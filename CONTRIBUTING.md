@@ -4,18 +4,69 @@ This document outlines our agreed project conventions and development guidelines
 
 ---
 
-## Getting Started
+# Getting Started
 
-1. **Clone the repository:**
+### 1. **Clone the repository:**
 
-   ```bash
-   git clone <repo-url>
-   cd repo-name
-   ```
+```bash
+git clone <repo-url>
+cd repo-name
+```
 
-2. **Install dependencies:** `npm install`
+### 2. **Install dependencies:**
 
-3. **Start the dev server:** `npm run dev`
+    `npm install`
+
+### 3. Environment Setup
+
+1.  **Set up environment variables:**
+    - Copy the example `.env` file:
+      ```bash
+      cp .env.example .env
+      ```
+    - Update the `.env` file as needed (e.g., `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `PORT`, etc.).
+
+2.  **Create the database using Sequelize CLI:**
+
+    ```bash
+    npx sequelize-cli db:create
+    ```
+
+3.  **(Optional) Run migrations:**
+
+    ```bash
+    npx sequelize-cli db:migrate
+    ```
+
+4.  **(Optional) Run seeders:**
+
+    ```bash
+    npx sequelize-cli db:seed:all
+    ```
+
+    This is useful to populate the database with test or default data.
+
+5.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+### 4. Database Tips
+
+- **Rollback last migration:**
+  ```bash
+  npx sequelize-cli db:migrate:undo
+  ```
+- **Rollback all migrations:**
+  ```bash
+  npx sequelize-cli db:migrate:undo:all
+  ```
+- **Undo all seeders:**
+  ```bash
+  npx sequelize-cli db:seed:undo:all
+  ```
 
 ---
 

@@ -1,17 +1,17 @@
 const fs = require("fs");
 const path = require("path");
+const logger = require("./shared/utils/logger");
 
 const NODE_ENV = process.env.NODE_ENV || "development";
 const envFilePath = path.resolve(__dirname, `.env.${NODE_ENV}`);
 if (fs.existsSync(envFilePath)) {
   require("dotenv").config({ path: envFilePath });
-  console.log(`Loaded env: ${envFilePath}`);
+  logger.info(`Loaded env: ${envFilePath}`);
 } else {
   require("dotenv").config();
-  console.log("Loaded default .env");
+  logger.info("Loaded default .env");
 }
 
-const logger = require("./shared/utils/logger");
 const app = require("./app");
 const db = require("./shared/database");
 
