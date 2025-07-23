@@ -121,7 +121,7 @@ chore(deps): upgrade joi to v17
 - **One task per branch and pull request.**
 - **Link related issue:** `Closes #issue-number`
 - Use **meaningful commit messages.**
-- Use the **PR template** (if provided).
+- Use the **[Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md)**.
 - **Pass all tests and linter checks** before requesting a review.
 - **Ask for review.**
 - **Do not merge your own PR.**
