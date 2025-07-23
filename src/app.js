@@ -5,8 +5,12 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const errorHandler = require("./shared/middlewares/error.middleware");
 
+// Load DB
+require("./shared/database");
+
 const app = express();
 
+// Middleware
 app.use(helmet());
 app.use(
   cors({
@@ -20,10 +24,12 @@ app.use(cookieParser());
 
 app.use(httpLogger);
 
-app.get("/", (req, res) => {
+// Routes
+app.get("/api", (req, res) => {
   res.send("Hello edupeerhub");
 });
 
+// Error handling
 app.use(errorHandler);
 
 module.exports = app;
