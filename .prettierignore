@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+coverage/
+*.min.js
+package-lock.json
+package.json
+yarn.lock
+
+*.min.js
+*.css.map
+.env
+.env.example
+.DS_Store
+.vscode
+
+.prettierrc

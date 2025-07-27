@@ -10,6 +10,8 @@ require("./shared/database");
 
 const app = express();
 
+app.set("trust proxy", true);
+
 // Middleware
 app.use(helmet());
 app.use(
