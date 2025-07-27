@@ -6,21 +6,12 @@ const {
   DatabaseError,
 } = require("sequelize");
 
-const errorHandler = (error, req, res) => {
-  // Log via Winston
-  logger.error("Error occurred", {
-    message: error.message,
-    status: error.statusCode || 500,
-    stack: error.stack,
-    path: req.originalUrl,
-    method: req.method,
-    userAgent: req.get("User-Agent"),
-    ip: req.ip,
-    user:
-      process.env.NODE_ENV === "production" && req.user
-        ? { id: req.user.id, email: req.user.email }
-        : undefined,
-  });
+const isProduction = process.env.NODE_ENV === "production";
+
+const errorHandler = (error, req, res, next) => {
+  let status = error.statusCode || 500;
+
+  // ─── Error Normalization ─────────────────────────────
 
   // Sequelize validation errors (e.g., notNull, len, isEmail, etc.)
   if (error instanceof ValidationError) {
@@ -53,6 +44,34 @@ const errorHandler = (error, req, res) => {
       name: error.name,
     });
   }
+
+  status = error.statusCode;
+
+  // ─── Skip 4xx Logs in Production ─────────────────────
+
+  if (!isProduction || status >= 500) {
+    const baseLog = {
+      message: error.message,
+      status,
+      details: error.details,
+      path: req.originalUrl,
+      method: req.method,
+    };
+
+    if (isProduction) {
+      logger.error("Error occurred", {
+        ...baseLog,
+        stack: error.stack,
+        userAgent: req.get("User-Agent"),
+        ip: req.ip,
+        user: req.user ? { id: req.user.id, email: req.user.email } : undefined,
+      });
+    } else {
+      logger.error("Error occurred", baseLog);
+    }
+  }
+
+  // ─── Client Response ──────────────────────────────────
 
   res.status(error.statusCode || 500).json({
     success: false,

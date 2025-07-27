@@ -18,9 +18,6 @@ const httpLogger = morgan((tokens, req, res) => {
   } catch (error) {
     logger.error("Failed to parse morgan log", { error: error.message });
   }
-
-  // return null so morgan doesn't write to the console
-  // return null;
 });
 
 module.exports = httpLogger;
