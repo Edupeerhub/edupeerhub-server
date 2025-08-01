@@ -1,7 +1,7 @@
 /**
  * Use this to standardize success responses across all controllers.
  * Example:
- * sendResponse(res, 201, "User created successfully", createdUser);
+ * sendResponse(res, "User created successfully", 201,  createdUser);
  */
 
 const sendResponse = (

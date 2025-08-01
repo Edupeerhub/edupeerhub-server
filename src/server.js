@@ -30,7 +30,7 @@ const startServer = async () => {
     }
 
     app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV}]`);
       logger.info(`API Base URL: http://localhost:${PORT}/api`);
     });
   } catch (err) {
