@@ -1,3 +1,5 @@
+const userAuthPlugin = require("./userAuth.plugin");
+
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define(
     "User",
@@ -40,16 +42,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
       },
       verificationTokenExpiresAt: {
-        type: DataTypes.DATE, // TIMESTAMP
+        type: DataTypes.DATE,
       },
       resetPasswordToken: {
         type: DataTypes.TEXT,
       },
       resetPasswordExpiresAt: {
-        type: DataTypes.DATE, // TIMESTAMP
+        type: DataTypes.DATE,
       },
       lastLogin: {
-        type: DataTypes.DATE, // TIMESTAMP
+        type: DataTypes.DATE,
       },
     },
     {
@@ -57,6 +59,13 @@ module.exports = (sequelize, DataTypes) => {
       underscored: true,
     }
   );
+
+  userAuthPlugin(User, {
+    passwordField: "passwordHash",
+    saltRounds: 12,
+    jwtSecret: process.env.JWT_SECRET,
+    jwtExpiresIn: "7d",
+  });
 
   User.associate = (models) => {
     User.hasOne(models.Student, { foreignKey: "user_id", as: "student" });
