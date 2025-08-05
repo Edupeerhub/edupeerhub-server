@@ -5,9 +5,6 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const errorHandler = require("./shared/middlewares/error.middleware");
 
-// Load DB
-require("./shared/database");
-
 const app = express();
 
 // Trust first proxy

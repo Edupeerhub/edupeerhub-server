@@ -19,15 +19,13 @@ const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
-    if (NODE_ENV === "production") {
-      await db.sequelize.authenticate();
-      logger.info("PostgreSQL connected successfully");
-    }
+    await db.sequelize.authenticate();
+    logger.info("PostgreSQL connected successfully");
 
-    if (NODE_ENV === "development") {
-      await db.sequelize.sync({ alter: true });
-      logger.info("✅ Database synced");
-    }
+    // if (NODE_ENV === "development") {
+    //   await db.sequelize.sync({ alter: true });
+    // logger.info("✅ Database synced (development only)");
+    // }
 
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV}]`);
