@@ -19,8 +19,8 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: "pending",
         allowNull: false,
       },
-      profileStatus: {
-        type: DataTypes.ENUM("active", "suspended", "hidden"),
+      profileVisibility: {
+        type: DataTypes.ENUM("active", "hidden"),
         defaultValue: "active",
         allowNull: false,
       },

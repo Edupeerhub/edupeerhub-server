@@ -33,24 +33,51 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM("admin", "tutor", "student"),
         allowNull: false,
       },
-      emailVerified: {
+      isVerified: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
       },
+      isOnboarded: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      lastLogin: {
+        type: DataTypes.DATE,
+      },
+      // Account status fields
+      accountStatus: {
+        type: DataTypes.ENUM("active", "suspended"),
+        defaultValue: "active",
+        allowNull: false,
+      },
+      suspendedAt: {
+        type: DataTypes.DATE,
+      },
+      suspensionReason: {
+        type: DataTypes.STRING,
+      },
+      // Email verification fields
       verificationToken: {
         type: DataTypes.TEXT,
       },
       verificationTokenExpiresAt: {
         type: DataTypes.DATE,
       },
+      // Password reset fields
       resetPasswordToken: {
         type: DataTypes.TEXT,
       },
       resetPasswordExpiresAt: {
         type: DataTypes.DATE,
       },
-      lastLogin: {
+      // Soft delete fields
+      isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      deletedAt: {
         type: DataTypes.DATE,
       },
     },

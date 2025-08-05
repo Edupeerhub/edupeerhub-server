@@ -6,12 +6,10 @@ module.exports = {
   async up(queryInterface) {
     const passwordHash = await bcrypt.hash("Password123!", 10);
 
-    // IDs for linking profiles
     const adminId = uuidv4();
     const tutorId = uuidv4();
     const studentId = uuidv4();
 
-    // Insert into users
     await queryInterface.bulkInsert("users", [
       {
         id: adminId,
@@ -20,7 +18,10 @@ module.exports = {
         last_name: "Admin",
         password_hash: passwordHash,
         role: "admin",
-        email_verified: true,
+        is_verified: true,
+        is_onboarded: true,
+        account_status: "active",
+        is_deleted: false,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -31,7 +32,10 @@ module.exports = {
         last_name: "Tutor",
         password_hash: passwordHash,
         role: "tutor",
-        email_verified: true,
+        is_verified: true,
+        is_onboarded: true,
+        account_status: "active",
+        is_deleted: false,
         created_at: new Date(),
         updated_at: new Date(),
       },
@@ -42,30 +46,31 @@ module.exports = {
         last_name: "Student",
         password_hash: passwordHash,
         role: "student",
-        email_verified: true,
+        is_verified: true,
+        is_onboarded: true,
+        account_status: "active",
+        is_deleted: false,
         created_at: new Date(),
         updated_at: new Date(),
       },
     ]);
 
-    // Insert into admin_profiles
     await queryInterface.bulkInsert("admin_profiles", [
       {
         user_id: adminId,
-        admin_role: "super_admin",
+        is_super_admin: true,
         created_at: new Date(),
         updated_at: new Date(),
       },
     ]);
 
-    // Insert into tutor_profiles
     await queryInterface.bulkInsert("tutor_profiles", [
       {
         user_id: tutorId,
         bio: "Experienced math tutor",
         rating: 5.0,
         approval_status: "approved",
-        profile_status: "active",
+        profile_visibility: "active",
         education: "MSc Mathematics",
         timezone: "UTC",
         created_at: new Date(),
@@ -73,7 +78,6 @@ module.exports = {
       },
     ]);
 
-    // Insert into student_profiles
     await queryInterface.bulkInsert("student_profiles", [
       {
         user_id: studentId,
