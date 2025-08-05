@@ -1,4 +1,5 @@
 const rateLimit = require("express-rate-limit");
+const { ipKeyGenerator } = require("express-rate-limit");
 const ApiError = require("../utils/apiError.util");
 const logger = require("../utils/logger");
 
@@ -14,8 +15,7 @@ function createRateLimiter({ max, windowMs, message }) {
     windowMs,
     max,
     keyGenerator: (req) => {
-      // Use email from body if available, fallback to IP
-      return req.body?.email || req.ip;
+      return ipKeyGenerator(req);
     },
     handler: (req, res, next) => {
       logger.warn("Rate limit hit", {

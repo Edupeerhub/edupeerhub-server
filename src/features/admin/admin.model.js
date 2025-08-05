@@ -6,9 +6,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         primaryKey: true,
       },
-      role: {
-        type: DataTypes.ENUM("admin", "super admin"),
-        allowNull: false,
+      isSuperAdmin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {
