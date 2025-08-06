@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         unique: true,
       },
       firstName: {
@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       role: {
         type: DataTypes.ENUM("admin", "tutor", "student"),
-        allowNull: false,
+        allowNull: true,
       },
       isVerified: {
         type: DataTypes.BOOLEAN,
@@ -84,15 +84,49 @@ module.exports = (sequelize, DataTypes) => {
     {
       tableName: "users",
       underscored: true,
+      defaultScope: {
+        attributes: {
+          exclude: [
+            "password_hash",
+            "verification_token",
+            "reset_password_token",
+          ],
+        },
+        where: {
+          is_deleted: false,
+        },
+      },
+      scopes: {
+        includeDeleted: {
+          where: {},
+        },
+        active: {
+          where: {
+            account_status: "active",
+            is_deleted: false,
+          },
+        },
+        verified: {
+          where: {
+            is_verified: true,
+            is_deleted: false,
+          },
+        },
+      },
+      indexes: [
+        { fields: ["email"] },
+        { fields: ["role"] },
+        { fields: ["account_status"] },
+        { fields: ["is_verified"] },
+        { fields: ["is_deleted"] },
+        { fields: ["verification_token"] },
+        { fields: ["reset_password_token"] },
+        { fields: ["created_at"] },
+      ],
     }
   );
 
-  userAuthPlugin(User, {
-    passwordField: "passwordHash",
-    saltRounds: 12,
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: "7d",
-  });
+  userAuthPlugin(User);
 
   User.associate = (models) => {
     User.hasOne(models.Student, { foreignKey: "user_id", as: "student" });
