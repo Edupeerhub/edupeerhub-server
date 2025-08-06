@@ -58,7 +58,6 @@ const fileFormat = winston.format.combine(
 const transports = [
   new winston.transports.Console({
     level: logLevel,
-    handleExceptions: true,
     format: consoleFormat,
   }),
 ];
@@ -69,7 +68,6 @@ if (!isProduction) {
     new winston.transports.File({
       level: "debug",
       filename: "./logs/app.log",
-      handleExceptions: true,
       maxsize: 5 * 1024 * 1024, // 5MB
       maxFiles: 5,
       format: fileFormat,
@@ -103,20 +101,6 @@ const logger = winston.createLogger({
   levels: winston.config.npm.levels,
   transports,
   exitOnError: false,
-});
-
-// ─── Global Error Handlers ──────────────────────────────────
-
-process.on("uncaughtException", (err) => {
-  logger.error("Uncaught Exception", err);
-  process.exit(1);
-});
-
-process.on("unhandledRejection", (reason) => {
-  logger.error(
-    "Unhandled Rejection",
-    reason instanceof Error ? reason : { message: String(reason) }
-  );
 });
 
 module.exports = logger;

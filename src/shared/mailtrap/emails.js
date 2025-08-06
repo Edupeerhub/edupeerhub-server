@@ -1,10 +1,10 @@
-const ApiError = require("../utils/apiError.js");
+const ApiError = require("../utils/apiError");
 const {
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
   VERIFICATION_EMAIL_TEMPLATE,
-} = require("./emailTemplates.js");
-const { mailtrapClient, sender } = require("./mailtrap.config.js");
+} = require("./emailTemplates");
+const { mailtrapClient, sender } = require("./mailtrap.config");
 
 const sendVerificationEmail = async (email, verificationToken) => {
   const recipient = [{ email }];
