@@ -48,6 +48,10 @@ const Student = require("../../features/student/student.model")(
 );
 const Tutor = require("../../features/tutor/tutor.model")(sequelize, DataTypes);
 const Admin = require("../../features/admin/admin.model")(sequelize, DataTypes);
+const EventLog = require("../../features/events/events.model")(
+  sequelize,
+  DataTypes
+);
 
 // Store models in db object
 const db = {
@@ -57,6 +61,7 @@ const db = {
   Student,
   Tutor,
   Admin,
+  EventLog,
 };
 
 Object.keys(db).forEach((modelName) => {

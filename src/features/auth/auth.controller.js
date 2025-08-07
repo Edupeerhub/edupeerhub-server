@@ -17,6 +17,9 @@ const {
   sendVerificationEmail,
   sendWelcomeEmail,
 } = require("../../shared/mailtrap/emails");
+const trackEvent = require("../events/events.service");
+const eventTypes = require("../events/eventTypes");
+const { date } = require("joi");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -32,6 +35,13 @@ exports.signup = async (req, res, next) => {
     // await addStreamUser(newUser);
 
     const token = newUser.generateAuthToken();
+
+    await trackEvent(eventTypes.USER_SIGNED_UP, {
+      userId: newUser.id,
+      email: newUser.email,
+      fullName: `${newUser.firstName} ${newUser.lastName}`,
+    });
+
     res.cookie("jwt", token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
@@ -54,8 +64,13 @@ exports.login = async (req, res, next) => {
     const user = await loginUser({ ...req.body });
     const token = user.generateAuthToken();
 
-    user.lastLogin = new Date();
-    await user.save();
+    await trackEvent(eventTypes.USER_LOGGED_IN, {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      fullName: `${user.firstName} ${user.lastName}`,
+      date: user.lastLogin,
+    });
 
     res.cookie("jwt", token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -100,6 +115,12 @@ exports.verifyEmail = async (req, res, next) => {
     const verifiedUser = await verifyUserEmail(code);
 
     // await sendWelcomeEmail(verifiedUser.email, verifiedUser.fullName);
+    await trackEvent(eventTypes.USER_VERIFIED_EMAIL, {
+      userId: verifiedUser.id,
+      email: verifiedUser.email,
+      role: verifiedUser.role,
+      fullName: `${verifiedUser.firstName} ${verifiedUser.lastName}`,
+    });
     sendResponse(res, 200, "Email verified successfully", {
       id: verifiedUser.id,
       email: verifiedUser.email,

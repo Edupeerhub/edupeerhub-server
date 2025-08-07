@@ -95,6 +95,8 @@ exports.loginUser = async ({ email, password }) => {
 
   const isMatch = await user.isValidPassword(password);
   if (!isMatch) throw new ApiError("Invalid email or password", 401);
+  user.lastLogin = new Date();
+  await user.save();
 
   return user;
 };
