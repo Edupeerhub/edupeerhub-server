@@ -207,7 +207,7 @@ exports.resetUserPassword = async (token, password) => {
     ],
   });
 
-  if (!user) throw new ApiError("Invalid or expired reset token", 400);
+  if (!user) throw new ApiError("Invalid or expired reset token", 401);
 
   const hashedPassword = await hashPassword(password);
 

@@ -6,6 +6,7 @@ const helmet = require("helmet");
 const errorHandler = require("./shared/middlewares/error.middleware");
 const authRoutes = require("./features/auth/auth.route");
 const ApiError = require("./shared/utils/apiError");
+const sendResponse = require("./shared/utils/sendResponse");
 
 const app = express();
 
