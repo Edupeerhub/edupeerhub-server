@@ -1,42 +1,35 @@
 const { Sequelize, DataTypes } = require("sequelize");
-const config = require("../config/db.config.js");
+const config = require("../config/db.config");
 
 const env = process.env.NODE_ENV || "development";
 const dbConfig = config[env];
 
-let sequelize;
+const useSSL = process.env.DB_SSL === "true";
 
-if (process.env.DATABASE_URL) {
-  // Use connection string (e.g., for NeonDB)
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
+const sequelize = new Sequelize(
+  dbConfig.database,
+  dbConfig.username,
+  dbConfig.password,
+  {
+    host: dbConfig.host,
+    dialect: dbConfig.dialect,
+    logging: dbConfig.logging,
+    dialectOptions: useSSL
+      ? {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        }
+      : {},
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000,
     },
-    logging: false,
-  });
-} else {
-  // Fallback: use individual config values
-  sequelize = new Sequelize(
-    dbConfig.database,
-    dbConfig.username,
-    dbConfig.password,
-    {
-      host: dbConfig.host,
-      dialect: dbConfig.dialect,
-      logging: dbConfig.logging,
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000,
-      },
-    }
-  );
-}
+  }
+);
 
 // =====================
 // MANUAL MODEL IMPORTS
@@ -48,6 +41,10 @@ const Student = require("../../features/student/student.model")(
 );
 const Tutor = require("../../features/tutor/tutor.model")(sequelize, DataTypes);
 const Admin = require("../../features/admin/admin.model")(sequelize, DataTypes);
+const EventLog = require("../../features/events/events.model")(
+  sequelize,
+  DataTypes
+);
 
 // Store models in db object
 const db = {
@@ -57,6 +54,7 @@ const db = {
   Student,
   Tutor,
   Admin,
+  EventLog,
 };
 
 Object.keys(db).forEach((modelName) => {

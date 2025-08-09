@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       email: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: false,
         unique: true,
       },
       firstName: {
@@ -31,41 +31,103 @@ module.exports = (sequelize, DataTypes) => {
       },
       role: {
         type: DataTypes.ENUM("admin", "tutor", "student"),
-        allowNull: false,
+        allowNull: true,
       },
-      emailVerified: {
+      isVerified: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
       },
+      isOnboarded: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      lastLogin: {
+        type: DataTypes.DATE,
+      },
+      // Account status fields
+      accountStatus: {
+        type: DataTypes.ENUM("active", "suspended"),
+        defaultValue: "active",
+        allowNull: false,
+      },
+      suspendedAt: {
+        type: DataTypes.DATE,
+      },
+      suspensionReason: {
+        type: DataTypes.STRING,
+      },
+      // Email verification fields
       verificationToken: {
         type: DataTypes.TEXT,
       },
       verificationTokenExpiresAt: {
         type: DataTypes.DATE,
       },
+      // Password reset fields
       resetPasswordToken: {
         type: DataTypes.TEXT,
       },
       resetPasswordExpiresAt: {
         type: DataTypes.DATE,
       },
-      lastLogin: {
+      // Soft delete fields
+      isDeleted: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      deletedAt: {
         type: DataTypes.DATE,
       },
     },
     {
       tableName: "users",
       underscored: true,
+      timestamps: true,
+      defaultScope: {
+        attributes: {
+          exclude: [
+            "password_hash",
+            "verification_token",
+            "reset_password_token",
+          ],
+        },
+        where: {
+          is_deleted: false,
+        },
+      },
+      scopes: {
+        includeDeleted: {
+          where: {},
+        },
+        active: {
+          where: {
+            account_status: "active",
+            is_deleted: false,
+          },
+        },
+        verified: {
+          where: {
+            is_verified: true,
+            is_deleted: false,
+          },
+        },
+      },
+      indexes: [
+        { fields: ["email"] },
+        { fields: ["role"] },
+        { fields: ["account_status"] },
+        { fields: ["is_verified"] },
+        { fields: ["is_deleted"] },
+        { fields: ["verification_token"] },
+        { fields: ["reset_password_token"] },
+        { fields: ["created_at"] },
+      ],
     }
   );
 
-  userAuthPlugin(User, {
-    passwordField: "passwordHash",
-    saltRounds: 12,
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: "7d",
-  });
+  userAuthPlugin(User);
 
   User.associate = (models) => {
     User.hasOne(models.Student, { foreignKey: "user_id", as: "student" });

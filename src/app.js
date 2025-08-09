@@ -4,6 +4,9 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const errorHandler = require("./shared/middlewares/error.middleware");
+const authRoutes = require("./features/auth/auth.route");
+const ApiError = require("./shared/utils/apiError");
+const sendResponse = require("./shared/utils/sendResponse");
 
 const app = express();
 
@@ -25,8 +28,17 @@ app.use(cookieParser());
 app.use(httpLogger);
 
 // Routes
-app.get("/api", (req, res) => {
-  res.send("Hello edupeerhub");
+app.use("/api/auth", authRoutes);
+
+app.get("/api/health", (req, res) => {
+  sendResponse(res, 200, "Server is healthy", {
+    status: "OK",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.all("/{*splat}", (req, res, next) => {
+  next(new ApiError(`Cannot ${req.method} ${req.originalUrl}`, 404));
 });
 
 // Error handling
