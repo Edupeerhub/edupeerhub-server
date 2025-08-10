@@ -13,19 +13,19 @@ if (fs.existsSync(envFilePath)) {
 }
 
 const app = require("./app");
-const db = require("./shared/database");
+const sequelize = require("./shared/database/index");
 
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
     if (NODE_ENV === "production") {
-      await db.sequelize.authenticate();
+      await sequelize.authenticate();
       logger.info("PostgreSQL connected successfully");
     }
 
     if (NODE_ENV === "development") {
-      await db.sequelize.sync({ alter: true });
+      await sequelize.sync();
       logger.info("✅ Database synced (development only)");
     }
 
@@ -42,7 +42,7 @@ const startServer = async () => {
 const gracefulExit = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   try {
-    await db.sequelize.close();
+    await sequelize.close();
     logger.info("Database connection closed");
   } catch (error) {
     logger.error("Error during shutdown:", error);
