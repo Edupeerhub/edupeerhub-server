@@ -22,7 +22,7 @@ router.get("/:id", tutorController.getTutor);
 // POST /api/tutors         // Create tutor profile
 router.post("/", profileValidator, tutorController.createTutor);
 // PUT /api/tutors/:id     // Update tutor profile
-router.put("/", profileValidator, tutorController.updateTutor);
+router.put("/:id", profileValidator, tutorController.updateTutor);
 
 // GET /api/tutors/:id/schedule  // Get tutor's schedule
 router.get(
