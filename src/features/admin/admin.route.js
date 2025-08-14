@@ -2,6 +2,8 @@ const express = require("express");
 const adminController = require("./admin.controller");
 const { protectRoute } = require("../auth/auth.middleware");
 const { requireSuperAdmin, requireAdmin } = require("./admin.middleware");
+const validate = require("../../shared/middlewares/validate.middleware");
+const adminValidation = require("./admin.validator");
 
 const router = express.Router();
 
@@ -21,10 +23,18 @@ router.patch("/users/:id/restore", adminController.restoreUser);
 router.get("/tutors/pending", adminController.getPendingTutors);
 router.get("/tutors/:id/pending", adminController.getPendingTutorById);
 router.patch("/tutors/:id/approve", adminController.approveTutor);
-router.patch("/tutors/:id/reject", adminController.rejectTutor);
+router.patch(
+  "/tutors/:id/reject",
+  validate(adminValidation.rejectTutor),
+  adminController.rejectTutor
+);
 
 router.use(requireSuperAdmin);
-router.post("/", adminController.createAdmin);
+router.post(
+  "/",
+  validate(adminValidation.createAdmin),
+  adminController.createAdmin
+);
 router.get("/", adminController.getAllAdmins);
 
 module.exports = router;

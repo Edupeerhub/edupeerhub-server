@@ -67,7 +67,11 @@ exports.approveTutor = async (req, res, next) => {
 
 exports.rejectTutor = async (req, res, next) => {
   try {
-    const tutor = await adminService.rejectTutor(req.params.id);
+    const { rejectionReason } = req.body;
+    const tutor = await adminService.rejectTutor(
+      req.params.id,
+      rejectionReason
+    );
     // await sendRejectionEmail(tutor.user.email, tutor.user.firstName, tutor.rejectionReason);
     sendResponse(res, 200, "Tutor rejected successfully", tutor);
   } catch (error) {

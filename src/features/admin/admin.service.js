@@ -15,6 +15,7 @@ const TUTOR_INCLUDES = [
       "approvalStatus",
       "profileVisibility",
       "education",
+      "rejectionReason",
     ],
   },
 ];
@@ -154,11 +155,13 @@ exports.approveTutor = async (id) => {
   return tutor;
 };
 
-exports.rejectTutor = async (id) => {
+exports.rejectTutor = async (id, rejectionReason) => {
   const tutor = await exports.getPendingTutor(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "rejected";
+  tutor.rejectionReason = rejectionReason;
+
   await tutor.save();
   return tutor;
 };
