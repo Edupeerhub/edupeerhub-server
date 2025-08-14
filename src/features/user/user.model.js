@@ -1,6 +1,6 @@
 const userAuthPlugin = require("./userAuth.plugin");
 const sequelize = require("../../shared/database/index");
-const DataTypes = require("sequelize");
+const { DataTypes } = require("sequelize");
 module.exports = () => {
   const User = sequelize.define(
     "User",
@@ -47,7 +47,6 @@ module.exports = () => {
       lastLogin: {
         type: DataTypes.DATE,
       },
-      // Account status fields
       accountStatus: {
         type: DataTypes.ENUM("active", "suspended"),
         defaultValue: "active",
@@ -59,21 +58,18 @@ module.exports = () => {
       suspensionReason: {
         type: DataTypes.STRING,
       },
-      // Email verification fields
       verificationToken: {
         type: DataTypes.TEXT,
       },
       verificationTokenExpiresAt: {
         type: DataTypes.DATE,
       },
-      // Password reset fields
       resetPasswordToken: {
         type: DataTypes.TEXT,
       },
       resetPasswordExpiresAt: {
         type: DataTypes.DATE,
       },
-      // Soft delete fields
       isDeleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -88,30 +84,33 @@ module.exports = () => {
       timestamps: true,
       defaultScope: {
         attributes: {
-          exclude: [
-            "password_hash",
-            "verification_token",
-            "reset_password_token",
-          ],
+          exclude: ["passwordHash", "verificationToken", "resetPasswordToken"],
         },
         where: {
-          is_deleted: false,
+          isDeleted: false,
         },
       },
       scopes: {
         includeDeleted: {
+          attributes: {
+            exclude: [
+              "passwordHash",
+              "verificationToken",
+              "resetPasswordToken",
+            ],
+          },
           where: {},
         },
         active: {
           where: {
-            account_status: "active",
-            is_deleted: false,
+            accountStatus: "active",
+            isDeleted: false,
           },
         },
         verified: {
           where: {
-            is_verified: true,
-            is_deleted: false,
+            isVerified: true,
+            isDeleted: false,
           },
         },
       },

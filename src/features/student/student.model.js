@@ -1,5 +1,5 @@
 const sequelize = require("../../shared/database/index");
-const DataTypes = require("sequelize");
+const { DataTypes } = require("sequelize");
 
 module.exports = () => {
   const Student = sequelize.define(
