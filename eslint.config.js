@@ -39,7 +39,6 @@ module.exports = [
       "no-var": "error",
       "prefer-const": "error",
       eqeqeq: ["error", "always"],
-      curly: ["warn", "all"],
       "no-unused-vars": "warn",
       "no-undef": "error",
 
