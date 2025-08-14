@@ -22,6 +22,10 @@ module.exports = () => {
         defaultValue: "pending",
         allowNull: false,
       },
+      rejectionReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
         defaultValue: "active",

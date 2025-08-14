@@ -84,7 +84,13 @@ module.exports = () => {
       timestamps: true,
       defaultScope: {
         attributes: {
-          exclude: ["passwordHash", "verificationToken", "resetPasswordToken"],
+          exclude: [
+            "passwordHash",
+            "verificationToken",
+            "resetPasswordToken",
+            "verificationTokenExpiresAt",
+            "resetPasswordExpiresAt",
+          ],
         },
         where: {
           isDeleted: false,
@@ -97,6 +103,8 @@ module.exports = () => {
               "passwordHash",
               "verificationToken",
               "resetPasswordToken",
+              "verificationTokenExpiresAt",
+              "resetPasswordExpiresAt",
             ],
           },
           where: {},
