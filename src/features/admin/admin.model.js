@@ -8,6 +8,7 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
+        field: "user_id",
       },
       isSuperAdmin: {
         type: DataTypes.BOOLEAN,
@@ -21,7 +22,7 @@ module.exports = () => {
   );
 
   Admin.associate = (models) => {
-    Admin.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    Admin.belongsTo(models.User, { foreignKey: "userId", as: "user" });
   };
 
   return Admin;

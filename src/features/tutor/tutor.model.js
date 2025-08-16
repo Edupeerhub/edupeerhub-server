@@ -8,6 +8,7 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
+        field: "user_id",
       },
       bio: {
         type: DataTypes.TEXT,
@@ -47,7 +48,7 @@ module.exports = () => {
   );
 
   Tutor.associate = (models) => {
-    Tutor.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    Tutor.belongsTo(models.User, { foreignKey: "userId", as: "user" });
   };
 
   return Tutor;

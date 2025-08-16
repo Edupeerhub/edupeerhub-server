@@ -8,6 +8,7 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
+        field: "user_id",
       },
       gradeLevel: {
         type: DataTypes.STRING,
@@ -25,7 +26,7 @@ module.exports = () => {
   );
 
   Student.associate = (models) => {
-    Student.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    Student.belongsTo(models.User, { foreignKey: "userId", as: "user" });
   };
 
   return Student;

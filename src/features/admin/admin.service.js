@@ -132,9 +132,8 @@ exports.getAllPendingTutors = async () => {
   return pendingTutors;
 };
 
-exports.getPendingTutor = async (id) => {
-  const pendingTutor = await Tutor.findByPk(id, {
-    where: { approvalStatus: "pending" },
+exports.getTutor = async (id) => {
+  const tutor = await Tutor.findByPk(id, {
     include: [
       {
         model: User,
@@ -143,11 +142,12 @@ exports.getPendingTutor = async (id) => {
       },
     ],
   });
-  return pendingTutor;
+
+  return tutor;
 };
 
 exports.approveTutor = async (id) => {
-  const tutor = await exports.getPendingTutor(id);
+  const tutor = await exports.getTutor(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "approved";
@@ -156,7 +156,7 @@ exports.approveTutor = async (id) => {
 };
 
 exports.rejectTutor = async (id, rejectionReason) => {
-  const tutor = await exports.getPendingTutor(id);
+  const tutor = await exports.getTutor(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "rejected";

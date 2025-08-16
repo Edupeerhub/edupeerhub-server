@@ -138,9 +138,9 @@ module.exports = () => {
   userAuthPlugin(User);
 
   User.associate = (models) => {
-    User.hasOne(models.Student, { foreignKey: "user_id", as: "student" });
-    User.hasOne(models.Tutor, { foreignKey: "user_id", as: "tutor" });
-    User.hasOne(models.Admin, { foreignKey: "user_id", as: "admin" });
+    User.hasOne(models.Student, { foreignKey: "userId", as: "student" });
+    User.hasOne(models.Tutor, { foreignKey: "userId", as: "tutor" });
+    User.hasOne(models.Admin, { foreignKey: "userId", as: "admin" });
   };
 
   return User;

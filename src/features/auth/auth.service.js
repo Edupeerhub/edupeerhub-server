@@ -116,6 +116,7 @@ exports.verifyUserEmail = async (code) => {
 exports.resendVerificationEmail = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: [
+      "id",
       "isVerified",
       "verificationToken",
       "verificationTokenExpiresAt",
@@ -138,10 +139,10 @@ exports.resendVerificationEmail = async (userId) => {
   }
 
   const { code, expiresAt } = generateVerificationCode();
-  user.verificationToken = code;
-  user.verificationTokenExpiresAt = expiresAt;
-
-  await user.save();
+  await user.update({
+    verificationToken: code,
+    verificationTokenExpiresAt: expiresAt,
+  });
   return user;
 };
 
