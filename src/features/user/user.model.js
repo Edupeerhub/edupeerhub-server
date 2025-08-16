@@ -1,6 +1,7 @@
 const userAuthPlugin = require("./userAuth.plugin");
 const sequelize = require("../../shared/database/index");
 const { DataTypes } = require("sequelize");
+
 module.exports = () => {
   const User = sequelize.define(
     "User",

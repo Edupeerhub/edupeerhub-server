@@ -1,3 +1,4 @@
+/* eslint-disable curly */
 const { Op } = require("sequelize");
 const crypto = require("crypto");
 const { upsertStreamUser } = require("../../shared/config/stream.config");
