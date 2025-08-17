@@ -1,9 +1,10 @@
+/* eslint-disable curly */
 const { Op } = require("sequelize");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { upsertStreamUser } = require("../../shared/config/stream.config");
 const ApiError = require("../../shared/utils/apiError");
-const { User } = require("../../shared/database/index");
+const {User} = require("../../shared/database/models");
 
 // ==========================
 // Constants

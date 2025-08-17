@@ -1,4 +1,7 @@
-module.exports = (sequelize, DataTypes) => {
+const sequelize = require("../../shared/database/index");
+const DataTypes = require("sequelize");
+
+module.exports = () => {
   const Admin = sequelize.define(
     "Admin",
     {

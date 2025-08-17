@@ -1,4 +1,4 @@
-const { EventLog } = require("../../shared/database");
+const { EventLog } = require("../../shared/database/models");
 const ApiError = require("../../shared/utils/apiError");
 
 /**

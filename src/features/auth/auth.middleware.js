@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { User } = require("../../shared/database/index");
+const { User } = require("../../shared/database/models");
 const ApiError = require("../../shared/utils/apiError");
 
 exports.protectRoute = async (req, res, next) => {

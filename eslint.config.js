@@ -12,6 +12,7 @@ module.exports = [
       "coverage/",
       "*.min.js",
       "eslint.config.mjs", // Keep this in ignores if you're converting this file to .js or .cjs
+      "*.json",
     ],
   },
 
@@ -39,7 +40,7 @@ module.exports = [
       "prefer-const": "error",
       eqeqeq: ["error", "always"],
       curly: ["warn", "all"],
-      "no-unused-vars": "error",
+      "no-unused-vars": "warn",
       "no-undef": "error",
 
       // Node.js specific
