@@ -1,5 +1,5 @@
 const sendResponse = require("../../shared/utils/sendResponse");
-const { status } = require("http-status");
+;
 //availability validator
 
 exports.availabilityValidator = async (req, res, next) => {
@@ -27,7 +27,7 @@ exports.canEditProfileValidator = async (req, res, next) => {
     return;
   }
 
-  sendResponse(res, status.FORBIDDEN, status["403_NAME"], );
+  sendResponse(res, 403,"forbidden", );
 };
 //tutor search validator
 exports.searchValidator = async (req, res, next) => {

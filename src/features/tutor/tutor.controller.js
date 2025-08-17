@@ -1,6 +1,6 @@
 const sendResponse = require("../../shared/utils/sendResponse");
 const tutorService = require("./tutor.service");
-const { status } = require("http-status");
+;
 exports.getTutors = async (req, res, next) => {
   try {
     //params
@@ -28,7 +28,7 @@ exports.getTutors = async (req, res, next) => {
 exports.getTutor = async (req, res, next) => {
   const tutor = await tutorService.getTutor(req.params.id);
 
-  sendResponse(res, status.OK, status["200_NAME"], tutor);
+  sendResponse(res, 200, "success", tutor);
 };
 
 exports.createTutor = async (req, res, next) => {
@@ -38,7 +38,7 @@ exports.createTutor = async (req, res, next) => {
   };
   const newTutor = await tutorService.createTutor({ tutor });
 
-  sendResponse(res, status.CREATED, status["201_NAME"], newTutor);
+  sendResponse(res, 201, "created successfully", newTutor);
 };
 
 exports.updateTutor = async (req, res, next) => {
@@ -46,7 +46,7 @@ exports.updateTutor = async (req, res, next) => {
   const tutorProfile = req.body;
 
   if (tutorId !== req.user.id) {
-    sendResponse(res, status.FORBIDDEN, status["403_NAME"]);
+    sendResponse(res, 403, "forbidden");
     return;
   }
   const updatedTutorProfile = await tutorService.updateTutorProfile({
@@ -54,7 +54,7 @@ exports.updateTutor = async (req, res, next) => {
     tutorProfile,
   });
 
-  sendResponse(res, status.OK, status["200_NAME"], updatedTutorProfile);
+  sendResponse(res, 200, "success", updatedTutorProfile);
 };
 
 exports.getTutorSchedule = async (req, res, next) => {};

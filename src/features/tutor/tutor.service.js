@@ -1,6 +1,6 @@
 const Tutor = require("./tutor.model")();
 const User = require("../user/user.model")();
-const { default: status } = require("http-status");
+
 const ApiError = require("../../shared/utils/apiError");
 const { where } = require("sequelize");
 const Subject = require("../../shared/database/models/subject");
