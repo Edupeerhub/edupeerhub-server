@@ -3,12 +3,22 @@ const tutorService = require("./tutor.service");
 const { status } = require("http-status");
 exports.getTutors = async (req, res, next) => {
   try {
-
     //params
-    const page = req.queryParams?.page ?? 1;
-    const limit = req.queryParams?.limit ?? 10;
+    const page = req.query?.page ?? 1;
+    const limit = req.query?.limit ?? 10;
 
-    const tutors = await tutorService.getTutors({page: page, limit: limit});
+    //filters
+    const subjects = req.query.subjects?.split(",");
+    const availability = req.query.availability?.split(",");
+    const ratings = req.query.rating?.split(",");
+
+    const tutors = await tutorService.getTutors({
+      page: page,
+      limit: limit,
+      subjects,
+      availability,
+      ratings,
+    });
     sendResponse(res, 200, "Tutors retrieved successfully", tutors);
   } catch (error) {
     next(error);
@@ -28,7 +38,7 @@ exports.createTutor = async (req, res, next) => {
   };
   const newTutor = await tutorService.createTutor({ tutor });
 
-  sendResponse(res, status.CREATED, status["201_MESSAGE"], newTutor);
+  sendResponse(res, status.CREATED, status["201_NAME"], newTutor);
 };
 
 exports.updateTutor = async (req, res, next) => {
@@ -36,7 +46,7 @@ exports.updateTutor = async (req, res, next) => {
   const tutorProfile = req.body;
 
   if (tutorId !== req.user.id) {
-    sendResponse(res, status.FORBIDDEN, status["403_NAME"], );
+    sendResponse(res, status.FORBIDDEN, status["403_NAME"]);
     return;
   }
   const updatedTutorProfile = await tutorService.updateTutorProfile({

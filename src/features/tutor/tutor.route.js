@@ -11,6 +11,7 @@ const {
   profileValidator,
   scheduleSearchValidator,
   availabilityValidator,
+  canEditProfileValidator,
 } = require("./tutor.middleware");
 const router = express.Router();
 
@@ -22,7 +23,7 @@ router.get("/:id", tutorController.getTutor);
 // POST /api/tutors         // Create tutor profile
 router.post("/", profileValidator, tutorController.createTutor);
 // PUT /api/tutors/:id     // Update tutor profile
-router.put("/:id", profileValidator, tutorController.updateTutor);
+router.put("/:id", profileValidator, canEditProfileValidator, tutorController.updateTutor);
 
 // GET /api/tutors/:id/schedule  // Get tutor's schedule
 router.get(
