@@ -1,5 +1,5 @@
 const sequelize = require("../../shared/database/index");
-const { DataTypes } = require("sequelize");
+const DataTypes = require("sequelize");
 
 module.exports = () => {
   const Admin = sequelize.define(
@@ -8,7 +8,6 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
-        field: "user_id",
       },
       isSuperAdmin: {
         type: DataTypes.BOOLEAN,
@@ -22,7 +21,7 @@ module.exports = () => {
   );
 
   Admin.associate = (models) => {
-    Admin.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    Admin.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
   };
 
   return Admin;

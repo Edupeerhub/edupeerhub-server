@@ -60,6 +60,11 @@ router.put(
   authController.changePassword
 );
 
+// router.post(
+//   "/onboarding",
+//   validate(authValidation.onboarding),
+//   authController.onboard
+// );
 router.post("/logout", authController.logout);
 
 module.exports = router;

@@ -1,7 +1,6 @@
 const userAuthPlugin = require("./userAuth.plugin");
 const sequelize = require("../../shared/database/index");
-const { DataTypes } = require("sequelize");
-
+const DataTypes = require("sequelize");
 module.exports = () => {
   const User = sequelize.define(
     "User",
@@ -48,6 +47,7 @@ module.exports = () => {
       lastLogin: {
         type: DataTypes.DATE,
       },
+      // Account status fields
       accountStatus: {
         type: DataTypes.ENUM("active", "suspended"),
         defaultValue: "active",
@@ -59,18 +59,21 @@ module.exports = () => {
       suspensionReason: {
         type: DataTypes.STRING,
       },
+      // Email verification fields
       verificationToken: {
         type: DataTypes.TEXT,
       },
       verificationTokenExpiresAt: {
         type: DataTypes.DATE,
       },
+      // Password reset fields
       resetPasswordToken: {
         type: DataTypes.TEXT,
       },
       resetPasswordExpiresAt: {
         type: DataTypes.DATE,
       },
+      // Soft delete fields
       isDeleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -86,40 +89,29 @@ module.exports = () => {
       defaultScope: {
         attributes: {
           exclude: [
-            "passwordHash",
-            "verificationToken",
-            "resetPasswordToken",
-            "verificationTokenExpiresAt",
-            "resetPasswordExpiresAt",
+            "password_hash",
+            "verification_token",
+            "reset_password_token",
           ],
         },
         where: {
-          isDeleted: false,
+          is_deleted: false,
         },
       },
       scopes: {
         includeDeleted: {
-          attributes: {
-            exclude: [
-              "passwordHash",
-              "verificationToken",
-              "resetPasswordToken",
-              "verificationTokenExpiresAt",
-              "resetPasswordExpiresAt",
-            ],
-          },
           where: {},
         },
         active: {
           where: {
-            accountStatus: "active",
-            isDeleted: false,
+            account_status: "active",
+            is_deleted: false,
           },
         },
         verified: {
           where: {
-            isVerified: true,
-            isDeleted: false,
+            is_verified: true,
+            is_deleted: false,
           },
         },
       },
@@ -139,9 +131,9 @@ module.exports = () => {
   userAuthPlugin(User);
 
   User.associate = (models) => {
-    User.hasOne(models.Student, { foreignKey: "userId", as: "student" });
-    User.hasOne(models.Tutor, { foreignKey: "userId", as: "tutor" });
-    User.hasOne(models.Admin, { foreignKey: "userId", as: "admin" });
+    User.hasOne(models.Student, { foreignKey: "user_id", as: "student" });
+    User.hasOne(models.Tutor, { foreignKey: "user_id", as: "tutor" });
+    User.hasOne(models.Admin, { foreignKey: "user_id", as: "admin" });
   };
 
   return User;

@@ -2,37 +2,30 @@
 // MANUAL MODEL IMPORTS
 // =====================
 
-const sequelize = require("./index");
+exports.User = require("../../features/user/user.model")();
+exports.Student = require("../../features/student/student.model")();
+exports.Tutor = require("../../features/tutor/tutor.model")();
+exports.Admin = require("../../features/admin/admin.model")();
+exports.EventLog = require("../../features/events/events.model")();
 
-const User = require("../../features/user/user.model")();
-const Student = require("../../features/student/student.model")();
-const Tutor = require("../../features/tutor/tutor.model")();
-const Admin = require("../../features/admin/admin.model")();
-const EventLog = require("../../features/events/events.model")();
+// // Store models in db object
+// const db = {
+//   sequelize,
+//   Sequelize,
+//   User,
+//   Student,
+//   Tutor,
+//   Admin,
+//   EventLog,
+// };
 
-// Store models in db object
-const db = {
-  User,
-  Student,
-  Tutor,
-  Admin,
-  EventLog,
-};
+// Object.keys(db).forEach((modelName) => {
+//   if (db[modelName]?.associate) {
+//     db[modelName].associate(db);
+//   }
+// });
 
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName]?.associate) {
-    db[modelName].associate(db);
-  }
-});
-
-module.exports = {
-  User,
-  Student,
-  Tutor,
-  Admin,
-  EventLog,
-};
-
+// module.exports = db;
 // OPTIONAL: AUTO-LOADER WITH GLOB (SHORTER)
 
 // const glob = require("glob");

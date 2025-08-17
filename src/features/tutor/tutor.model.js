@@ -1,5 +1,5 @@
 const sequelize = require("../../shared/database/index");
-const { DataTypes } = require("sequelize");
+const DataTypes = require("sequelize");
 
 module.exports = () => {
   const Tutor = sequelize.define(
@@ -8,7 +8,6 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
-        field: "user_id",
       },
       bio: {
         type: DataTypes.TEXT,
@@ -22,10 +21,6 @@ module.exports = () => {
         type: DataTypes.ENUM("pending", "approved", "rejected"),
         defaultValue: "pending",
         allowNull: false,
-      },
-      rejectionReason: {
-        type: DataTypes.TEXT,
-        allowNull: true,
       },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
@@ -48,7 +43,7 @@ module.exports = () => {
   );
 
   Tutor.associate = (models) => {
-    Tutor.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    Tutor.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
   };
 
   return Tutor;

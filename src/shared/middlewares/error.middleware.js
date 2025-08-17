@@ -72,13 +72,6 @@ const errorHandler = (error, req, res, next) => {
   }
 
   // ─── Client Response ──────────────────────────────────
-  if (status === 429 && error.details?.retryAfter) {
-    return res.status(status).json({
-      success: false,
-      message: error.message,
-      retryAfter: error.details.retryAfter,
-    });
-  }
 
   res.status(error.statusCode || 500).json({
     success: false,
