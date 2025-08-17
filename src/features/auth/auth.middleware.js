@@ -74,10 +74,3 @@ exports.requireTutorRole = (req, res, next) => {
   }
   next();
 };
-
-exports.requireAdminRole = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    throw new ApiError("Access denied - Admins only", 403);
-  }
-  next();
-};
