@@ -187,15 +187,3 @@ exports.changePassword = async (req, res, next) => {
     next(error);
   }
 };
-
-// onboarding will be per user role of student or mentor
-// exports.onboard = async (req, res, next) => {
-//   try {
-//     const updatedUser = await onBoardUser({ userId: req.user.id, ...req.body });
-
-//     await addStreamUser(updatedUser);
-//     sendResponse(res, 200, "Onboard successful", updatedUser);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
