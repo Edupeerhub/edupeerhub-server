@@ -8,7 +8,7 @@ const {
   TUTOR_APPROVAL_TEMPLATE,
   TUTOR_REJECTION_TEMPLATE,
 } = require("./emailTemplates");
-const { sendEmail } = require("../utils/email.utils");
+const { sendEmail } = require("./email.utils");
 
 // send verification email
 const sendVerificationEmail = async (email, verificationToken) => {
