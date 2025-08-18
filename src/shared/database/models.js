@@ -1,9 +1,6 @@
 // =====================
 // MANUAL MODEL IMPORTS
 // =====================
-
-const sequelize = require("./index");
-
 const User = require("../../features/user/user.model")();
 const Student = require("../../features/student/student.model")();
 const Tutor = require("../../features/tutor/tutor.model")();
