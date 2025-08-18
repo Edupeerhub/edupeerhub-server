@@ -1,50 +1,20 @@
 /* eslint-disable curly */
 const { Op } = require("sequelize");
 const crypto = require("crypto");
-const bcrypt = require("bcrypt");
 const { upsertStreamUser } = require("../../shared/config/stream.config");
 const ApiError = require("../../shared/utils/apiError");
-const {User} = require("../../shared/database/models");
+const { User } = require("../../shared/database/models");
+const {
+  hashPassword,
+  generateRandomAvatar,
+  generateVerificationCode,
+  generateResetToken,
+} = require("../../shared/utils/authHelpers");
+const {
+  MIN_RESEND_INTERVAL_MS,
+  VERIFICATION_CODE_EXPIRY,
+} = require("../../shared/constants/authConstants");
 
-// ==========================
-// Constants
-// ==========================
-const VERIFICATION_CODE_EXPIRY = 60 * 60 * 1000; // 1 hour
-const MIN_RESEND_INTERVAL_MS = 30 * 1000; // 30 seconds
-const VERIFICATION_CODE_LENGTH = 6;
-const SALT_ROUNDS = 10;
-// ==========================
-// Helpers
-// ==========================
-function generateVerificationCode() {
-  const code = Math.floor(
-    10 ** (VERIFICATION_CODE_LENGTH - 1) +
-      Math.random() * 9 * 10 ** (VERIFICATION_CODE_LENGTH - 1)
-  ).toString();
-
-  return {
-    code,
-    expiresAt: new Date(Date.now() + VERIFICATION_CODE_EXPIRY),
-  };
-}
-
-function generateRandomAvatar(firstName, lastName) {
-  return `https://avatar.iran.liara.run/username?username=${firstName}+${lastName}`;
-}
-
-function generateResetToken() {
-  const token = crypto.randomBytes(20).toString("hex");
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  return { token, hashedToken };
-}
-
-function hashPassword(password) {
-  return bcrypt.hash(password, SALT_ROUNDS);
-}
-
-// ==========================
-// User Services
-// ==========================
 exports.createUser = async ({ firstName, lastName, email, password }) => {
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
@@ -147,6 +117,7 @@ exports.verifyUserEmail = async (code) => {
 exports.resendVerificationEmail = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: [
+      "id",
       "isVerified",
       "verificationToken",
       "verificationTokenExpiresAt",
@@ -169,10 +140,10 @@ exports.resendVerificationEmail = async (userId) => {
   }
 
   const { code, expiresAt } = generateVerificationCode();
-  user.verificationToken = code;
-  user.verificationTokenExpiresAt = expiresAt;
-
-  await user.save();
+  await user.update({
+    verificationToken: code,
+    verificationTokenExpiresAt: expiresAt,
+  });
   return user;
 };
 
@@ -235,19 +206,6 @@ exports.changeUserPassword = async (userId, oldPassword, newPassword) => {
   await user.save();
   return { id: user.id, email: user.email };
 };
-
-// exports.onBoardUser = async (userData) => {
-//   const { userId, ...updates } = userData;
-
-//   const [updatedCount, [updatedUser]] = await User.update(
-//     { ...updates, isOnboarded: true },
-//     { where: { id: userId }, returning: true }
-//   );
-
-//   if (!updatedCount) throw new ApiError("User not found", 404);
-
-//   return updatedUser;
-// };
 
 exports.addStreamUser = async ({
   id,

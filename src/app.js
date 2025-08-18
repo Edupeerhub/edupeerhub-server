@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const errorHandler = require("./shared/middlewares/error.middleware");
 const authRoutes = require("./features/auth/auth.route");
+const adminRoutes = require("./features/admin/admin.route");
 const ApiError = require("./shared/utils/apiError");
 const sendResponse = require("./shared/utils/sendResponse");
 
@@ -29,10 +30,12 @@ app.use(httpLogger);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/api/health", (req, res) => {
   sendResponse(res, 200, "Server is healthy", {
     status: "OK",
+    uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
