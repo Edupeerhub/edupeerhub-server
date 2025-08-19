@@ -1,46 +1,51 @@
+const sequelize = require("./index");
+
+
 // =====================
 // MANUAL MODEL IMPORTS
 // =====================
 
-const sequelize = require("./index");
+const definers = [
+  require("../../features/user/user.model"),
+  require("../../features/student/student.model"),
+  require("../../features/tutor/tutor.model"),
+  require("../../features/admin/admin.model"),
+  require("../../features/events/events.model"),
+  require("../../features/subject/subject.model"),
+];
 
-const User = require("../../features/user/user.model")();
-const Student = require("../../features/student/student.model")();
-const Tutor = require("../../features/tutor/tutor.model")();
-const Admin = require("../../features/admin/admin.model")();
-const EventLog = require("../../features/events/events.model")();
+///Add models
+for (const definer of definers) {
+  definer(sequelize);
+}
 
-const Subject = require("../../features/subject/subject.model")();
-// Store models in db object
-const db = {
-  User,
-  Student,
-  Tutor,
-  Subject,
-  Admin,
-  EventLog,
-};
+//Associate models
+for (const model of sequelize.modelManager.models) {
+  model?.associate?.call(model, sequelize.models);
+}// Store models in db object
+// const db = {
+//   // User,
+//   Student,
+//   Tutor,
+//   Subject,
+//   Admin,
+// };
 
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName]?.associate) {
-    db[modelName].associate(db);
-  }
-});
+// Object.keys(db).forEach((modelName) => {
+//   if (db[modelName]?.associate) {
+//     db[modelName].associate(db);
+//   }
+// });
 
-// Subject.bulkCreate([
-//   { name: "English", description: "English language", is_active: true },
-//   { name: "Mathematics", description: "Mathematics", is_active: true },
-//   { name: "Physics", description: "Physics", is_active: true },
-//   { name: "Chemistry", description: "Chemistry", is_active: true },
-// ]);
+
 
 module.exports = {
-  User,
-  Student,
-  Tutor,
-  Subject,
-  Admin,
-  EventLog,
+  User: sequelize.models.User,
+  Student: sequelize.models.Student,
+  Tutor: sequelize.models.Tutor,
+  Subject: sequelize.models.Subject,
+  Admin: sequelize.models.Admin,
+  EventLog: sequelize.models.EventLog,
 };
 
 // OPTIONAL: AUTO-LOADER WITH GLOB (SHORTER)
