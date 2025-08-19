@@ -1,6 +1,7 @@
 const sendResponse = require("../../shared/utils/sendResponse");
 const tutorService = require("./tutor.service");
-;
+
+const queryStringToList = require("../../shared/utils/listInQuery");
 exports.getTutors = async (req, res, next) => {
   try {
     //params
@@ -8,9 +9,9 @@ exports.getTutors = async (req, res, next) => {
     const limit = req.query?.limit ?? 10;
 
     //filters
-    const subjects = req.query.subjects?.split(",");
-    const availability = req.query.availability?.split(",");
-    const ratings = req.query.rating?.split(",");
+    const subjects = queryStringToList(req.query?.subjects);
+    const availability = queryStringToList(req.query?.availability);
+    const ratings = queryStringToList(req.query?.rating);
 
     const tutors = await tutorService.getTutors({
       page: page,
