@@ -1,0 +1,64 @@
+const express = require("express");
+
+const validate = require("../../shared/middlewares/validate.middleware");
+
+const { protectRoute } = require("../auth/auth.middleware");
+const { Subject } = require("../../shared/database/models");
+const { requireAdmin } = require("../admin/admin.middleware");
+const sendResponse = require("../../shared/utils/sendResponse");
+
+const router = express.Router();
+
+router.use(protectRoute);
+
+//get subjects
+router.get("/", async (req, res) => {
+  const query = {};
+  const userOrTutor = req.user.role === "tutor" || req.user.role === "student";
+
+  if (userOrTutor) {
+    query.where = {
+      isSctive: true,
+    };
+  }
+  const subjects = await Subject.findAll({
+    where: query,
+  });
+
+  sendResponse(res, 200, "success", subjects);
+});
+
+//add subject
+router.post("/", requireAdmin, async (req, res) => {
+  const newSubject = await Subject.create(req.body);
+  sendResponse(res, 200, "success", newSubject);
+});
+
+//update subject
+router.put("/:id", requireAdmin, async (req, res) => {
+  const [, [updatedSubject]] = await Subject.update(req.body, {
+    where: {
+      id: req.params.id,
+    },
+    returning: true,
+  });
+  sendResponse(res, 200, "success", updatedSubject);
+});
+
+//delete subject
+
+router.delete("/:id", requireAdmin, async (req, res) => {
+  const deleteCount = await Subject.destroy({
+    where: {
+      id: req.params.id,
+    },
+  });
+
+  if (deleteCount === 0) {
+    sendResponse(res, 404, "Subject does not exist");
+    return;
+  }
+  sendResponse(res, 200, "success");
+});
+
+module.exports = router;

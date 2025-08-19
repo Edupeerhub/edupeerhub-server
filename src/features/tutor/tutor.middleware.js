@@ -27,7 +27,7 @@ exports.canEditProfileValidator = async (req, res, next) => {
     return;
   }
 
-  sendResponse(res, 403,"forbidden", );
+  sendResponse(res, 403,"Access denied - cannot modify resource", );
 };
 //tutor search validator
 exports.searchValidator = async (req, res, next) => {
