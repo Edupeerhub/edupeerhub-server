@@ -10,11 +10,13 @@ const Tutor = require("../../features/tutor/tutor.model")();
 const Admin = require("../../features/admin/admin.model")();
 const EventLog = require("../../features/events/events.model")();
 
+const Subject = require("../../features/subject/subject.model")();
 // Store models in db object
 const db = {
   User,
   Student,
   Tutor,
+  Subject,
   Admin,
   EventLog,
 };
@@ -25,10 +27,18 @@ Object.keys(db).forEach((modelName) => {
   }
 });
 
+// Subject.bulkCreate([
+//   { name: "English", description: "English language", is_active: true },
+//   { name: "Mathematics", description: "Mathematics", is_active: true },
+//   { name: "Physics", description: "Physics", is_active: true },
+//   { name: "Chemistry", description: "Chemistry", is_active: true },
+// ]);
+
 module.exports = {
   User,
   Student,
   Tutor,
+  Subject,
   Admin,
   EventLog,
 };

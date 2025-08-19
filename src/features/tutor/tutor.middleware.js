@@ -13,7 +13,7 @@ exports.profileValidator = async (req, res, next) => {
 
 exports.canEditProfileValidator = async (req, res, next) => {
   const userId = req.user.id;
-  const profileId = req.path.id;
+  const profileId = req.params.id;
   //own profile
 
   if (userId === profileId) {

@@ -1,7 +1,5 @@
-const sequelize = require("../index");
+const sequelize = require("../../shared/database/index");
 const DataTypes = require("sequelize");
-
-const { Tutor, Student } = require("../models");
 
 module.exports = () => {
   const Subject = sequelize.define(
@@ -15,6 +13,7 @@ module.exports = () => {
       name: {
         type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
       },
       description: {
         type: DataTypes.TEXT,
@@ -32,13 +31,24 @@ module.exports = () => {
     }
   );
 
-  //Tutor associations
-  Tutor.hasMany(Subject, { through: "tutor_subjects" });
-  Subject.hasMany(Tutor, { through: "tutor_subjects" });
+  Subject.associate = (models) => {
+    //Tutor associations
 
-  //Tutor associations
-  Student.hasMany(Subject, { through: "student_subjects" });
-  Subject.hasMany(Student, { through: "student_subjects" });
+    Subject.belongsToMany(models.Tutor, {
+      through: "tutor_subjects",
+      // uniqueKey: "subjectId",
+      // otherKey: "userId",
+    });
+
+    //Student associations
+    models.Student.belongsToMany(Subject, { through: "student_subjects" });
+    Subject.belongsToMany(models.Student, {
+      through: "student_subjects",
+      as: "student",
+    });
+  };
 
   return Subject;
 };
+
+
