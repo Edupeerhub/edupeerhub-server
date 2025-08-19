@@ -13,12 +13,6 @@ const errorHandler = (error, req, res, next) => {
 
   // ─── Error Normalization ─────────────────────────────
 
-  // Sequelize validation errors (e.g., notNull, len, isEmail, etc.)
-  if (error instanceof ValidationError) {
-    const messages = error.errors.map((err) => err.message);
-    error = new ApiError("Validation error", 400, messages);
-  }
-
   // Sequelize unique constraint error (e.g., duplicate email)
   if (error instanceof UniqueConstraintError) {
     const field = error.errors[0].path;
@@ -27,6 +21,12 @@ const errorHandler = (error, req, res, next) => {
       field.charAt(0).toUpperCase() + field.slice(1)
     } '${value}' already exists`;
     error = new ApiError("Duplicate resource", 409, message);
+  }
+
+  // Sequelize validation errors (e.g., notNull, len, isEmail, etc.)
+  if (error instanceof ValidationError) {
+    const messages = error.errors.map((err) => err.message);
+    error = new ApiError("Validation error", 400, messages);
   }
 
   // Sequelize general DB errors
