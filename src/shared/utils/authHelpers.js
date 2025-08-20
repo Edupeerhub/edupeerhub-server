@@ -4,7 +4,7 @@ const {
   VERIFICATION_CODE_EXPIRY,
   VERIFICATION_CODE_LENGTH,
   SALT_ROUNDS,
-} = require("../constants/authConstants");
+} = require("@src/shared/constants/authConstants");
 
 // Generate a numeric verification code
 function generateVerificationCode() {

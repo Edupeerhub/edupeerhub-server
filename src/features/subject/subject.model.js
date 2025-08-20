@@ -1,4 +1,4 @@
-const sequelize = require("../../shared/database/index");
+const sequelize = require("@src/shared/database/index");
 const DataTypes = require("sequelize");
 
 module.exports = () => {
@@ -50,5 +50,3 @@ module.exports = () => {
 
   return Subject;
 };
-
-

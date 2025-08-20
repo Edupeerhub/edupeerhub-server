@@ -1,5 +1,5 @@
-const ApiError = require("../utils/apiError");
-const logger = require("../utils/logger");
+const ApiError = require("@utils/apiError");
+const logger = require("@utils/logger");
 const {
   ValidationError,
   UniqueConstraintError,

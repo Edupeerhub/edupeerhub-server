@@ -1,5 +1,5 @@
-const { Admin } = require("../../shared/database/models");
-const ApiError = require("../../shared/utils/apiError");
+const { Admin } = require("@models");
+const ApiError = require("@utils/apiError");
 
 exports.requireAdmin = async (req, res, next) => {
   if (req.user.role !== "admin") {

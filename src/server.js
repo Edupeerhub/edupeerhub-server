@@ -14,7 +14,7 @@ if (fs.existsSync(envFilePath)) {
 }
 
 const app = require("./app");
-const sequelize = require("./shared/database/index");
+const sequelize = require("@src/shared/database/index");
 
 const PORT = process.env.PORT || 3000;
 

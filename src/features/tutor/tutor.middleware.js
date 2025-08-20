@@ -1,5 +1,4 @@
-const sendResponse = require("../../shared/utils/sendResponse");
-;
+const sendResponse = require("@utils/sendResponse");
 //availability validator
 
 exports.availabilityValidator = async (req, res, next) => {
@@ -27,7 +26,7 @@ exports.canEditProfileValidator = async (req, res, next) => {
     return;
   }
 
-  sendResponse(res, 403,"Access denied - cannot modify resource", );
+  sendResponse(res, 403, "Access denied - cannot modify resource");
 };
 //tutor search validator
 exports.searchValidator = async (req, res, next) => {

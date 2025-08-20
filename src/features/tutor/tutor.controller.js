@@ -1,7 +1,7 @@
-const sendResponse = require("../../shared/utils/sendResponse");
+const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
 
-const queryStringToList = require("../../shared/utils/listInQuery");
+const queryStringToList = require("@utils/listInQuery");
 exports.getTutors = async (req, res, next) => {
   try {
     //params

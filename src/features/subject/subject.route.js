@@ -1,11 +1,11 @@
 const express = require("express");
 
-const validate = require("../../shared/middlewares/validate.middleware");
+const validate = require("@src/shared/middlewares/validate.middleware");
 
-const { protectRoute } = require("../auth/auth.middleware");
-const { Subject } = require("../../shared/database/models");
-const { requireAdmin } = require("../admin/admin.middleware");
-const sendResponse = require("../../shared/utils/sendResponse");
+const { protectRoute } = require("@features/auth/auth.middleware");
+const { Subject } = require("@models");
+const { requireAdmin } = require("@features/admin/admin.middleware");
+const sendResponse = require("@utils/sendResponse");
 
 const router = express.Router();
 
@@ -60,5 +60,12 @@ router.delete("/:id", requireAdmin, async (req, res) => {
   }
   sendResponse(res, 200, "success");
 });
+
+// Subject.bulkCreate([
+//   { name: "English", description: "English language", is_active: true },
+//   { name: "Mathematics", description: "Mathematics", is_active: true },
+//   { name: "Physics", description: "Physics", is_active: true },
+//   { name: "Chemistry", description: "Chemistry", is_active: true },
+// ]);
 
 module.exports = router;

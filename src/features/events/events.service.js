@@ -1,5 +1,5 @@
-const { EventLog } = require("../../shared/database/models");
-const ApiError = require("../../shared/utils/apiError");
+const { EventLog } = require("@/models");
+const ApiError = require("@utils/apiError");
 
 /**
  * Logs an analytic event to the database.

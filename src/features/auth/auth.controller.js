@@ -1,4 +1,4 @@
-const sendResponse = require("../../shared/utils/sendResponse");
+const sendResponse = require("@utils/sendResponse");
 const {
   addStreamUser,
   changeUserPassword,
@@ -16,9 +16,9 @@ const {
   sendResetSuccessEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
-} = require("../../shared/mailtrap/emails");
-const trackEvent = require("../events/events.service");
-const eventTypes = require("../events/eventTypes");
+} = require("@src/shared/mailtrap/emails");
+const trackEvent = require("@features/events/events.service");
+const eventTypes = require("@features/events/eventTypes");
 const { date } = require("joi");
 
 exports.signup = async (req, res, next) => {

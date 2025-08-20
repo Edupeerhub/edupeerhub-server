@@ -1,6 +1,6 @@
 const rateLimit = require("express-rate-limit");
-const ApiError = require("../utils/apiError");
-const logger = require("../utils/logger");
+const ApiError = require("@utils/apiError");
+const logger = require("@utils/logger");
 
 /**
  * Create a rate limiter middleware.

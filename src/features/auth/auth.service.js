@@ -1,19 +1,19 @@
 /* eslint-disable curly */
 const { Op } = require("sequelize");
 const crypto = require("crypto");
-const { upsertStreamUser } = require("../../shared/config/stream.config");
-const ApiError = require("../../shared/utils/apiError");
-const { User } = require("../../shared/database/models");
+const { upsertStreamUser } = require("@src/shared/config/stream.config");
+const ApiError = require("@utils/apiError");
+const { User } = require("@models");
 const {
   hashPassword,
   generateRandomAvatar,
   generateVerificationCode,
   generateResetToken,
-} = require("../../shared/utils/authHelpers");
+} = require("@utils/authHelpers");
 const {
   MIN_RESEND_INTERVAL_MS,
   VERIFICATION_CODE_EXPIRY,
-} = require("../../shared/constants/authConstants");
+} = require("@src/shared/constants/authConstants");
 
 exports.createUser = async ({ firstName, lastName, email, password }) => {
   const existingUser = await User.findOne({ where: { email } });

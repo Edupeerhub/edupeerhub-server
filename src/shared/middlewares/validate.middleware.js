@@ -1,4 +1,4 @@
-const ApiError = require("../utils/apiError");
+const ApiError = require("@utils/apiError");
 
 // Helper to prevent leaking sensitive values in validation errors
 const shouldIncludeValue = (fieldName) => {

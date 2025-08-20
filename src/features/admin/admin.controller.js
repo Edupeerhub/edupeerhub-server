@@ -1,4 +1,4 @@
-const sendResponse = require("../../shared/utils/sendResponse");
+const sendResponse = require("@utils/sendResponse");
 const adminService = require("./admin.service");
 
 // =====================

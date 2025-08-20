@@ -1,10 +1,10 @@
 const express = require("express");
 
-const validate = require("../../shared/middlewares/validate.middleware");
+const validate = require("@src/shared/middlewares/validate.middleware");
 
-const { protectRoute } = require("../auth/auth.middleware");
-const createRateLimiter = require("../../shared/middlewares/rateLimit.middleware");
-const rateLimitConfig = require("../../shared/config/rateLimit.config");
+const { protectRoute } = require("@features/auth/auth.middleware");
+const createRateLimiter = require("@src/shared/middlewares/rateLimit.middleware");
+const rateLimitConfig = require("@src/shared/config/rateLimit.config");
 const tutorController = require("./tutor.controller");
 const {
   searchValidator,
@@ -23,7 +23,12 @@ router.get("/:id", tutorController.getTutor);
 // POST /api/tutors         // Create tutor profile
 router.post("/", profileValidator, tutorController.createTutor);
 // PUT /api/tutors/:id     // Update tutor profile
-router.put("/:id", profileValidator, canEditProfileValidator, tutorController.updateTutor);
+router.put(
+  "/:id",
+  profileValidator,
+  canEditProfileValidator,
+  tutorController.updateTutor
+);
 
 // GET /api/tutors/:id/schedule  // Get tutor's schedule
 router.get(

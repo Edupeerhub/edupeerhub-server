@@ -1,10 +1,10 @@
 const express = require("express");
 const authController = require("./auth.controller");
-const validate = require("../../shared/middlewares/validate.middleware");
+const validate = require("@src/shared/middlewares/validate.middleware");
 const authValidation = require("./auth.validator");
 const { protectRoute } = require("./auth.middleware");
-const createRateLimiter = require("../../shared/middlewares/rateLimit.middleware");
-const rateLimitConfig = require("../../shared/config/rateLimit.config");
+const createRateLimiter = require("@src/shared/middlewares/rateLimit.middleware");
+const rateLimitConfig = require("@src/shared/config/rateLimit.config");
 
 const router = express.Router();
 
