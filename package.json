@@ -60,13 +60,15 @@
   "_moduleAliases": {
     "@src": "./src",
     "@models": "./src/shared/database/models",
-    "@utils": "src/shared/utils"
+    "@utils": "src/shared/utils",
+    "@features": ["./src/features"]
   },
   "jest": {
     "moduleNameMapper": {
       "@src(.*)": "<rootDir>/src/$1",
       "@models(.*)": "<rootDir>/src/shared/database/models/$1",
-      "@utils/(.*)": "<rootDir>/src/shared/utils/$1"
+      "@utils/(.*)": "<rootDir>/src/shared/utils/$1",
+      "@features/(.*)": ["./src/features/$1"]
     }
   }
 }
