@@ -21,11 +21,32 @@ module.exports = () => {
     {
       tableName: "student_profiles",
       underscored: true,
+      paranoid: true
     }
   );
 
   Student.associate = (models) => {
-    Student.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    // one - one relationship w/user
+    Student.belongsTo(models.User, {
+       foreignKey: "user_id", 
+       as: "user" 
+      });
+
+    // one to many relationship w/subject  
+    Student.belongsToMany(models.Subject, {
+      through: models.StudentSubject,
+      foreignKey: "student_id",
+      otherKey: "subject_id",
+      as: "subjects"
+    });
+    
+    // one to many relationship w/exams
+    Student.belongsToMany(models.StudentSubject, {
+      through: models.StudentExam,
+      foreignKey: "student_id",
+      otherKey: "exam_id",
+      as: "exams"
+    })
   };
 
   return Student;

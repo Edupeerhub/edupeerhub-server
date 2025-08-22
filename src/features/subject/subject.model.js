@@ -1,4 +1,7 @@
-module.exports = (sequelize, DataTypes) => {
+const sequelize = require("../../shared/database/index")
+const DataTypes = require ("sequelize")
+
+module.exports = () => {
   const Subject = sequelize.define(
     "Subject",
     {
@@ -18,12 +21,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
+        field: "is_active"
       }
     },
     {
       tableName: "subjects",
       underscored: true,
       timestamps: true,
+      paranoid: true
     }
   );
 
