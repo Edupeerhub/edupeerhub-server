@@ -62,13 +62,6 @@
     "@models": "./src/shared/database/models",
     "@utils": "src/shared/utils",
     "@features": "./src/features"
-  },
-  "jest": {
-    "moduleNameMapper": {
-    "@src(.*)": "<rootDir>/src/$1",
-    "@models": "<rootDir>/src/shared/database/models",
-    "@utils/(.*)": "<rootDir>/src/shared/utils/$1",
-    "@features/(.*)": ["<rootDir>/src/features/$1"]
-    }
   }
+
 }

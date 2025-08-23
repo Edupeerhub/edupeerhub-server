@@ -1,4 +1,4 @@
-const { EventLog } = require("@/models");
+const { EventLog } = require("@models");
 const ApiError = require("@utils/apiError");
 
 /**
