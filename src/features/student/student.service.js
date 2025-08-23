@@ -38,6 +38,16 @@ const createStudent = async ({ userId, learningGoals, subjectIds = [], examIds =
     
     // Add subjects if provided
     if (subjectIds.length > 0) {
+      // Verify all subject IDs exist
+      const subjects = await Subject.findAll({
+        where: { id: subjectIds },
+        transaction
+      });
+      
+      if (subjects.length !== subjectIds.length) {
+        throw new ApiError(400, 'One or more subject IDs are invalid');
+      }
+      
       const subjectRecords = subjectIds.map(subjectId => ({
         studentId: student.id,
         subjectId
@@ -47,6 +57,16 @@ const createStudent = async ({ userId, learningGoals, subjectIds = [], examIds =
     
     // Add exams if provided
     if (examIds.length > 0) {
+      // Verify all exam IDs exist
+      const exams = await Exam.findAll({
+        where: { id: examIds },
+        transaction
+      });
+      
+      if (exams.length !== examIds.length) {
+        throw new ApiError(400, 'One or more exam IDs are invalid');
+      }
+      
       const examRecords = examIds.map(examId => ({
         studentId: student.id,
         examId
@@ -89,6 +109,16 @@ const updateStudent = async (studentId, { learningGoals, subjectIds = [], examId
     });
     
     if (subjectIds.length > 0) {
+      // Verify all subject IDs exist
+      const subjects = await Subject.findAll({
+        where: { id: subjectIds },
+        transaction
+      });
+      
+      if (subjects.length !== subjectIds.length) {
+        throw new ApiError(400, 'One or more subject IDs are invalid');
+      }
+      
       const subjectRecords = subjectIds.map(subjectId => ({
         studentId,
         subjectId
@@ -103,6 +133,16 @@ const updateStudent = async (studentId, { learningGoals, subjectIds = [], examId
     });
     
     if (examIds.length > 0) {
+      // Verify all exam IDs exist
+      const exams = await Exam.findAll({
+        where: { id: examIds },
+        transaction
+      });
+      
+      if (exams.length !== examIds.length) {
+        throw new ApiError(400, 'One or more exam IDs are invalid');
+      }
+      
       const examRecords = examIds.map(examId => ({
         studentId,
         examId
@@ -121,7 +161,7 @@ const updateStudent = async (studentId, { learningGoals, subjectIds = [], examId
 };
 
 /**
- * Complete student onboarding (you already have this)
+ * Complete student onboarding
  */
 const completeStudentOnboarding = async (userId, onboardingData) => {
   const transaction = await sequelize.transaction();

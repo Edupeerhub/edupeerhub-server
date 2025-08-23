@@ -7,8 +7,10 @@ const errorHandler = require("./shared/middlewares/error.middleware");
 const authRoutes = require("./features/auth/auth.route");
 const ApiError = require("./shared/utils/apiError");
 const sendResponse = require("./shared/utils/sendResponse");
+const studentRoutes = require("./features/student/student.route")
 
 const app = express();
+
 
 // Trust first proxy
 app.set("trust proxy", 1);
@@ -29,6 +31,7 @@ app.use(httpLogger);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/students", studentRoutes)
 
 app.get("/api/health", (req, res) => {
   sendResponse(res, 200, "Server is healthy", {

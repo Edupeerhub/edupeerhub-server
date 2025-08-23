@@ -41,7 +41,7 @@ module.exports = () => {
     });
     
     // one to many relationship w/exams
-    Student.belongsToMany(models.StudentSubject, {
+    Student.belongsToMany(models.Exam, {
       through: models.StudentExam,
       foreignKey: "student_id",
       otherKey: "exam_id",
