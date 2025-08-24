@@ -1,7 +1,6 @@
-const sequelize = require("@src/shared/database/index");
 const { DataTypes } = require("sequelize");
 
-module.exports = () => {
+module.exports = (sequelize) => {
   const Tutor = sequelize.define(
     "Tutor",
     {
@@ -28,7 +27,7 @@ module.exports = () => {
       },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
-        defaultValue: "active",
+        defaultValue: "hidden",
         allowNull: false,
       },
       education: {
@@ -43,6 +42,15 @@ module.exports = () => {
     {
       tableName: "tutor_profiles",
       underscored: true,
+      defaultScope: {
+        include: [
+          {
+            model: sequelize.models.Subject,
+            through: { attributes: [] },
+            as: "subjects",
+          },
+        ],
+      },
     }
   );
 
@@ -55,8 +63,6 @@ module.exports = () => {
     Tutor.belongsToMany(models.Subject, {
       through: "tutor_subjects",
       as: "subjects",
-      // otherKey: "subjectId",
-      // uniqueKey: "userId",
     });
   };
 

@@ -3,8 +3,9 @@ const { where, Op } = require("sequelize");
 const { Subject, User, Tutor } = require("../../shared/database/models");
 const sequelize = require("../../shared/database");
 
-exports.createTutor = async ({ tutor }) => {
-  const newTutor = await Tutor.create(tutor);
+exports.createTutor = async ({ profile, userId }) => {
+  const newTutor = await Tutor.create(profile);
+  await User.update({ role: "tutor" }, { where: { id: userId } });
 
   return newTutor;
 };
@@ -15,11 +16,6 @@ exports.getTutor = async (userId) => {
       {
         model: Subject,
         as: "subjects",
-        // attributes: ["id", "name", "description"],
-        attributes: {exclude: ["tutor_subjects"]}
-        
-        // Uncomment the next line if you want to exclude the
-        // through: { attributes: [] },
       },
     ],
   });
@@ -33,31 +29,9 @@ exports.getTutors = async ({
   limit = 10,
   page = 1,
 }) => {
-  // return await sequelize.query(
-  //   `SELECT t.*, s.name as subject_name
-  //    FROM tutor_profiles t
-  //    INNER JOIN tutor_subjects ts ON t.user_id = ts.tutor_user_id
-  //    INNER JOIN subjects s ON ts.subject_id = s.id
-  //    WHERE
-  //   --  t.approval_status = :approvalStatus
-  //   --    AND t.profile_visibility = :profileVisibility
-  //     --  AND
-  //       s.name IN (:subjects)
-  //    LIMIT :limit OFFSET :offset`,
-  //   {
-  //     replacements: {
-  //       approvalStatus,
-  //       profileVisibility,
-  //       subjects,
-  //       limit,
-  //       offset: (page - 1) * limit,
-  //     },
-  //     type: sequelize.QueryTypes.SELECT,
-  //   }
-  // );
   const query = {};
 
-  if (subjects && subjects.length >0 ) {
+  if (subjects && subjects.length > 0) {
     query.name = {
       [Op.in]: subjects,
     };
@@ -100,7 +74,7 @@ exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   });
 
   await newTutorProfile.setSubjects(selectedSubjects);
-  newTutorProfile  = await this.getTutor(id);
+  newTutorProfile = await this.getTutor(id);
   return newTutorProfile;
 };
 

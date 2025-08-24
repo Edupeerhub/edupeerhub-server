@@ -67,7 +67,7 @@ const errorHandler = (error, req, res, next) => {
         user: req.user ? { id: req.user.id, email: req.user.email } : undefined,
       });
     } else {
-      logger.error("Error occurred", baseLog);
+      logger.error("Error occurred", { baseLog, stack: error.stack });
     }
   }
 

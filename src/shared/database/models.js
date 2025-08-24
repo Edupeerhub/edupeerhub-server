@@ -8,10 +8,10 @@ const sequelize = require("./index");
 const definers = [
   require("@features/user/user.model"),
   require("@features/student/student.model"),
+  require("@features/subject/subject.model"),
   require("@features/tutor/tutor.model"),
   require("@features/admin/admin.model"),
   require("@features/events/events.model"),
-  require("@features/subject/subject.model"),
 ];
 
 ///Add models

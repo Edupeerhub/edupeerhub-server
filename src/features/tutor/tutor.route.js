@@ -26,7 +26,7 @@ router.post("/", profileValidator, tutorController.createTutor);
 router.put(
   "/:id",
   profileValidator,
-  canEditProfileValidator,
+  // canEditProfileValidator,
   tutorController.updateTutor
 );
 
