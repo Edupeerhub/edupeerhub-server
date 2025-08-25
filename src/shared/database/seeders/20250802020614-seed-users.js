@@ -1,14 +1,14 @@
 "use strict";
-const { v4: uuidv4 } = require("uuid");
+// const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 
 module.exports = {
   async up(queryInterface) {
     const passwordHash = await bcrypt.hash("Password123!", 10);
 
-    const adminId = uuidv4();
-    const tutorId = uuidv4();
-    const studentId = uuidv4();
+    const adminId = "00000000-0000-0000-0000-000000000001";
+    const tutorId = "00000000-0000-0000-0000-000000000002";
+    const studentId = "00000000-0000-0000-0000-000000000003";
 
     await queryInterface.bulkInsert(
       "users",
