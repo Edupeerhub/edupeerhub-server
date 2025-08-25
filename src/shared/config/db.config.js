@@ -6,6 +6,12 @@ module.exports = {
         use_env_variable: "DATABASE_URL",
         dialect: "postgres",
         logging: console.log,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        },
         pool: {
           max: 5,
           min: 0,
