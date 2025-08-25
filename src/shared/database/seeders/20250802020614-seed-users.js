@@ -1,64 +1,49 @@
 "use strict";
-// const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require("uuid");
 const bcrypt = require("bcrypt");
 
 module.exports = {
   async up(queryInterface) {
     const passwordHash = await bcrypt.hash("Password123!", 10);
 
-    const adminId = "00000000-0000-0000-0000-000000000001";
-    const tutorId = "00000000-0000-0000-0000-000000000002";
-    const studentId = "00000000-0000-0000-0000-000000000003";
+    // Helper to insert user if not exists
+    const ensureUser = async (email, role, extraFields = {}) => {
+      const [rows] = await queryInterface.sequelize.query(
+        `SELECT id FROM users WHERE email = :email`,
+        { replacements: { email } }
+      );
 
-    await queryInterface.bulkInsert(
-      "users",
-      [
-        {
-          id: adminId,
-          email: "admin@example.com",
-          first_name: "Default",
-          last_name: "Admin",
-          password_hash: passwordHash,
-          role: "admin",
-          is_verified: true,
-          is_onboarded: true,
-          account_status: "active",
-          is_deleted: false,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        {
-          id: tutorId,
-          email: "tutor@example.com",
-          first_name: "John",
-          last_name: "Tutor",
-          password_hash: passwordHash,
-          role: "tutor",
-          is_verified: true,
-          is_onboarded: true,
-          account_status: "active",
-          is_deleted: false,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-        {
-          id: studentId,
-          email: "student@example.com",
-          first_name: "Jane",
-          last_name: "Student",
-          password_hash: passwordHash,
-          role: "student",
-          is_verified: true,
-          is_onboarded: true,
-          account_status: "active",
-          is_deleted: false,
-          created_at: new Date(),
-          updated_at: new Date(),
-        },
-      ],
-      { ignoreDuplicates: true }
-    );
+      let userId;
+      if (rows.length === 0) {
+        userId = uuidv4();
+        await queryInterface.bulkInsert("users", [
+          {
+            id: userId,
+            email,
+            first_name: extraFields.first_name || "Default",
+            last_name: extraFields.last_name || role,
+            password_hash: passwordHash,
+            role,
+            is_verified: true,
+            is_onboarded: true,
+            account_status: "active",
+            is_deleted: false,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ]);
+      } else {
+        userId = rows[0].id;
+      }
 
+      return userId;
+    };
+
+    // Admin
+    const adminId = await ensureUser("admin@example.com", "admin", {
+      first_name: "Default",
+      last_name: "Admin",
+    });
     await queryInterface.bulkInsert(
       "admin_profiles",
       [
@@ -72,6 +57,11 @@ module.exports = {
       { ignoreDuplicates: true }
     );
 
+    // Tutor
+    const tutorId = await ensureUser("tutor@example.com", "tutor", {
+      first_name: "John",
+      last_name: "Tutor",
+    });
     await queryInterface.bulkInsert(
       "tutor_profiles",
       [
@@ -90,6 +80,11 @@ module.exports = {
       { ignoreDuplicates: true }
     );
 
+    // Student
+    const studentId = await ensureUser("student@example.com", "student", {
+      first_name: "Jane",
+      last_name: "Student",
+    });
     await queryInterface.bulkInsert(
       "student_profiles",
       [
@@ -109,6 +104,8 @@ module.exports = {
     await queryInterface.bulkDelete("admin_profiles", null, {});
     await queryInterface.bulkDelete("tutor_profiles", null, {});
     await queryInterface.bulkDelete("student_profiles", null, {});
-    await queryInterface.bulkDelete("users", null, {});
+    await queryInterface.bulkDelete("users", {
+      email: ["admin@example.com", "tutor@example.com", "student@example.com"],
+    });
   },
 };
