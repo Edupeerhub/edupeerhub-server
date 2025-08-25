@@ -108,7 +108,12 @@ exports.PASSWORD_CHANGE_SUCCESS_TEMPLATE = () =>
   `
   );
 
-exports.UNREAD_MESSAGE_TEMPLATE = () =>
+exports.UNREAD_MESSAGE_TEMPLATE = (
+  userName,
+  unreadCount,
+  senderNames,
+  appURL
+) =>
   emailWrapper(
     "Unread Messages",
     `

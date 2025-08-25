@@ -18,10 +18,7 @@ const sendVerificationEmail = async (email, verificationToken) => {
     await sendEmail({
       to: recipient,
       subject: "Verify your email",
-      html: VERIFICATION_EMAIL_TEMPLATE.replace(
-        "{verificationCode}",
-        verificationToken
-      ),
+      html: VERIFICATION_EMAIL_TEMPLATE(verificationToken),
       category: "Email Verification",
     });
   } catch (error) {
@@ -59,7 +56,7 @@ const sendPasswordResetEmail = async (email, resetURL) => {
     await sendEmail({
       to: recipient,
       subject: "Reset your password",
-      html: PASSWORD_RESET_REQUEST_TEMPLATE.replace("{resetURL}", resetURL),
+      html: PASSWORD_RESET_REQUEST_TEMPLATE(resetURL),
       category: "Password Reset",
     });
   } catch (error) {
@@ -79,7 +76,7 @@ const sendResetSuccessEmail = async (email) => {
     await sendEmail({
       to: recipient,
       subject: "Password Reset Successful",
-      html: PASSWORD_RESET_SUCCESS_TEMPLATE,
+      html: PASSWORD_RESET_SUCCESS_TEMPLATE(),
       category: "Password Reset",
     });
   } catch (error) {
@@ -97,7 +94,7 @@ const sendPasswordChangeSuccessEmail = async (email) => {
     await sendEmail({
       to: recipient,
       subject: "Password Change Successful",
-      html: PASSWORD_CHANGE_SUCCESS_TEMPLATE,
+      html: PASSWORD_CHANGE_SUCCESS_TEMPLATE(),
       category: "Password Change",
     });
   } catch (error) {
@@ -142,10 +139,7 @@ const sendUnreadMessageEmail = async (
       subject: `You have ${unreadCount} unread message${
         unreadCount > 1 ? "s" : ""
       }`,
-      html: UNREAD_MESSAGE_TEMPLATE.replace("{userName}", userName)
-        .replace("{unreadCount}", unreadCount)
-        .replace("{senderNames}", senderNames)
-        .replace("{appURL}", appURL),
+      html: UNREAD_MESSAGE_TEMPLATE(userName, unreadCount, senderNames, appURL),
       category: "Unread Messages",
     });
   } catch (error) {
