@@ -101,9 +101,49 @@ module.exports = {
 				return user.toJSON();
 		},
     // update user
-        
-    
-    // delete user
+	async updateStudent(id, data) {
+		const payload = data || {};
+		const student = await Student.findByPk(id);
+			if (!student) {
+				throw new ApiError("Student not found", 404);
+			}
+
+			if (payload.gradeLevel) {
+				student.gradeLevel = payload.gradeLevel;
+			}
+			if (payload.learningGoals) {
+				const goals = Array.isArray(payload.learningGoals)
+					? payload.learningGoals.map((g) => (typeof g === "string" ? g : g.title))
+					: [];
+				student.learningGoals = JSON.stringify(goals);
+			}
+			if (typeof payload.isOnboarded === "boolean") {
+				student.isOnboarded = payload.isOnboarded;
+			}
+
+		await student.save();
+
+		// ensure user is marked onboarded after profile update
+		try {
+			const userId = student.userId || student.id;
+			const user = await User.findByPk(userId);
+			if (user && !user.isOnboarded) {
+				await user.update({ isOnboarded: true });
+			}
+		} catch (err) {
+			console.error('Failed to set user.isOnboarded on update:', err.message || err);
+		}
+
+			if (payload.subjects) {
+				await student.setSubjects(payload.subjects);
+			}
+			if (payload.exams) {
+				await student.setExams(payload.exams);
+			}
+
+		return this.getStudentById(student.userId || student.id);
+	},
+
 	async deleteStudent(id) {
 		const student = await Student.findByPk(id);
 			if (!student) {
