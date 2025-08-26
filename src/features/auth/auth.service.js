@@ -24,7 +24,6 @@ exports.createUser = async ({ firstName, lastName, email, password }) => {
     );
   }
 
-  const hashedPassword = await hashPassword(password);
   const randomAvatar = generateRandomAvatar(firstName, lastName);
   const { code, expiresAt } = generateVerificationCode();
 
@@ -32,7 +31,7 @@ exports.createUser = async ({ firstName, lastName, email, password }) => {
     email,
     firstName: firstName,
     lastName: lastName,
-    passwordHash: hashedPassword,
+    passwordHash: password,
     profileImageUrl: randomAvatar,
     verificationToken: code,
     verificationTokenExpiresAt: expiresAt,

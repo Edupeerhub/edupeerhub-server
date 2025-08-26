@@ -61,6 +61,14 @@ exports.requireVerifiedAndOnboardedUser = (req, res, next) => {
   next();
 };
 
+exports.requireVerifiedUser = (req, res, next) => {
+  if (!req.user.isVerified) {
+    throw new ApiError("Please verify your email to access this resource", 403);
+  }
+
+  next();
+};
+
 exports.requireStudentRole = (req, res, next) => {
   if (req.user.role !== "student") {
     throw new ApiError("Access denied - Student only", 403);

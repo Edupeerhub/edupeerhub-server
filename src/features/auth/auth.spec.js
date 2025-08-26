@@ -40,7 +40,7 @@ describe("Auth integration test", () => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        passwordHash: hashedPassword, //TODO: refactor to use hook to hash password
+        passwordHash: user.password, //TODO: refactor to use hook to hash password
         profileImageUrl: "randomAvatar",
         verificationToken: "code",
         verificationTokenExpiresAt: Date.now(),
