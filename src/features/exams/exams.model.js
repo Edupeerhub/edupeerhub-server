@@ -23,7 +23,7 @@ module.exports = () => {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
-        field: "is_active"
+        field: "isActive"
       }
     },
     {
@@ -37,8 +37,8 @@ module.exports = () => {
   Exam.associate = (models) => {
     Exam.belongsToMany(models.Student, {
       through: models.StudentExam,
-      foreignKey: "examId",
-      otherKey: "studentId",
+      foreignKey: "exam_id",
+      otherKey: "student_id",
       as: "students"
     });
   };

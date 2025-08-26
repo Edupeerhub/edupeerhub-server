@@ -1,42 +1,38 @@
-const Joi = require('joi');
+const Joi = require("joi");
 
-// Validator schema for getting student by ID
-const getStudentById = Joi.object({
-  id: Joi.string().uuid().required().messages({
-    'string.uuid': 'Student ID must be a valid UUID'
-  })
-});
+const uuid = Joi.string().guid({ version: ["uuidv4", "uuidv5"] });
 
-// Validator schema for creating a student
-const createStudent = Joi.object({
-  userId: Joi.string().uuid().required().messages({
-    'string.uuid': 'User ID must be a valid UUID'
-  }),
-  learningGoals: Joi.string().allow('', null),
-  subjectIds: Joi.array().items(Joi.string().uuid()).default([]),
-  examIds: Joi.array().items(Joi.string().uuid()).default([])
-});
-
-// Validator schema for updating a student
-const updateStudent = Joi.object({
-  id: Joi.string().uuid().required().messages({
-    'string.uuid': 'Student ID must be a valid UUID'
-  }),
-  learningGoals: Joi.string().allow('', null),
-  subjectIds: Joi.array().items(Joi.string().uuid()).default([]),
-  examIds: Joi.array().items(Joi.string().uuid()).default([])
-});
-
-// Validator schema for onboarding
-const completeOnboarding = Joi.object({
-  learningGoals: Joi.string().required().min(10),
-  subjectIds: Joi.array().items(Joi.string().uuid()).min(1).required(),
-  examIds: Joi.array().items(Joi.string().uuid()).min(1).required()
-});
-
-module.exports = {
-  getStudentById,
-  createStudent,
-  updateStudent,
-  completeOnboarding
+exports.getStudentById = {
+  params: Joi.object({ id: uuid.required() }),
 };
+
+exports.createStudent = {
+  body: Joi.object({
+    gradeLevel: Joi.string().required(),
+    learningGoals: Joi.array()
+      .items(
+        // Just incase we wanna send string or object instead of array
+        Joi.alternatives().try(
+          Joi.string().required(),
+          Joi.object({ title: Joi.string().required() })
+        )
+      )
+      .min(1)
+      .required(),
+    subjects: Joi.array().items(uuid).min(1).required(),
+    exams: Joi.array().items(uuid).min(1).required(),
+  }),
+};
+
+exports.updateStudent = {
+  params: Joi.object({ id: uuid.required() }),
+  body: Joi.object({
+    gradeLevel: Joi.string().optional(),
+    learningGoals: Joi.array().items(Joi.string().required()),
+    subjects: Joi.array().items(uuid),
+    exams: Joi.array().items(uuid),
+    isOnboarded: Joi.boolean(),
+  }),
+};
+
+exports.listStudents = {};

@@ -10,11 +10,21 @@ module.exports = () => {
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
                 primaryKey: true,
+            },
+            student_id: {
+                type: DataTypes.UUID,
+                allowNull: false,
+            },
+            subject_id: {
+                type: DataTypes.UUID,
+                allowNull: false,
             }
         },
         {
             tableName: "student_subjects",
-            timestamps: false,
+            underscored: true,
+            timestamps: true,
+            paranoid: true,
         }
     );
     StudentSubject.associate = (models) => {

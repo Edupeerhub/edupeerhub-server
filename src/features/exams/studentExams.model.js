@@ -22,7 +22,9 @@ module.exports = () => {
         },
         {
             tableName: "student_exams",
-            timestamps: false,
+            underscored: true,
+            timestamps: true,
+            paranoid: true,
         }
     );
     StudentExam.associate = (models) => {

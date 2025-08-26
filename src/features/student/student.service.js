@@ -1,265 +1,117 @@
-const { User, Student, Subject, Exam, StudentSubject, StudentExam } = 
-  require('../../shared/database/models');
-const sequelize = require('../../shared/database');
-const ApiError = require('../../shared/utils/apiError');
 
-/**
- * Get student by ID
- */
-const getStudentById = async (studentId) => {
-  return await Student.findByPk(studentId, {
-    include: [
-      { 
-        model: User, 
-        as: 'user',
-        attributes: { exclude: ['passwordHash', 'verificationToken', 'resetPasswordToken'] }
-      },
-      { model: Subject, as: 'subjects' },
-      { model: Exam, as: 'exams' }
-    ]
-  });
-};
-
-/**
- * Create student profile
- */
-const createStudent = async ({ userId, learningGoals, subjectIds = [], examIds = [] }) => {
-  const transaction = await sequelize.transaction();
-  
-  try {
-    // Create student profile
-    const student = await Student.create(
-      { 
-        userId,
-        learningGoals 
-      },
-      { transaction }
-    );
-    
-    // Add subjects if provided
-    if (subjectIds.length > 0) {
-      // Verify all subject IDs exist
-      const subjects = await Subject.findAll({
-        where: { id: subjectIds },
-        transaction
-      });
-      
-      if (subjects.length !== subjectIds.length) {
-        throw new ApiError(400, 'One or more subject IDs are invalid');
-      }
-      
-      const subjectRecords = subjectIds.map(subjectId => ({
-        studentId: student.id,
-        subjectId
-      }));
-      await StudentSubject.bulkCreate(subjectRecords, { transaction });
-    }
-    
-    // Add exams if provided
-    if (examIds.length > 0) {
-      // Verify all exam IDs exist
-      const exams = await Exam.findAll({
-        where: { id: examIds },
-        transaction
-      });
-      
-      if (exams.length !== examIds.length) {
-        throw new ApiError(400, 'One or more exam IDs are invalid');
-      }
-      
-      const examRecords = examIds.map(examId => ({
-        studentId: student.id,
-        examId
-      }));
-      await StudentExam.bulkCreate(examRecords, { transaction });
-    }
-    
-    await transaction.commit();
-    
-    // Return the complete student profile
-    return await getStudentById(student.id);
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-};
-
-/**
- * Update student profile
- */
-const updateStudent = async (studentId, { learningGoals, subjectIds = [], examIds = [] }) => {
-  const transaction = await sequelize.transaction();
-  
-  try {
-    const student = await Student.findByPk(studentId, { transaction });
-    
-    if (!student) {
-      throw new ApiError(404, 'Student profile not found');
-    }
-    
-    // Update learning goals if provided
-    if (learningGoals !== undefined) {
-      await student.update({ learningGoals }, { transaction });
-    }
-    
-    // Update subjects
-    await StudentSubject.destroy({
-      where: { studentId },
-      transaction
-    });
-    
-    if (subjectIds.length > 0) {
-      // Verify all subject IDs exist
-      const subjects = await Subject.findAll({
-        where: { id: subjectIds },
-        transaction
-      });
-      
-      if (subjects.length !== subjectIds.length) {
-        throw new ApiError(400, 'One or more subject IDs are invalid');
-      }
-      
-      const subjectRecords = subjectIds.map(subjectId => ({
-        studentId,
-        subjectId
-      }));
-      await StudentSubject.bulkCreate(subjectRecords, { transaction });
-    }
-    
-    // Update exams
-    await StudentExam.destroy({
-      where: { studentId },
-      transaction
-    });
-    
-    if (examIds.length > 0) {
-      // Verify all exam IDs exist
-      const exams = await Exam.findAll({
-        where: { id: examIds },
-        transaction
-      });
-      
-      if (exams.length !== examIds.length) {
-        throw new ApiError(400, 'One or more exam IDs are invalid');
-      }
-      
-      const examRecords = examIds.map(examId => ({
-        studentId,
-        examId
-      }));
-      await StudentExam.bulkCreate(examRecords, { transaction });
-    }
-    
-    await transaction.commit();
-    
-    // Return the updated student profile
-    return await getStudentById(studentId);
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-};
-
-/**
- * Complete student onboarding
- */
-const completeStudentOnboarding = async (userId, onboardingData) => {
-  const transaction = await sequelize.transaction();
-  
-  try {
-    // Find the user and ensure they're a student
-    const user = await User.findByPk(userId, {
-      include: [{
-        model: Student,
-        as: 'student'
-      }],
-      transaction
-    });
-    
-    if (!user) {
-      throw new ApiError(404, 'User not found');
-    }
-    
-    if (user.role !== 'student') {
-      throw new ApiError(400, 'Only students can complete onboarding');
-    }
-    
-    if (!user.student) {
-      throw new ApiError(400, 'Student profile not found');
-    }
-    
-    // Check if onboarding is already completed
-    if (user.isOnboarded) {
-      throw new ApiError(400, 'Onboarding already completed');
-    }
-    
-    const { learningGoals, subjectIds, examIds } = onboardingData;
-    
-    // Update student profile with learning goals
-    await user.student.update({
-      learningGoals: learningGoals
-    }, { transaction });
-    
-    // Add subjects (replace existing)
-    await StudentSubject.destroy({
-      where: { 
-        studentId: user.student.id 
-      },
-      transaction
-    });
-    
-    const subjectRecords = subjectIds.map(subjectId => ({
-      studentId: user.student.id,
-      subjectId: subjectId
-    }));
-    
-    await StudentSubject.bulkCreate(subjectRecords, { transaction });
-    
-    // Add exams (replace existing)
-    await StudentExam.destroy({
-      where: { 
-        studentId: user.student.id 
-      },
-      transaction
-    });
-    
-    const examRecords = examIds.map(examId => ({
-      studentId: user.student.id,
-      examId: examId
-    }));
-    
-    await StudentExam.bulkCreate(examRecords, { transaction });
-    
-    // Mark user as onboarded
-    await user.update({
-      isOnboarded: true
-    }, { transaction });
-    
-    await transaction.commit();
-    
-    // Return updated user with all associations
-    return await User.findByPk(userId, {
-      include: [
-        { 
-          model: Student, 
-          as: 'student',
-          include: [
-            { model: Subject, as: 'subjects' },
-            { model: Exam, as: 'exams' }
-          ]
-        }
-      ],
-      attributes: { exclude: ['passwordHash', 'verificationToken', 'resetPasswordToken'] }
-    });
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-};
+const ApiError = require("../../shared/utils/apiError");
+const { User, Student, Subject, Exam } = require("../../shared/database/models");
 
 module.exports = {
-  getStudentById,
-  createStudent,
-  updateStudent,
-  completeStudentOnboarding
+    // get all
+	async listStudents() {
+		const students = await Student.findAll({
+			include: [
+				{ model: User, as: "user", attributes: ["id", "firstName", "lastName", "email"] },
+				{ model: Subject, as: "subjects", attributes: ["id", "name"] },
+				{ model: Exam, as: "exams", attributes: ["id", "name"] },
+			],
+		});
+
+		return students.map((s) => {
+			const plain = s.toJSON();
+			return {
+				id: plain.userId || plain.user_id,
+				firstName: plain.user?.firstName || plain.user?.first_name,
+				lastName: plain.user?.lastName || plain.user?.last_name,
+				email: plain.user?.email,
+				subjects: (plain.subjects || []).map((sub) => sub.name),
+				exams: (plain.exams || []).map((ex) => ex.name),
+			};
+		});
+	},
+    // get one
+	async getStudentById(id) {
+		const student = await Student.findByPk(id, {
+			include: [
+				{ model: User, as: "user", attributes: ["id", "firstName", "lastName", "email"] },
+				{ model: Subject, as: "subjects", attributes: ["id", "name"] },
+				{ model: Exam, as: "exams", attributes: ["id", "name"] },
+			],
+		});
+        if (!student) {
+            return null;
+        }
+		const plain = student.toJSON();
+		return {
+				id: plain.userId || plain.user_id,
+				firstName: plain.user?.firstName || plain.user?.first_name,
+				lastName: plain.user?.lastName || plain.user?.last_name,
+				email: plain.user?.email,
+				subjects: (plain.subjects || []).map((sub) => sub.name),
+				exams: (plain.exams || []).map((ex) => ex.name),
+			};
+	},
+    // onboarding
+	async createStudentForUser(userId, data) {
+			if (!userId) {
+				throw new ApiError("User id required", 400);
+			}
+			const payload = data || {};
+			const existing = await Student.findByPk(userId);
+			if (existing) {
+				throw new ApiError("Student profile already exists", 409);
+			}
+
+			const user = await User.findByPk(userId);
+			if (!user) {
+				throw new ApiError("User not found", 404);
+			}
+
+			// normalize learningGoals to array of strings
+			let goals = [];
+			if (Array.isArray(payload.learningGoals)) {
+				goals = payload.learningGoals.map((g) => (typeof g === "string" ? g : g.title));
+			}
+
+			const student = await Student.create({
+				userId,
+				gradeLevel: payload.gradeLevel,
+				learningGoals: JSON.stringify(goals),
+			});
+
+			// mark user as onboarded
+			try {
+				await user.update({ isOnboarded: true });
+			} catch (err) {
+				// don't fail onboarding if updating user flag fails; log and continue
+				console.error('Failed to set user.isOnboarded:', err.message || err);
+			}
+
+			if (payload.subjects) {
+				await student.setSubjects(payload.subjects);
+			}
+			if (payload.exams) {
+				await student.setExams(payload.exams);
+			}
+
+		return this.getStudentById(userId);
+	},
+
+		async getUserById(userId) {
+			const user = await User.findByPk(userId, { attributes: ["id", "role", "firstName", "lastName", "email"] });
+				if (!user) {
+					return null;
+				}
+				return user.toJSON();
+		},
+    // update user
+        
+    
+    // delete user
+	async deleteStudent(id) {
+		const student = await Student.findByPk(id);
+			if (!student) {
+				throw new ApiError("Student not found", 404);
+			}
+			await student.setSubjects([]);
+			await student.setExams([]);
+			await student.destroy();
+		return { id };
+	}
 };

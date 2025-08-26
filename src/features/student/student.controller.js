@@ -1,150 +1,85 @@
-const {
-  getStudentById,
-  createStudent,
-  updateStudent,
-  completeStudentOnboarding
-} = require('./student.service');
-const sendResponse = require('../../shared/utils/sendResponse');
-const ApiError = require('../../shared/utils/apiError');
-
-/**
- * Get student by ID
- */
-const getStudent = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const student = await getStudentById(id);
-    
-    if (!student) {
-      throw new ApiError(404, 'Student profile not found');
-    }
-    
-    // Check if user is authorized to view this student profile
-    // Students can view their own profile, admins can view any profile
-    if (req.user.role !== 'admin' && student.userId !== req.user.id) {
-      throw new ApiError(403, 'Access denied - You can only view your own profile');
-    }
-    
-    sendResponse(res, {
-      statusCode: 200,
-      data: student,
-      message: 'Student profile retrieved successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Create student profile
- */
-const createStudentProfile = async (req, res, next) => {
-  try {
-    const { userId, learningGoals, subjectIds, examIds } = req.body;
-    
-    // Only admins can create student profiles for other users
-    // Students can only create their own profile
-    if (req.user.role !== 'admin' && req.user.id !== userId) {
-      throw new ApiError(403, 'Access denied - You can only create a profile for yourself');
-    }
-    
-    // Verify the user exists and is a student
-    const user = await req.models.User.findByPk(userId);
-    if (!user) {
-      throw new ApiError(404, 'User not found');
-    }
-    
-    if (user.role !== 'student') {
-      throw new ApiError(400, 'User must have student role to create student profile');
-    }
-    
-    // Check if student profile already exists
-    const existingStudent = await req.models.Student.findOne({
-      where: { userId }
-    });
-    
-    if (existingStudent) {
-      throw new ApiError(400, 'Student profile already exists for this user');
-    }
-    
-    const student = await createStudent({
-      userId,
-      learningGoals,
-      subjectIds,
-      examIds
-    });
-    
-    sendResponse(res, {
-      statusCode: 201,
-      data: student,
-      message: 'Student profile created successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Update student profile
- */
-const updateStudentProfile = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { learningGoals, subjectIds, examIds } = req.body;
-    
-    const student = await updateStudent(id, {
-      learningGoals,
-      subjectIds,
-      examIds
-    });
-    
-    if (!student) {
-      throw new ApiError(404, 'Student profile not found');
-    }
-    
-    // Check if user is authorized to update this student profile
-    // Students can update their own profile, admins can update any profile
-    if (req.user.role !== 'admin' && student.userId !== req.user.id) {
-      throw new ApiError(403, 'Access denied - You can only update your own profile');
-    }
-    
-    sendResponse(res, {
-      statusCode: 200,
-      data: student,
-      message: 'Student profile updated successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Complete onboarding
- */
-const completeOnboarding = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const { learningGoals, subjectIds, examIds } = req.body;
-    
-    const student = await completeStudentOnboarding(userId, {
-      learningGoals,
-      subjectIds,
-      examIds
-    });
-    
-    sendResponse(res, {
-      statusCode: 200,
-      data: student,
-      message: 'Student onboarding completed successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+const sendResponse = require("../../shared/utils/sendResponse");
+const studentService = require("./student.service");
 
 module.exports = {
-  getStudent,
-  createStudentProfile,
-  updateStudentProfile,
-  completeOnboarding
+  async listStudents(req, res, next) {
+    try {
+      const students = await studentService.listStudents();
+      sendResponse(res, 200, "Students list fetched", students);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async getStudent(req, res, next) {
+    try {
+      const student = await studentService.getStudentById(req.params.id);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      sendResponse(res, 200, "Student fetched", student);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async onboarding(req, res, next) {
+  try {
+    const requester = req.user;
+    const targetId = req.params.id;
+    
+    // Only check if requester can onboard this specific profile
+    if (requester.id !== targetId) {
+      return res.status(403).json({ message: "Students can only onboard their own profile" });
+    }
+
+    const payload = req.body;
+    // This check might be redundant if validate middleware ensures body exists
+    if (!payload || typeof payload !== "object") {
+      return res.status(400).json({ message: "Request body required" });
+    }
+
+    const student = await studentService.createStudentForUser(targetId, payload);
+    sendResponse(res, 201, "Onboarding successful", student);
+  } catch (err) {
+    next(err);
+  }
+},
+
+  async updateStudent(req, res, next) {
+    try {
+      const requester = req.user;
+      const targetId = req.params.id;
+      if (!requester) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (requester.role !== "admin" && requester.id !== targetId) {
+        return res.status(403).json({ message: "You're not allowed to do that" });
+      }
+
+      const student = await studentService.updateStudent(targetId, req.body);
+      sendResponse(res, 200, "Student updated", student);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  async deleteStudent(req, res, next) {
+    try {
+      const requester = req.user;
+      const targetId = req.params.id
+      if (!requester) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      if (requester.role !== "admin" || !targetId) {
+        return res.status(403).json({ message: "Only Students and Admins can delete accounts" });
+      }
+
+      const result = await studentService.deleteStudent(req.params.id);
+      sendResponse(res, 200, "Student deleted", result);
+    } catch (err) {
+      next(err);
+    }
+  }
 };

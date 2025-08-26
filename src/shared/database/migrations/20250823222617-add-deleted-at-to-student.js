@@ -3,15 +3,15 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
-    await queryInterface.addColumn("exams", "deleted_at", {
+    await queryInterface.addColumn("student_profiles", "deleted_at", {
       type: Sequelize.DATE,
       allowNull: true,
     });
     // Index for soft delete (matching User model pattern)
-    await queryInterface.addIndex('exams', ['deleted_at']);
+    await queryInterface.addIndex('student_profiles', ['deleted_at']);
   },
 
   async down (queryInterface) {
-    await queryInterface.removeColumn("exams", "deleted_at");
+    await queryInterface.removeColumn("student_profiles", "deleted_at");
   }
 };
