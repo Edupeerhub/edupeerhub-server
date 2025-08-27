@@ -6,47 +6,36 @@ const sequelize = require("@src/shared/database");
 const { User } = require("@src/shared/database/models");
 const { hashPassword } = require("@src/shared/utils/authHelpers");
 
-const user = {
-  firstName: "John",
-  lastName: "Dupe",
-  email: "john@example.com",
-  password: "StrongPass123!",
-};
-
-const hashedPassword =
-  "$2b$10$PjBOJPU3o7wQtjVfpQnUIuhmn69ZYjXDNqlQjLy7eXkjIvQW.WeZ.";
-
-// hashawait hashPassword(user.password);
+const {
+  userObject: user,
+  createVerifiedUser,
+} = require("@src/shared/tests/utils");
 
 describe("Auth integration test", () => {
   beforeEach(async () => await cleanupDB());
   describe("POST /signup", () => {
     it("should return user details ", async () => {
       const response = await request(app).post(`/api/auth/signup`).send(user);
-      expect(response.statusCode).toBe(201);
-      const { success, message, data } = response.body;
-      expect(success).toBe(true);
-      expect(message).toBe("User registered successfully");
 
-      expect(data.id).toBeDefined();
-      expect(data.email).toBe(user.email);
+
+      expect(response.statusCode).toBe(201);
+      expect(response.headers["set-cookie"]).toBeDefined();      
+
+      expect(response.body).toEqual({
+        message: "User registered successfully",
+        success: true,
+        data: {
+          id: expect.any(String),
+          email: user.email,
+        },
+      });
     });
   });
 
   describe("POST /login", () => {
     it("should login user with valid credentials", async () => {
       // add user to DB
-      await User.create({
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        passwordHash: user.password, //TODO: refactor to use hook to hash password
-        profileImageUrl: "randomAvatar",
-        verificationToken: "code",
-        verificationTokenExpiresAt: Date.now(),
-        isVerified: false,
-        isOnboarded: false,
-      });
+      await createVerifiedUser();
       // login user
       const res = await request(app)
         .post(`/api/auth/login`)
