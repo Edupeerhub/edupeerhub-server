@@ -8,10 +8,10 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
-        references: {
-          model: "users",
-          key: "id"
-        }
+        // references: {
+        //   model: "users",
+        //   key: "id",
+        // },
       },
       gradeLevel: {
         type: DataTypes.STRING,
@@ -25,32 +25,33 @@ module.exports = () => {
     {
       tableName: "student_profiles",
       underscored: true,
-      paranoid: true
+      paranoid: true,
     }
   );
 
   Student.associate = (models) => {
     // one - one relationship w/user
     Student.belongsTo(models.User, {
-       targetKey: "id",
-       as: "user" 
-      });
+      // targetKey: "id",
+      // as: "user",
+      foreignKey: "userId",
+      as: "user",
+  
+    });
 
-    // one to many relationship w/subject  
+    // many to many relationship w/subject
     Student.belongsToMany(models.Subject, {
       through: models.StudentSubject,
-      foreignKey: "student_id",
-      otherKey: "subject_id",
-      as: "subjects"
+      foreignKey: "studentId",      
+      as: "subjects",
     });
-    
+
     // one to many relationship w/exams
     Student.belongsToMany(models.Exam, {
       through: models.StudentExam,
-      foreignKey: "student_id",
-      otherKey: "exam_id",
-      as: "exams"
-    })
+      foreignKey: "studentId",      
+      as: "exams",
+    });
   };
 
   return Student;
