@@ -25,7 +25,7 @@ router.post(
 
 router.post(
   "/forgot-password",
-  // createRateLimiter(rateLimitConfig.forgotPassword),
+  createRateLimiter(rateLimitConfig.forgotPassword),
   validate(authValidation.forgotPassword),
   authController.forgotPassword
 );
