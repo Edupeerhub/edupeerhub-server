@@ -5,7 +5,10 @@ const sequelize = require("../../shared/database");
 
 exports.createTutor = async ({ profile, userId }) => {
   const newTutor = await Tutor.create(profile);
-  await User.update({ role: "tutor" }, { where: { id: userId } });
+  await User.update(
+    { role: "tutor", isOnboarded: true },
+    { where: { id: userId } }
+  );
 
   return newTutor;
 };
@@ -45,7 +48,7 @@ exports.getTutors = async ({
       {
         model: Subject,
         as: "subjects",
-        // where: query,
+        where: query,
       },
     ],
     limit: limit,

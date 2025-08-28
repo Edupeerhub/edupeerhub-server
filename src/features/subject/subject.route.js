@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
 
   if (userOrTutor) {
     query.where = {
-      isSctive: true,
+      isActive: true,
     };
   }
   const subjects = await Subject.findAll({

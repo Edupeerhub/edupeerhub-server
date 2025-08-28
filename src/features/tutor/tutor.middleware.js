@@ -1,3 +1,5 @@
+const Joi = require("joi");
+
 const sendResponse = require("@utils/sendResponse");
 //availability validator
 
@@ -6,9 +8,17 @@ exports.availabilityValidator = async (req, res, next) => {
 };
 
 //tutor profile validator
-exports.profileValidator = async (req, res, next) => {
-  next();
-};
+exports.profileSchema = Joi.object({
+  bio: Joi.string().max(1000).required(),
+  education: Joi.string().max(255).required(),
+  profileVisibility: Joi.valid().valid("active", "hidden"),
+
+  timezone: Joi.string().pattern(
+    /^UTC[+-][0.9]{0,2}?$/, {invert :true}
+  ),
+  subjectIds: Joi.array().items(Joi.string().uuid()).default([]),
+  
+});
 
 exports.canEditProfileValidator = async (req, res, next) => {
   const userId = req.user.id;

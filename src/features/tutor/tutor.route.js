@@ -2,30 +2,36 @@ const express = require("express");
 
 const validate = require("@src/shared/middlewares/validate.middleware");
 
-const { protectRoute } = require("@features/auth/auth.middleware");
+const {
+  protectRoute,
+  requireVerifiedUser,
+} = require("@features/auth/auth.middleware");
 const createRateLimiter = require("@src/shared/middlewares/rateLimit.middleware");
 const rateLimitConfig = require("@src/shared/config/rateLimit.config");
 const tutorController = require("./tutor.controller");
 const {
   searchValidator,
-  profileValidator,
+
   scheduleSearchValidator,
   availabilityValidator,
   canEditProfileValidator,
+  profileSchema,
 } = require("./tutor.middleware");
 const router = express.Router();
 
 router.use(protectRoute);
+router.use(requireVerifiedUser);
+
 // GET /api/tutors              // Browse tutors with filters
 router.get("/", searchValidator, tutorController.getTutors);
 // GET /api/tutors/:id          // Individual tutor profile
 router.get("/:id", tutorController.getTutor);
 // POST /api/tutors         // Create tutor profile
-router.post("/", profileValidator, tutorController.createTutor);
+router.post("/", validate(profileSchema), tutorController.createTutor);
 // PUT /api/tutors/:id     // Update tutor profile
 router.put(
   "/:id",
-  profileValidator,
+  validate(profileSchema),
   // canEditProfileValidator,
   tutorController.updateTutor
 );

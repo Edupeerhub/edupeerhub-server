@@ -10,7 +10,7 @@ module.exports = (sequelize) => {
       },
       bio: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       rating: {
         type: DataTypes.FLOAT,
@@ -36,7 +36,7 @@ module.exports = (sequelize) => {
       },
       timezone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
     },
     {

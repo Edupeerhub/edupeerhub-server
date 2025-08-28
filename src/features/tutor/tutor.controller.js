@@ -3,31 +3,29 @@ const tutorService = require("./tutor.service");
 
 const queryStringToList = require("@utils/listInQuery");
 exports.getTutors = async (req, res) => {
-  
-    //params
-    const page = req.query?.page ?? 1;
-    const limit = req.query?.limit ?? 10;
+  //params
+  const page = req.query?.page ?? 1;
+  const limit = req.query?.limit ?? 10;
 
-    //filters
-    const subjects = queryStringToList(req.query?.subjects);
-    const availability = queryStringToList(req.query?.availability);
-    const ratings = queryStringToList(req.query?.rating);
+  //filters
+  const subjects = queryStringToList(req.query?.subjects);
+  const availability = queryStringToList(req.query?.availability);
+  const ratings = queryStringToList(req.query?.rating);
 
-    const tutors = await tutorService.getTutors({
-      page: page,
-      limit: limit,
-      subjects,
-      availability,
-      ratings,
-    });
-    sendResponse(res, 200, "Tutors retrieved successfully", tutors);
-
+  const tutors = await tutorService.getTutors({
+    page: page,
+    limit: limit,
+    subjects,
+    availability,
+    ratings,
+  });
+  sendResponse(res, 200, "Tutors retrieved successfully", tutors);
 };
 
 exports.getTutor = async (req, res) => {
   const tutor = await tutorService.getTutor(req.params.id);
 
-  if(tutor === null) {
+  if (tutor === null) {
     sendResponse(res, 404, "Tutor not found");
     return;
   }
@@ -39,7 +37,7 @@ exports.createTutor = async (req, res) => {
     ...req.body,
     rating: 0.0,
     approvalStatus: "pending",
-    profielVisibility: "hidden",
+    profileVisibility: "hidden",
 
     userId: req.user.id,
   };
