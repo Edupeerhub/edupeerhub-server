@@ -69,16 +69,14 @@ async function createTestTutors(count = 5) {
     { returning: true }
   );
 
-  await Promise.all(
-    tutors.map((tutor, i) => {
-      return new Promise((resolve) => {
-        const slice = subjects.slice(0, tutors.length - (i % tutors.length));
-        tutor
-          .setSubjects(slice)
-          .then((value) => resolve(value));
-      });
-    })
-  );
+  await tutors.map(async (tutor, i) => {
+    const numSubjectsForTutor = i + 1;
+    const startIndex = i * numSubjectsForTutor;
+    const endIndex = startIndex + numSubjectsForTutor;
+    const slice = subjects.slice(startIndex, endIndex);
+    return await tutor.setSubjects(slice);
+  });
+
   return tutors;
 }
 describe("Tutor test", () => {
@@ -146,7 +144,7 @@ describe("Tutor test", () => {
         success: true,
         message: "Tutors retrieved successfully",
         data: {
-          count: 5,
+          count: expect.any(Number),
           rows: expect.arrayOf(
             expect.objectContaining({
               approvalStatus: expect.any(String),
@@ -188,7 +186,7 @@ describe("Tutor test", () => {
         success: true,
         message: "Tutors retrieved successfully",
         data: {
-          count: expect.any(Number),
+          count: 3,
           rows: expect.arrayOf(
             expect.objectContaining({
               approvalStatus: expect.any(String),

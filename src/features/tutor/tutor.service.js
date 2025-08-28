@@ -2,6 +2,7 @@ const ApiError = require("../../shared/utils/apiError");
 const { where, Op } = require("sequelize");
 const { Subject, User, Tutor } = require("../../shared/database/models");
 const sequelize = require("../../shared/database");
+const { required } = require("joi");
 
 exports.createTutor = async ({ profile, userId }) => {
   const newTutor = await Tutor.create(profile);
@@ -32,10 +33,12 @@ exports.getTutors = async ({
   limit = 10,
   page = 1,
 }) => {
-  const query = {};
-
+  const subjectInclude = {
+    model: Subject,
+    as: "subjects",    
+  };
   if (subjects && subjects.length > 0) {
-    query.name = {
+    subjectInclude.query = {
       [Op.in]: subjects,
     };
   }
@@ -44,13 +47,7 @@ exports.getTutors = async ({
       approvalStatus,
       profileVisibility,
     },
-    include: [
-      {
-        model: Subject,
-        as: "subjects",
-        where: query,
-      },
-    ],
+    include: [subjectInclude],
     limit: limit,
     offset: (page - 1) * limit,
   });
