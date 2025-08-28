@@ -20,7 +20,7 @@ async function connectToDB() {
   //   console.log("Already connected to MongoDB");
   //   return;
   // }
-
+  console.log("Connecting to test database");
   try {
     await sequelize.sync({ force: true });
 
@@ -32,6 +32,7 @@ async function connectToDB() {
 }
 
 async function disconnectFromDB() {
+  console.log("Disconnecting from test database");
   try {
     gracefulExit("DISCONNECT");
   } catch (err) {
@@ -42,6 +43,7 @@ async function disconnectFromDB() {
 
 async function cleanupDB() {
   // await sequelize.drop();
+  console.log("Cleaning up test database");
   await sequelize.sync({ force: true });
 }
 

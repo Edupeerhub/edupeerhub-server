@@ -3,7 +3,7 @@ module.exports = {
   // setupFilesAfterEnv: ["<rootDir>/src/shared/tests/jest.setup.js"],
   globalTeardown: "<rootDir>/src/shared/tests/jest.teardown.js",
   globalSetup: "<rootDir>/src/shared/tests/jest.setup.js",
-  testTimeout: 30000,
+  testTimeout: 10000,
   clearMocks: true,
   resetMocks: true,
   restoreMocks: true,
