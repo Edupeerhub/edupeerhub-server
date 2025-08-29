@@ -1,8 +1,8 @@
 const express = require("express");
 const adminController = require("./admin.controller");
-const { protectRoute } = require("../auth/auth.middleware");
+const { protectRoute } = require("@features/auth/auth.middleware");
 const { requireSuperAdmin, requireAdmin } = require("./admin.middleware");
-const validate = require("../../shared/middlewares/validate.middleware");
+const validate = require("@src/shared/middlewares/validate.middleware");
 const adminValidation = require("./admin.validator");
 
 const router = express.Router();

@@ -1,4 +1,4 @@
-const ApiError = require("../utils/apiError");
+const ApiError = require("@utils/apiError");
 const {
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,

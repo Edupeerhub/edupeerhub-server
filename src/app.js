@@ -1,13 +1,15 @@
 const express = require("express");
-const httpLogger = require("./shared/middlewares/httpLogger.middleware");
+const httpLogger = require("@src/shared/middlewares/httpLogger.middleware");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const errorHandler = require("./shared/middlewares/error.middleware");
-const authRoutes = require("./features/auth/auth.route");
-const adminRoutes = require("./features/admin/admin.route");
-const ApiError = require("./shared/utils/apiError");
-const sendResponse = require("./shared/utils/sendResponse");
+const errorHandler = require("@src/shared/middlewares/error.middleware");
+const authRoutes = require("@features/auth/auth.route");
+const tutorRoutes = require("@features/tutor/tutor.route");
+const adminRoutes = require("@features/admin/admin.route");
+const subjectRoutes = require("@features/subject/subject.route");
+const ApiError = require("@utils/apiError");
+const sendResponse = require("@utils/sendResponse");
 
 const app = express();
 
@@ -30,7 +32,9 @@ app.use(httpLogger);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/tutor", tutorRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/subject", subjectRoutes);
 
 app.get("/api/health", (req, res) => {
   sendResponse(res, 200, "Server is healthy", {

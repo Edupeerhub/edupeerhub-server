@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "NODE_ENV=production node src/server.js",
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
@@ -36,6 +36,7 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "mailtrap": "^4.2.0",
+    "module-alias": "^2.2.3",
     "morgan": "^1.10.1",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
@@ -54,6 +55,13 @@
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
     "sequelize-cli": "^6.6.3",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "supertest-session": "^5.0.1"
+  },
+  "_moduleAliases": {
+    "@src": "./src",
+    "@models": "./src/shared/database/models",
+    "@utils": "src/shared/utils",
+    "@features": "./src/features"
   }
 }

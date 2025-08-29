@@ -1,5 +1,5 @@
-const sequelize = require("../../shared/database/index");
-const { DataTypes } = require("sequelize");
+const sequelize = require("@src/shared/database/index");
+const DataTypes = require("sequelize");
 
 module.exports = () => {
   const Tutor = sequelize.define(
@@ -12,7 +12,7 @@ module.exports = () => {
       },
       bio: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       rating: {
         type: DataTypes.FLOAT,
@@ -29,7 +29,7 @@ module.exports = () => {
       },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
-        defaultValue: "active",
+        defaultValue: "hidden",
         allowNull: false,
       },
       education: {
@@ -38,17 +38,34 @@ module.exports = () => {
       },
       timezone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
     },
     {
       tableName: "tutor_profiles",
       underscored: true,
+      defaultScope: {
+        include: [
+          {
+            model: sequelize.models.Subject,
+            through: { attributes: [] },
+            as: "subjects",
+          },
+        ],
+      },
     }
   );
 
   Tutor.associate = (models) => {
-    Tutor.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+    Tutor.belongsTo(models.User, {
+      foreignKey: "userId",
+      as: "user",
+    });
+
+    Tutor.belongsToMany(models.Subject, {
+      through: "tutor_subjects",
+      as: "subjects",
+    });
   };
 
   return Tutor;

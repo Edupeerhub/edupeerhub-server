@@ -1,9 +1,6 @@
-const { User, Tutor, Student, Admin } = require("../../shared/database/models");
-const ApiError = require("../../shared/utils/apiError");
-const {
-  hashPassword,
-  generateRandomAvatar,
-} = require("../../shared/utils/authHelpers");
+const { User, Tutor, Student, Admin } = require("@src/shared/database/models");
+const ApiError = require("@utils/apiError");
+const { hashPassword, generateRandomAvatar } = require("@utils/authHelpers");
 
 const TUTOR_INCLUDES = [
   {

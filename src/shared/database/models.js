@@ -1,3 +1,5 @@
+const sequelize = require("./index");
+
 // =====================
 // MANUAL MODEL IMPORTS
 // =====================
@@ -7,20 +9,31 @@ const Tutor = require("../../features/tutor/tutor.model")();
 const Admin = require("../../features/admin/admin.model")();
 const EventLog = require("../../features/events/events.model")();
 
-// Store models in db object
-const db = {
-  User,
-  Student,
-  Tutor,
-  Admin,
-  EventLog,
-};
+const definers = [
+  require("@features/user/user.model"),
+  require("@features/student/student.model"),
+  require("@features/subject/subject.model"),
+  require("@features/tutor/tutor.model"),
+  require("@features/admin/admin.model"),
+  require("@features/events/events.model"),
+];
 
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName]?.associate) {
-    db[modelName].associate(db);
-  }
-});
+///Add models
+for (const definer of definers) {
+  definer(sequelize);
+}
+
+//Associate models
+for (const model of sequelize.modelManager.models) {
+  model?.associate?.call(model, sequelize.models);
+} // Store models in db object
+// const db = {
+//   // User,
+//   Student,
+//   Tutor,
+//   Subject,
+//   Admin,
+// };
 
 module.exports = {
   User,
@@ -28,6 +41,15 @@ module.exports = {
   Tutor,
   Admin,
   EventLog,
+};
+
+module.exports = {
+  User: sequelize.models.User,
+  Student: sequelize.models.Student,
+  Tutor: sequelize.models.Tutor,
+  Subject: sequelize.models.Subject,
+  Admin: sequelize.models.Admin,
+  EventLog: sequelize.models.EventLog,
 };
 
 // OPTIONAL: AUTO-LOADER WITH GLOB (SHORTER)

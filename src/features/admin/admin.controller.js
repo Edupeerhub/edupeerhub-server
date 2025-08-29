@@ -1,8 +1,8 @@
+const sendResponse = require("@utils/sendResponse");
 const {
   sendApprovalEmail,
   sendRejectionEmail,
-} = require("../../shared/email/email.service");
-const sendResponse = require("../../shared/utils/sendResponse");
+} = require("@src/shared/email/email.service");
 const adminService = require("./admin.service");
 
 // =====================

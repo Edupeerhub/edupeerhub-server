@@ -1,6 +1,6 @@
 const { StreamChat } = require("stream-chat");
-const ApiError = require("../utils/apiError");
-const logger = require("../utils/logger");
+const ApiError = require("@utils/apiError");
+const logger = require("@utils/logger");
 
 const apiKey = process.env.STREAM_API_KEY;
 const apiSecret = process.env.STREAM_API_SECRET;

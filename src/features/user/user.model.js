@@ -1,5 +1,6 @@
 const userAuthPlugin = require("./userAuth.plugin");
-const sequelize = require("../../shared/database/index");
+const authHelpers = require("@utils/authHelpers");
+const sequelize = require("@src/shared/database/index");
 const { DataTypes } = require("sequelize");
 
 module.exports = () => {
@@ -121,6 +122,11 @@ module.exports = () => {
             isVerified: true,
             isDeleted: false,
           },
+        },
+      },
+      hooks: {
+        beforeCreate: async (user, options) => {
+          user.passwordHash = await authHelpers.hashPassword(user.passwordHash);
         },
       },
       indexes: [

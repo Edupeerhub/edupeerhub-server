@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const { User } = require("../../shared/database/models");
-const ApiError = require("../../shared/utils/apiError");
+const { User } = require("@src/shared/database/models");
+const ApiError = require("@utils/apiError");
 
 exports.protectRoute = async (req, res, next) => {
   try {
@@ -56,6 +56,14 @@ exports.requireVerifiedAndOnboardedUser = (req, res, next) => {
       "Please complete onboarding to access this resource",
       403
     );
+  }
+
+  next();
+};
+
+exports.requireVerifiedUser = (req, res, next) => {
+  if (!req.user.isVerified) {
+    throw new ApiError("Please verify your email to access this resource", 403);
   }
 
   next();
