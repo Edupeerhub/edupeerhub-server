@@ -1,4 +1,8 @@
 const sendResponse = require("@utils/sendResponse");
+const {
+  sendApprovalEmail,
+  sendRejectionEmail,
+} = require("@src/shared/email/email.service");
 const adminService = require("./admin.service");
 
 // =====================
@@ -58,7 +62,7 @@ exports.getPendingTutorById = async (req, res, next) => {
 exports.approveTutor = async (req, res, next) => {
   try {
     const tutor = await adminService.approveTutor(req.params.id);
-    // await sendApprovalEmail(tutor.user.email, tutor.user.firstName);
+    await sendApprovalEmail(tutor.user.email, tutor.user.firstName);
     sendResponse(res, 200, "Tutor approved successfully", tutor);
   } catch (error) {
     next(error);
@@ -72,7 +76,11 @@ exports.rejectTutor = async (req, res, next) => {
       req.params.id,
       rejectionReason
     );
-    // await sendRejectionEmail(tutor.user.email, tutor.user.firstName, tutor.rejectionReason);
+    await sendRejectionEmail(
+      tutor.user.email,
+      tutor.user.firstName,
+      tutor.rejectionReason
+    );
     sendResponse(res, 200, "Tutor rejected successfully", tutor);
   } catch (error) {
     next(error);

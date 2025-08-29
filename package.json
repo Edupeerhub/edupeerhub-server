@@ -64,5 +64,4 @@
     "@utils": "src/shared/utils",
     "@features": "./src/features"
   }
-
 }

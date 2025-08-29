@@ -1,9 +1,13 @@
 const sequelize = require("./index");
 
-
 // =====================
 // MANUAL MODEL IMPORTS
 // =====================
+const User = require("../../features/user/user.model")();
+const Student = require("../../features/student/student.model")();
+const Tutor = require("../../features/tutor/tutor.model")();
+const Admin = require("../../features/admin/admin.model")();
+const EventLog = require("../../features/events/events.model")();
 
 const definers = [
   require("@features/user/user.model"),
@@ -22,7 +26,7 @@ for (const definer of definers) {
 //Associate models
 for (const model of sequelize.modelManager.models) {
   model?.associate?.call(model, sequelize.models);
-}// Store models in db object
+} // Store models in db object
 // const db = {
 //   // User,
 //   Student,
@@ -31,13 +35,13 @@ for (const model of sequelize.modelManager.models) {
 //   Admin,
 // };
 
-// Object.keys(db).forEach((modelName) => {
-//   if (db[modelName]?.associate) {
-//     db[modelName].associate(db);
-//   }
-// });
-
-
+module.exports = {
+  User,
+  Student,
+  Tutor,
+  Admin,
+  EventLog,
+};
 
 module.exports = {
   User: sequelize.models.User,

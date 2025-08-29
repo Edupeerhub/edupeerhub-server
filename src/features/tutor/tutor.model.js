@@ -1,12 +1,14 @@
-const { DataTypes } = require("sequelize");
+const sequelize = require("@src/shared/database/index");
+const DataTypes = require("sequelize");
 
-module.exports = (sequelize) => {
+module.exports = () => {
   const Tutor = sequelize.define(
     "Tutor",
     {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
+        field: "user_id",
       },
       bio: {
         type: DataTypes.TEXT,
