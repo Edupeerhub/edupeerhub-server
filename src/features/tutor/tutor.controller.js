@@ -27,8 +27,7 @@ exports.getTutor = async (req, res) => {
   const tutor = await tutorService.getTutor(req.params.id);
 
   if (tutor === null) {
-    throw new ApiError("Tutor not found", 404, )
-    
+    throw new ApiError("Tutor not found", 404);
   }
   sendResponse(res, 200, "success", tutor);
 };
@@ -67,8 +66,12 @@ exports.updateTutor = async (req, res) => {
 
 exports.getTutorRecommendations = async (req, res) => {
   const userId = req.user.id;
+
+  const { page, limit } = req.query;
   const tutorRecommendations = await tutorService.getTutorRecommendations({
     userId,
+    page,
+    limit,
   });
   sendResponse(res, 200, "success", tutorRecommendations);
 };

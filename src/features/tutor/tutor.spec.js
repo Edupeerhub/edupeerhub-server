@@ -410,9 +410,10 @@ describe("Tutor test", () => {
       });
       await student.addSubjects(subjects);
       const response = await authenticatedSession.get(
-        `/api/tutor/recommendations`
+        `/api/tutor/recommendations/`
       );
       expect(response.statusCode).toBe(200);
+      // expect(response.body.data.rows.length).toBe(3)
       expect(response.body).toEqual({
         success: true,
         message: "success",
