@@ -24,6 +24,9 @@ router.use(requireVerifiedUser);
 
 // GET /api/tutors              // Browse tutors with filters
 router.get("/", searchValidator, tutorController.getTutors);
+
+//GET tutor recommendations
+router.get("/recommendations", tutorController.getTutorRecommendations);
 // GET /api/tutors/:id          // Individual tutor profile
 router.get("/:id", tutorController.getTutor);
 // POST /api/tutors         // Create tutor profile

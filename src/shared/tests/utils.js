@@ -7,6 +7,10 @@ const user = {
   password: "StrongPass123!",
 };
 
+const { v4: uuidv4 } = require("uuid");
+
+exports.uuid = uuidv4;
+
 exports.userObject = user;
 
 exports.createVerifiedUser = async () =>

@@ -1,6 +1,11 @@
 const ApiError = require("../../shared/utils/apiError");
 const { where, Op } = require("sequelize");
-const { Subject, User, Tutor } = require("../../shared/database/models");
+const {
+  Subject,
+  User,
+  Tutor,
+  Student,
+} = require("../../shared/database/models");
 const sequelize = require("../../shared/database");
 const { required } = require("joi");
 
@@ -35,7 +40,7 @@ exports.getTutors = async ({
 }) => {
   const subjectInclude = {
     model: Subject,
-    as: "subjects",    
+    as: "subjects",
   };
   if (subjects && subjects.length > 0) {
     subjectInclude.query = {
@@ -53,12 +58,44 @@ exports.getTutors = async ({
   });
 };
 
+exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
+  const student = await Student.findOne({ where: { userId } });
+  const subjects = await student.getSubjects();
+
+  const subjectInclude = {
+    model: Subject,
+    as: "subjects",
+  };
+
+  if (subjects && subjects.length > 0) {
+    subjectInclude.query = {
+      [Op.in]: subjects,
+    };
+  }
+  return await Tutor.findAndCountAll({
+    where: {
+      approvalStatus: "approved",
+      profileVisibility: "active",
+    },
+    include: [subjectInclude],
+    limit: limit,
+    offset: (page - 1) * limit,
+  });
+};
+
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   let [count, [newTutorProfile]] = await Tutor.update(tutorProfile, {
     where: { user_id: id },
     returning: true,
   });
 
+  if (count === 0) {
+    throw new ApiError(
+      "Tutor profile does not exist",
+      404,
+      "Tutor profile not found"
+    );
+  }
   const subjectIds = tutorProfile?.subjects?.map((subject) => subject.id);
 
   if (!Array.isArray(subjectIds)) {

@@ -2,6 +2,7 @@ const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
 
 const queryStringToList = require("@utils/listInQuery");
+const ApiError = require("@src/shared/utils/apiError");
 exports.getTutors = async (req, res) => {
   //params
   const page = req.query?.page ?? 1;
@@ -26,8 +27,8 @@ exports.getTutor = async (req, res) => {
   const tutor = await tutorService.getTutor(req.params.id);
 
   if (tutor === null) {
-    sendResponse(res, 404, "Tutor not found");
-    return;
+    throw new ApiError("Tutor not found", 404, )
+    
   }
   sendResponse(res, 200, "success", tutor);
 };
@@ -54,8 +55,7 @@ exports.updateTutor = async (req, res) => {
   const tutorProfile = req.body;
 
   if (tutorId !== req.user.id) {
-    sendResponse(res, 403, "forbidden");
-    return;
+    throw new ApiError("Unauthorized", 403, null);
   }
   const updatedTutorProfile = await tutorService.updateTutorProfile({
     id: tutorId,
@@ -63,6 +63,14 @@ exports.updateTutor = async (req, res) => {
   });
 
   sendResponse(res, 200, "success", updatedTutorProfile);
+};
+
+exports.getTutorRecommendations = async (req, res) => {
+  const userId = req.user.id;
+  const tutorRecommendations = await tutorService.getTutorRecommendations({
+    userId,
+  });
+  sendResponse(res, 200, "success", tutorRecommendations);
 };
 
 exports.getTutorSchedule = async (req, res) => {};
