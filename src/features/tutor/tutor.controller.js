@@ -1,7 +1,7 @@
 const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
 
-const queryStringToList = require("@utils/listInQuery");
+const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 exports.getTutors = async (req, res) => {
   //params

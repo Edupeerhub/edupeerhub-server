@@ -1,4 +1,4 @@
-module.exports = function queryStringToList(str) {
+module.exports = function commaStringToList(str) {
   if (str === null || str === undefined) {
     return null;
   }
