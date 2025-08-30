@@ -13,7 +13,7 @@ const lastNameRule = Joi.string().trim().min(1).required().messages({
   "any.required": "Last Name is required",
 });
 
-const emailRule = Joi.string().trim().email().required().messages({
+const emailRule = Joi.string().trim().lowercase().email().required().messages({
   "string.email": "Please provide a valid email address",
   "any.required": "Email is required",
   "string.empty": "Email cannot be empty",
