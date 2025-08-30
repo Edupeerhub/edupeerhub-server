@@ -129,6 +129,13 @@ module.exports = () => {
         beforeCreate: async (user, options) => {
           user.passwordHash = await authHelpers.hashPassword(user.passwordHash);
         },
+        beforeUpdate: async (user, options) => {
+          if (user.changed("passwordHash")) {
+            user.passwordHash = await authHelpers.hashPassword(
+              user.passwordHash
+            );
+          }
+        },
       },
       indexes: [
         { fields: ["email"] },
