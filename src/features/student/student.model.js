@@ -12,7 +12,7 @@ module.exports = () => {
       },
       gradeLevel: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       learningGoals: {
         type: DataTypes.TEXT,
