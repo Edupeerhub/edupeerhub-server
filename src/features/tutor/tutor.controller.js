@@ -64,6 +64,24 @@ exports.updateTutor = async (req, res) => {
   sendResponse(res, 200, "success", updatedTutorProfile);
 };
 
+exports.deleteTutor = async (req, res) => {
+  const tutorId = req.params.id;
+
+  if (
+    tutorId !== req.user.id ||
+    req.user.role === "admin" ||
+    req.user.role === "superAdmin"
+  ) {
+    throw new ApiError("Unauthorized", 403, null);
+  }
+  const deleteCount = await tutorService.deleteTutorProfile(tutorId);
+
+  if (deleteCount === 0) {
+    throw new ApiError("Profile not found", 404);
+  }
+  sendResponse(res, 200, "success", deleteCount);
+};
+
 exports.getTutorRecommendations = async (req, res) => {
   const userId = req.user.id;
 

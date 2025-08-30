@@ -163,7 +163,7 @@ describe("Tutor test", () => {
         bio: "I am a tutor",
         education: "BSc Early Child Education",
         timezone: "UTC",
-        subjects: [],
+        subjects: [1,2,3],
       };
 
       const response = await authenticatedSession
@@ -171,6 +171,7 @@ describe("Tutor test", () => {
         .send(tutor);
 
       expect(response.statusCode).toBe(201);
+      expect(response.body.data.subjects.length).toBe(tutor.subjects.length);
       expect(response.body).toEqual({
         success: true,
         message: "created successfully",
@@ -180,11 +181,12 @@ describe("Tutor test", () => {
           education: tutor.education,
           timezone: tutor.timezone,
           rating: 0,
-          subjects: expect.arrayContaining(tutor.subjects),
+          subjects: expect.arrayOf(expect.any(Object)),
           approvalStatus: "pending",
           userId: expect.any(String),
           updatedAt: expect.any(String),
           createdAt: expect.any(String),
+          deletedAt: null,
           rejectionReason: null,
         },
       });

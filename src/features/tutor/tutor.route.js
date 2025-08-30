@@ -29,6 +29,8 @@ router.get("/", searchValidator, tutorController.getTutors);
 router.get("/recommendations", tutorController.getTutorRecommendations);
 // GET /api/tutors/:id          // Individual tutor profile
 router.get("/:id", tutorController.getTutor);
+// DELETE /api/tutors/:id          // Individual tutor profile
+router.delete("/:id", tutorController.deleteTutor);
 // POST /api/tutors         // Create tutor profile
 router.post("/", validate(profileSchema), tutorController.createTutor);
 // PUT /api/tutors/:id     // Update tutor profile

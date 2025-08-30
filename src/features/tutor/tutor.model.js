@@ -44,6 +44,8 @@ module.exports = () => {
     {
       tableName: "tutor_profiles",
       underscored: true,
+      paranoid: true,
+
       defaultScope: {
         include: [
           {
