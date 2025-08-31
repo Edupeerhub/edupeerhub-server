@@ -1,6 +1,5 @@
-const sequelize = require("../../shared/database/index");
+const sequelize = require("@src/shared/database/index");
 const DataTypes = require("sequelize");
-
 
 module.exports = () => {
   const Exam = sequelize.define(
@@ -23,8 +22,8 @@ module.exports = () => {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
-        field: "isActive"
-      }
+        field: "isActive",
+      },
     },
     {
       tableName: "exams",
@@ -36,10 +35,11 @@ module.exports = () => {
 
   Exam.associate = (models) => {
     Exam.belongsToMany(models.Student, {
-      through: models.StudentExam,
+      through: "student_exams",
+      // through: models.StudentExam,
       foreignKey: "exam_id",
-      otherKey: "student_id",
-      as: "students"
+      // otherKey: "student_id",
+      // as: "students"
     });
   };
 

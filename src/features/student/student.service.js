@@ -1,6 +1,6 @@
 
-const ApiError = require("../../shared/utils/apiError");
-const { User, Student, Subject, Exam } = require("../../shared/database/models");
+const ApiError = require("@utils/apiError");
+const { User, Student, Subject, Exam } = require("@models");
 
 module.exports = {
     // get all

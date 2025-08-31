@@ -28,6 +28,8 @@ module.exports = () => {
 
   Student.associate = (models) => {
     Student.belongsTo(models.User, { foreignKey: "userId", as: "user" });
+
+    Student.belongsToMany(models.Exam, {through: "student_exams", foreignKey: "studentId"});
   };
 
   return Student;

@@ -3,18 +3,14 @@ const sequelize = require("./index");
 // =====================
 // MANUAL MODEL IMPORTS
 // =====================
-const User = require("../../features/user/user.model")();
-const Student = require("../../features/student/student.model")();
-const Tutor = require("../../features/tutor/tutor.model")();
-const Admin = require("../../features/admin/admin.model")();
-const EventLog = require("../../features/events/events.model")();
-
 const definers = [
   require("@features/user/user.model"),
   require("@features/student/student.model"),
   require("@features/subject/subject.model"),
   require("@features/tutor/tutor.model"),
   require("@features/admin/admin.model"),
+  require("@features/exams/exams.model"),
+  require("@features/exams/studentExams.model"),
   require("@features/events/events.model"),
 ];
 
@@ -36,20 +32,14 @@ for (const model of sequelize.modelManager.models) {
 // };
 
 module.exports = {
-  User,
-  Student,
-  Tutor,
-  Admin,
-  EventLog,
-};
-
-module.exports = {
   User: sequelize.models.User,
   Student: sequelize.models.Student,
   Tutor: sequelize.models.Tutor,
   Subject: sequelize.models.Subject,
   Admin: sequelize.models.Admin,
   EventLog: sequelize.models.EventLog,
+  Exam: sequelize.models.Exam,
+  // StudentExam: sequelize.models.StudentExam,
 };
 
 // OPTIONAL: AUTO-LOADER WITH GLOB (SHORTER)

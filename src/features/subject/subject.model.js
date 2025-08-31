@@ -41,7 +41,7 @@ module.exports = () => {
     });
 
     //Student associations
-    models.Student.belongsToMany(Subject, { through: "student_subjects" });
+    models.Student.belongsToMany(Subject, { through: "student_subjects" , as: "subjects"});
     Subject.belongsToMany(models.Student, {
       through: "student_subjects",
       as: "student",
