@@ -1,6 +1,6 @@
 const Joi = require("joi");
 
-// ─── Reusable Field Rules
+// ─── Reusable Field Rules ─────────
 const firstNameRule = Joi.string().trim().min(1).required().messages({
   "string.empty": "First Name cannot be empty",
   "string.min": "First Name cannot be empty",
@@ -13,7 +13,7 @@ const lastNameRule = Joi.string().trim().min(1).required().messages({
   "any.required": "Last Name is required",
 });
 
-const emailRule = Joi.string().trim().lowercase().email().required().messages({
+const emailRule = Joi.string().trim().email().required().messages({
   "string.email": "Please provide a valid email address",
   "any.required": "Email is required",
   "string.empty": "Email cannot be empty",
@@ -31,43 +31,33 @@ const passwordRule = Joi.string()
     "string.empty": "Password cannot be empty",
   });
 
-// ─── Auth Validation Schemas
-const authValidation = {
-  signup: Joi.object({
+const rejectionReasonRule = Joi.string().trim().min(1).required().messages({
+  "string.empty": "Rejection reason cannot be empty",
+  "any.required": "Rejection reason is required",
+});
+
+const roleRule = Joi.string().valid("tutor", "student").required().messages({
+  "any.only": "Role must be either 'tutor' or 'student'",
+  "any.required": "Role is required",
+});
+
+// ─── Admin Validation Schemas ─────────
+const adminValidation = {
+  createAdmin: Joi.object({
     firstName: firstNameRule,
     lastName: lastNameRule,
     email: emailRule,
     password: passwordRule,
+    isSuperAdmin: Joi.boolean().optional(),
   }),
 
-  login: Joi.object({
-    email: emailRule,
-    password: Joi.string().required().messages({
-      "any.required": "Password is required",
-      "string.empty": "Password cannot be empty",
-    }),
+  rejectTutor: Joi.object({
+    rejectionReason: rejectionReasonRule,
   }),
 
-  forgotPassword: Joi.object({
-    email: emailRule,
-  }),
-
-  changePassword: Joi.object({
-    currentPassword: passwordRule,
-    newPassword: passwordRule,
-  }),
-
-  resetPassword: Joi.object({
-    password: passwordRule,
-  }),
-
-  verifyEmail: Joi.object({
-    code: Joi.string().trim().length(6).required().messages({
-      "string.empty": "Verification code cannot be empty",
-      "string.length": "Verification code must be 6 characters",
-      "any.required": "Verification code is required",
-    }),
+  changeUserRole: Joi.object({
+    role: roleRule,
   }),
 };
 
-module.exports = authValidation;
+module.exports = adminValidation;

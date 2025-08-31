@@ -1,4 +1,4 @@
-const sequelize = require("../../shared/database/index");
+const sequelize = require("@src/shared/database/index");
 const DataTypes = require("sequelize");
 
 module.exports = () => {
@@ -6,7 +6,8 @@ module.exports = () => {
     "Subject",
     {
       id: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
       },
       name: {
@@ -16,27 +17,34 @@ module.exports = () => {
       },
       description: {
         type: DataTypes.TEXT,
+        allowNull: false,
       },
       is_active: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true,
+        defaultValue: false,
         allowNull: false,
-        field: "is_active",
       },
     },
     {
       tableName: "subjects",
       underscored: true,
-      timestamps: true,
-      paranoid: true,
     }
   );
 
   Subject.associate = (models) => {
+    //Tutor associations
+
+    Subject.belongsToMany(models.Tutor, {
+      through: "tutor_subjects",
+      // uniqueKey: "subjectId",
+      // otherKey: "userId",
+    });
+
+    //Student associations
+    models.Student.belongsToMany(Subject, { through: "student_subjects" });
     Subject.belongsToMany(models.Student, {
-      through: models.StudentSubject,
-      foreignKey: "subjectId",
-      as: "students",
+      through: "student_subjects",
+      as: "student",
     });
   };
 

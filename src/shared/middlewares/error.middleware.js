@@ -1,5 +1,5 @@
-const ApiError = require("../utils/apiError");
-const logger = require("../utils/logger");
+const ApiError = require("@utils/apiError");
+const logger = require("@utils/logger");
 const {
   ValidationError,
   UniqueConstraintError,
@@ -13,12 +13,6 @@ const errorHandler = (error, req, res, next) => {
 
   // ─── Error Normalization ─────────────────────────────
 
-  // Sequelize validation errors (e.g., notNull, len, isEmail, etc.)
-  if (error instanceof ValidationError) {
-    const messages = error.errors.map((err) => err.message);
-    error = new ApiError("Validation error", 400, messages);
-  }
-
   // Sequelize unique constraint error (e.g., duplicate email)
   if (error instanceof UniqueConstraintError) {
     const field = error.errors[0].path;
@@ -27,6 +21,12 @@ const errorHandler = (error, req, res, next) => {
       field.charAt(0).toUpperCase() + field.slice(1)
     } '${value}' already exists`;
     error = new ApiError("Duplicate resource", 409, message);
+  }
+
+  // Sequelize validation errors (e.g., notNull, len, isEmail, etc.)
+  if (error instanceof ValidationError) {
+    const messages = error.errors.map((err) => err.message);
+    error = new ApiError("Validation error", 400, messages);
   }
 
   // Sequelize general DB errors
@@ -67,11 +67,18 @@ const errorHandler = (error, req, res, next) => {
         user: req.user ? { id: req.user.id, email: req.user.email } : undefined,
       });
     } else {
-      logger.error("Error occurred", baseLog);
+      logger.error("Error occurred", { baseLog, stack: error.stack });
     }
   }
 
   // ─── Client Response ──────────────────────────────────
+  if (status === 429 && error.details?.retryAfter) {
+    return res.status(status).json({
+      success: false,
+      message: error.message,
+      retryAfter: error.details.retryAfter,
+    });
+  }
 
   res.status(error.statusCode || 500).json({
     success: false,

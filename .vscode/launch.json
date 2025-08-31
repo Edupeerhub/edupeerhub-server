@@ -4,6 +4,19 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+    {   
+      "internalConsoleOptions": "openOnSessionStart",
+      "name": "Tests",      
+      "request": "launch",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],      
+      "runtimeArgs": ["run-script", "test"],
+      "runtimeExecutable": "npm",
+      "cwd": "${workspaceFolder}",      
+      "console": "integratedTerminal",
+      "type": "node"
+    },
     {
       "name": "Launch Server via Npm",
       "request": "launch",

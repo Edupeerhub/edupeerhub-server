@@ -1,40 +1,39 @@
 "use strict";
 
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable("admin_profiles", {
       user_id: {
         type: Sequelize.UUID,
         primaryKey: true,
-        references: { model: "users", key: "id" },
-        onDelete: "CASCADE",
-        onUpdate: "CASCADE",
-      },
-      admin_role: {
-        type: Sequelize.ENUM("admin", "super_admin"),
         allowNull: false,
-        defaultValue: "admin",
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
+      is_super_admin: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       created_at: {
+        allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
       updated_at: {
+        allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
       },
     });
-
-    await queryInterface.addIndex("admin_profiles", ["admin_role"], {
-      name: "admin_profiles_admin_role_idx",
-    });
   },
 
-  async down(queryInterface) {
-    await queryInterface.removeIndex(
-      "admin_profiles",
-      "admin_profiles_admin_role_idx"
-    );
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable("admin_profiles");
   },
 };
