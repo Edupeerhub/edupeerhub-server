@@ -18,10 +18,10 @@ exports.createVerifiedUser = async () =>
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    passwordHash: user.password, //TODO: refactor to use hook to hash password
+    passwordHash: user.password,
     profileImageUrl: "randomAvatar",
-    verificationToken: "code",
-    verificationTokenExpiresAt: Date.now(),
+    verificationToken: "123456",
+    verificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     isVerified: true,
     isOnboarded: false,
   });

@@ -13,6 +13,9 @@ const errorHandler = (error, req, res, next) => {
 
   // ─── Error Normalization ─────────────────────────────
 
+  if (error instanceof SyntaxError) {
+    error = new ApiError(error.name, 400, error.message);
+  }
   // Sequelize unique constraint error (e.g., duplicate email)
   if (error instanceof UniqueConstraintError) {
     const field = error.errors[0].path;

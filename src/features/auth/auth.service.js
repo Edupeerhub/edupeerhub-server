@@ -198,9 +198,7 @@ exports.changeUserPassword = async (userId, oldPassword, newPassword) => {
   const isMatch = await user.isValidPassword(oldPassword);
   if (!isMatch) throw new ApiError("Current password is incorrect", 400);
 
-  const hashedPassword = await hashPassword(newPassword);
-
-  user.passwordHash = hashedPassword;
+  user.passwordHash = newPassword;
   await user.save();
   return { id: user.id, email: user.email };
 };

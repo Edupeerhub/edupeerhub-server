@@ -22,14 +22,7 @@ for (const definer of definers) {
 //Associate models
 for (const model of sequelize.modelManager.models) {
   model?.associate?.call(model, sequelize.models);
-} // Store models in db object
-// const db = {
-//   // User,
-//   Student,
-//   Tutor,
-//   Subject,
-//   Admin,
-// };
+} 
 
 module.exports = {
   User: sequelize.models.User,
