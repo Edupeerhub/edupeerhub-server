@@ -19,6 +19,7 @@ const {
 } = require("@src/shared/email/email.service");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
+const ApiError = require("@src/shared/utils/apiError");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -149,9 +150,11 @@ exports.forgotPassword = async (req, res, next) => {
         result.userEmail,
         `${process.env.CLIENT_URL}/reset-password/${result.resetToken}`
       );
+      sendResponse(res, 200, "Password reset link sent to your email");
+    }else{
+      throw new ApiError( "User not found", 404,);
     }
 
-    sendResponse(res, 200, "Password reset link sent to your email");
   } catch (error) {
     next(error);
   }
