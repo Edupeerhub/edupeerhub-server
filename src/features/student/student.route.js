@@ -3,7 +3,7 @@ const router = express.Router()
 const validate = require("../../shared/middlewares/validate.middleware");
 const studentValidator = require ("./student.validator")
 const studentController = require ("./student.controller")
-const authMiddleware = require ("../../features/auth/auth.middleware")
+const authMiddleware = require ("../auth/auth.middleware")
 
 
 
@@ -41,7 +41,7 @@ router.delete(
 // POST /api/students/onboarding/:id        // Create student profile
 router.post(
 	"/onboarding/:id",
-	authMiddleware.protectRoute, authMiddleware.requireStudentRole,
+	authMiddleware.protectRoute,
 	validate(studentValidator.getStudentById.params, "params"),
 	validate(studentValidator.createStudent.body, "body"),
 	studentController.onboarding

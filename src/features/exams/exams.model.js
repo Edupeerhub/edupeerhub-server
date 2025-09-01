@@ -37,8 +37,8 @@ module.exports = () => {
   Exam.associate = (models) => {
     Exam.belongsToMany(models.Student, {
       through: models.StudentExam,
-      foreignKey: "exam_id",
-      otherKey: "student_id",
+      foreignKey: "examId",
+      otherKey: "studentId",
       as: "students"
     });
   };
