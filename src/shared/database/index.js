@@ -1,4 +1,6 @@
 const { Sequelize } = require("sequelize");
+require("module-alias/register");
+
 const config = require("@src/shared/config/db.config");
 
 const env = process.env.NODE_ENV || "development";

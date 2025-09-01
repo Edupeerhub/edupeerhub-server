@@ -21,6 +21,11 @@ npm install sequelize pg pg-hstore
 npx sequelize-cli init
 ```
 
+```bash
+# Create database based on config
+npx sequelize-cli db:create
+```
+
 This command creates the following essential folders and a configuration file:
 
 - `config/config.json`

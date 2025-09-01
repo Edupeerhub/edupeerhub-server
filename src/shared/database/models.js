@@ -10,7 +10,6 @@ const definers = [
   require("@features/tutor/tutor.model"),
   require("@features/admin/admin.model"),
   require("@features/exams/exams.model"),
-  require("@features/exams/studentExams.model"),
   require("@features/events/events.model"),
 ];
 
@@ -22,7 +21,19 @@ for (const definer of definers) {
 //Associate models
 for (const model of sequelize.modelManager.models) {
   model?.associate?.call(model, sequelize.models);
-} 
+}
+
+// sequelize.models.Exam.bulkCreate([
+//   { name: "NECO", description: "", is_active: true },
+//   { name: "WAEC", description: "", is_active: true },
+// ]);
+
+// sequelize.models.Subject.bulkCreate([
+//   { name: "English", description: "English language", is_active: true },
+//   { name: "Mathematics", description: "Mathematics", is_active: true },
+//   { name: "Physics", description: "Physics", is_active: true },
+//   { name: "Chemistry", description: "Chemistry", is_active: true },
+// ]);
 
 module.exports = {
   User: sequelize.models.User,

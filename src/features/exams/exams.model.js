@@ -1,4 +1,5 @@
 const sequelize = require("@src/shared/database/index");
+const models = require("@src/shared/database/models");
 const DataTypes = require("sequelize");
 
 module.exports = () => {
@@ -6,9 +7,9 @@ module.exports = () => {
     "Exam",
     {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true,
       },
       name: {
         type: DataTypes.STRING,
@@ -22,7 +23,6 @@ module.exports = () => {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
-        field: "isActive",
       },
     },
     {
@@ -36,10 +36,8 @@ module.exports = () => {
   Exam.associate = (models) => {
     Exam.belongsToMany(models.Student, {
       through: "student_exams",
-      // through: models.StudentExam,
-      foreignKey: "exam_id",
-      // otherKey: "student_id",
-      // as: "students"
+      // foreignKey: "id",
+      as: "students",
     });
   };
 

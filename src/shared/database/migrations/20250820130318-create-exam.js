@@ -1,43 +1,43 @@
-'use strict';
+"use strict";
 
-const { toDefaultValue } = require('sequelize/lib/utils');
-const sequelize = require('..');
+const { toDefaultValue } = require("sequelize/lib/utils");
+const sequelize = require("..");
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('exams', {
+    await queryInterface.createTable("exams", {
       id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
-        primaryKey: true
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
+        primaryKey: true,
       },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
+        unique: true,
       },
       description: {
-        type: Sequelize.TEXT
+        type: Sequelize.TEXT,
       },
       isActive: {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
-        allowNull: false
+        allowNull: false,
       },
       created_at: {
-        defaultValue:Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
         allowNull: false,
         type: Sequelize.DATE,
       },
       updated_at: {
-        defaultValue:Sequelize.literal("CURRENT_TIMESTAMP"),
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
         allowNull: false,
-        type: Sequelize.DATE
-      }
+        type: Sequelize.DATE,
+      },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('exams');
-  }
+    await queryInterface.dropTable("exams");
+  },
 };
