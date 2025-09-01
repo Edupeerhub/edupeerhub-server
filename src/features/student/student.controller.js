@@ -16,10 +16,10 @@ function normalizeLearningGoals(lg) {
 }
 
 exports.onboarding = async (req, res, next) => {
-  const requestedId = req.params.id;
+  const targetId = req.params.id;
   const authenticatedId = req.user.id;
 
-  if (requestedId !== authenticatedId) {
+  if (targetId !== authenticatedId) {
     return next(new ApiError("Forbidden - cannot onboard for another user", 403));
   }
 
@@ -58,16 +58,8 @@ exports.onboarding = async (req, res, next) => {
 
     await transaction.commit();
 
-    const created = await Student.findOne({
-      where: { userId: authenticatedId },
-      include: [
-        { model: User, as: "user" },
-        { model: Subject, as: "subjects" },
-        { model: Exam, as: "exams" },
-      ],
-    });
-
-    return res.status(201).json({ data: created });
+    const created = await getStudentProfile(targetId)
+    return sendResponse(res, 201, "Onboarding completed successfully", created)
   } catch (err) {
     await transaction.rollback();
     return next(err instanceof ApiError ? err : new ApiError(err.message, 500));
@@ -99,7 +91,7 @@ exports.listStudents = async (req, res, next) => {
       };
     });
 
-    return res.status(200).json({ allStudents });
+    return sendResponse(res, 200, "All students retrieved successfully", allStudents)
   } catch (err) {
     return next(err instanceof ApiError ? err : new ApiError(err.message, 500));
   }
@@ -114,7 +106,7 @@ exports.getStudent = async (req, res, next) => {
     const authenticatedId = req.user.id;
 
     if (req.user.role !== 'admin' && authenticatedId !== targetUserId) {
-      return next(new ApiError('Access denied - You can only view your own profile', 403));
+      return next(new ApiError('Forbidden - You can only view your own profile', 403));
     }
     const responseData = await getStudentProfile(targetUserId);
     
@@ -127,11 +119,11 @@ exports.getStudent = async (req, res, next) => {
 
 
 exports.updateStudent = async (req, res, next) => {
-  const requestedId = req.params.id;
+  const targetId = req.params.id;
   const authenticatedId = req.user.id;
 
-  if (requestedId !== authenticatedId && req.user.id !== "admin") {
-    return next(new ApiError("Access denied - cannot update another student's profile", 403));
+  if (targetId !== authenticatedId && req.user.id !== "admin") {
+    return next(new ApiError("Forbidden - cannot update another student's profile", 403));
   }
 
   const { learningGoals, gradeLevel, profileImageUrl, subjects = [], exams = [] } = req.body;
@@ -166,7 +158,7 @@ exports.updateStudent = async (req, res, next) => {
       await user.update({ profileImageUrl }, { transaction });
     }
 
-    // Replace subjects
+    // Replace studentSubjects
     if (subjects) {
       // Delete old associations
       await StudentSubject.destroy({ where: { student_id: student.userId }, transaction });
@@ -176,7 +168,7 @@ exports.updateStudent = async (req, res, next) => {
       }
     }
 
-    // Replace exams
+    // Replace studentExams
     if (exams) {
       await StudentExam.destroy({ where: { student_id: student.userId }, transaction });
       if (exams.length) {
@@ -184,19 +176,10 @@ exports.updateStudent = async (req, res, next) => {
         await StudentExam.bulkCreate(examCreates, { transaction });
       }
     }
-
     await transaction.commit();
 
-    const updated = await Student.findOne({
-      where: { userId: authenticatedId },
-      include: [
-        { model: User, as: "user" },
-        { model: Subject, as: "subjects" },
-        { model: Exam, as: "exams" },
-      ],
-    });
-
-    return res.status(200).json({ data: updated });
+    const newStudentInfo = await getStudentProfile(targetId)
+    return sendResponse(res, 201, "Student profile updated successfully", newStudentInfo)
   } catch (err) {
     await transaction.rollback();
     return next(err instanceof ApiError ? err : new ApiError(err.message, 500));
@@ -204,11 +187,11 @@ exports.updateStudent = async (req, res, next) => {
 };
 
 exports.deleteStudent = async (req, res, next) => {
-  const requestedId = req.params.id;
+  const targetId = req.params.id;
   const authenticatedId = req.user.id;
 
-  if (requestedId !== authenticatedId && req.user.role !== "admin") {
-    return next(new ApiError("Access denied - cannot delete another student's profile", 403));
+  if (targetId !== authenticatedId && req.user.role !== "admin") {
+    return next(new ApiError("Forbidden - cannot delete another student's profile", 403));
   }
 
   const transaction = await sequelize.transaction();
@@ -223,13 +206,12 @@ exports.deleteStudent = async (req, res, next) => {
     // Soft delete the student profile (paranoid true)
     await student.destroy({ transaction });
 
-    // Cascade delete associations (paranoid true will soft delete them)
+    // Cascade delete associations (paranoid true will soft delete automatically)
     await StudentSubject.destroy({ where: { student_id: student.userId }, transaction });
     await StudentExam.destroy({ where: { student_id: student.userId }, transaction });
 
     await transaction.commit();
-
-    return res.status(200).json({ data: { message: "Student profile deleted" } });
+    return sendResponse(res, 200, "Student profile deleted successfully")
   } catch (err) {
     await transaction.rollback();
     return next(err instanceof ApiError ? err : new ApiError(err.message, 500));

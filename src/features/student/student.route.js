@@ -31,6 +31,7 @@ router.put(
 	studentController.updateStudent
 );
 
+// DELETE /api/students/:id        // Delete student profile
 router.delete(
 	"/:id",
 	authMiddleware.protectRoute,
