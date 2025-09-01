@@ -29,11 +29,11 @@ module.exports = () => {
     );
     StudentSubject.associate = (models) => {
         StudentSubject.belongsTo(models.Student, {
-            foreignKey: "student_id",
+            foreignKey: "studentId",
             as: "student"
         });
         StudentSubject.belongsTo(models.Subject, {
-            foreignKey: "subject_id",
+            foreignKey: "subjectId",
             as: "subject"
         })
     }

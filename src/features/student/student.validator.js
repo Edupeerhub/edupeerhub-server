@@ -1,9 +1,10 @@
 const Joi = require("joi");
-
 const uuid = Joi.string().guid({ version: ["uuidv4", "uuidv5"] });
 
 exports.getStudentById = {
-  params: Joi.object({ id: uuid.required() }),
+  params: Joi.object({
+    id: uuid.required().label("id"),
+  }),
 };
 
 exports.createStudent = {
@@ -25,14 +26,16 @@ exports.createStudent = {
 };
 
 exports.updateStudent = {
-  params: Joi.object({ id: uuid.required() }),
+  params: Joi.object({ id: uuid.required().label("id") }),
   body: Joi.object({
-    gradeLevel: Joi.string().optional(),
-    learningGoals: Joi.array().items(Joi.string().required()),
-    subjects: Joi.array().items(uuid),
-    exams: Joi.array().items(uuid),
-    isOnboarded: Joi.boolean(),
+    gradeLevel: Joi.string(),
+    learningGoals: Joi.alternatives()
+      .try(Joi.array().items(Joi.string()), Joi.string())
+      .label("learningGoals"),
+    subjects: Joi.array().items(uuid).label("subjects"),
+    exams: Joi.array().items(uuid).label("exams"),
+    accountStatus: Joi.string().valid('active', 'inactive').messages({
+    'any.only': 'accountStatus must be one of [active, inactive]'
+    })
   }),
 };
-
-exports.listStudents = {};
