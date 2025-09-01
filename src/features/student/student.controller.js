@@ -1,5 +1,6 @@
 const sendResponse = require("@utils/sendResponse");
 const studentService = require("./student.service");
+const ApiError = require("@src/shared/utils/apiError");
 
 module.exports = {
   async listStudents(req, res, next) {
@@ -14,8 +15,8 @@ module.exports = {
   async getStudent(req, res, next) {
     try {
       const student = await studentService.getStudentById(req.params.id);
-      if (!student) {
-        return res.status(404).json({ message: "Student not found" });
+      if (!student) {        
+        throw new ApiError("Student not found", 404);
       }
       sendResponse(res, 200, "Student fetched", student);
     } catch (err) {
@@ -24,27 +25,30 @@ module.exports = {
   },
 
   async onboarding(req, res, next) {
-  try {
-    const requester = req.user;
-    const targetId = req.params.id;
-    
-    // Only check if requester can onboard this specific profile
-    if (requester.id !== targetId) {
-      return res.status(403).json({ message: "Students can only onboard their own profile" });
-    }
+    try {
+      // const requester = req.user;
+      // const targetId = req.params.id;
 
-    const payload = req.body;
-    // This check might be redundant if validate middleware ensures body exists
-    if (!payload || typeof payload !== "object") {
-      return res.status(400).json({ message: "Request body required" });
-    }
+      // // Only check if requester can onboard this specific profile
+      // if (requester.id !== targetId) {
+      //   return res.status(403).json({ message: "Students can only onboard their own profile" });
+      // }
 
-    const student = await studentService.createStudentForUser(targetId, payload);
-    sendResponse(res, 201, "Onboarding successful", student);
-  } catch (err) {
-    next(err);
-  }
-},
+      // const payload = req.body;
+      // // This check might be redundant if validate middleware ensures body exists
+      // if (!payload || typeof payload !== "object") {
+      //   return res.status(400).json({ message: "Request body required" });
+      // }
+
+      const student = await studentService.createStudentForUser(
+        req.user.id,
+        req.body
+      );
+      sendResponse(res, 201, "Onboarding successful", student);
+    } catch (err) {
+      next(err);
+    }
+  },
 
   async updateStudent(req, res, next) {
     try {
@@ -55,7 +59,9 @@ module.exports = {
       }
 
       if (requester.role !== "admin" && requester.id !== targetId) {
-        return res.status(403).json({ message: "You're not allowed to do that" });
+        return res
+          .status(403)
+          .json({ message: "You're not allowed to do that" });
       }
 
       const student = await studentService.updateStudent(targetId, req.body);
@@ -68,12 +74,14 @@ module.exports = {
   async deleteStudent(req, res, next) {
     try {
       const requester = req.user;
-      const targetId = req.params.id
+      const targetId = req.params.id;
       if (!requester) {
         return res.status(401).json({ message: "Unauthorized" });
       }
       if (requester.role !== "admin" || !targetId) {
-        return res.status(403).json({ message: "Only Students and Admins can delete accounts" });
+        return res
+          .status(403)
+          .json({ message: "Only Students and Admins can delete accounts" });
       }
 
       const result = await studentService.deleteStudent(req.params.id);
@@ -81,5 +89,5 @@ module.exports = {
     } catch (err) {
       next(err);
     }
-  }
+  },
 };

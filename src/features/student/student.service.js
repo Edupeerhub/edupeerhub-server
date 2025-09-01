@@ -5,7 +5,7 @@ const { User, Student, Subject, Exam } = require("@models");
 module.exports = {
     // get all
 	async listStudents() {
-		const students = await Student.findAll({
+		return  await Student.findAndCountAll({
 			include: [
 				{ model: User, as: "user", attributes: ["id", "firstName", "lastName", "email"] },
 				{ model: Subject, as: "subjects", attributes: ["id", "name"] },
@@ -13,17 +13,17 @@ module.exports = {
 			],
 		});
 
-		return students.map((s) => {
-			const plain = s.toJSON();
-			return {
-				id: plain.userId || plain.user_id,
-				firstName: plain.user?.firstName || plain.user?.first_name,
-				lastName: plain.user?.lastName || plain.user?.last_name,
-				email: plain.user?.email,
-				subjects: (plain.subjects || []).map((sub) => sub.name),
-				exams: (plain.exams || []).map((ex) => ex.name),
-			};
-		});
+		// return students.map((s) => {
+		// 	const plain = s.toJSON();
+		// 	return {
+		// 		id: plain.userId || plain.user_id,
+		// 		firstName: plain.user?.firstName || plain.user?.first_name,
+		// 		lastName: plain.user?.lastName || plain.user?.last_name,
+		// 		email: plain.user?.email,
+		// 		subjects: (plain.subjects || []).map((sub) => sub.name),
+		// 		exams: (plain.exams || []).map((ex) => ex.name),
+		// 	};
+		// });
 	},
     // get one
 	async getStudentById(id) {
