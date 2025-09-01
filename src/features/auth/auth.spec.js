@@ -145,10 +145,15 @@ describe("Auth integration test", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({
         success: true,
-        message: "User details retrieved successfully",
+        message: "Profile fetch successful",
         data: {
-          id: expect.any(String),
           email: user.email,
+          firstName: user.firstName,
+          isOnboarded: false,
+          isVerified: true,
+          lastName: user.lastName,
+          profileImageUrl: "randomAvatar",
+          role: null,
         },
       });
     });
@@ -157,7 +162,7 @@ describe("Auth integration test", () => {
       expect(res.statusCode).toBe(401);
       expect(res.body).toEqual({
         success: false,
-        message: "Unauthorized",
+        message: "Unauthorized - No token provided",
         error: null,
       });
     });
@@ -165,14 +170,12 @@ describe("Auth integration test", () => {
 
   describe("POST /verify-email", () => {
     it("should verify email with valid token", async () => {
-      
-
       const response = await testSession.post(`/api/auth/signup`).send(user);
-      const user = await User.scope("active").findByPk(
+      const retrievedUser = await User.scope("active").findByPk(
         response.body.data.id,
         {}
       );
-      const token = user.verificationToken;
+      const token = retrievedUser.verificationToken;
       const res = await testSession
         .post(`/api/auth/verify-email`)
         .send({ code: token });
@@ -183,12 +186,12 @@ describe("Auth integration test", () => {
         data: null,
       });
     });
-    it("should return 400 for invalid token", async () => {
+    it("should return 401 for invalid token", async () => {
       const token = "invalid-token";
       const res = await request(app)
         .post(`/api/auth/verify-email`)
         .send({ token });
-      expect(res.statusCode).toBe(400);
+      expect(res.statusCode).toBe(401);
       expect(res.body).toEqual({
         success: false,
         message: "Invalid or expired token",
