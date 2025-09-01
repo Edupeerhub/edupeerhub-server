@@ -19,8 +19,8 @@ exports.createStudent = {
       )
       .min(1)
       .required(),
-    subjects: Joi.array().items(uuid).min(1).required(),
-    exams: Joi.array().items(uuid).min(1).required(),
+    subjects: Joi.array().items(Joi.number()).min(1).required(),
+    exams: Joi.array().items(Joi.number()).min(1).required(),
   }),
 };
 

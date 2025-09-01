@@ -61,11 +61,6 @@ router.delete("/:id", requireAdmin, async (req, res) => {
   sendResponse(res, 200, "success");
 });
 
-// Subject.bulkCreate([
-//   { name: "English", description: "English language", is_active: true },
-//   { name: "Mathematics", description: "Mathematics", is_active: true },
-//   { name: "Physics", description: "Physics", is_active: true },
-//   { name: "Chemistry", description: "Chemistry", is_active: true },
-// ]);
+
 
 module.exports = router;
