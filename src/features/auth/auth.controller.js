@@ -21,6 +21,7 @@ const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
 const { setAuthCookie, clearAuthCookie } = require("@src/shared/utils/cookies");
 
+
 exports.signup = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -43,6 +44,7 @@ exports.signup = async (req, res, next) => {
     });
 
     setAuthCookie(res, token);
+
 
     sendResponse(res, 201, "User registered successfully", {
       id: newUser.id,
@@ -68,6 +70,7 @@ exports.login = async (req, res, next) => {
 
     setAuthCookie(res, token);
 
+
     sendResponse(res, 200, "User signed in successfully", {
       id: user.id,
       email: user.email,
@@ -88,6 +91,7 @@ exports.profile = async (req, res, next) => {
 
 exports.logout = (req, res, next) => {
   clearAuthCookie(res);
+
   sendResponse(res, 200, "Logout Successful");
 };
 
