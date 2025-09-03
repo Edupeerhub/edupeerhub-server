@@ -21,7 +21,6 @@ const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
 const { setAuthCookie, clearAuthCookie } = require("@src/shared/utils/cookies");
 
-
 exports.signup = async (req, res, next) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -44,7 +43,6 @@ exports.signup = async (req, res, next) => {
     });
 
     setAuthCookie(res, token);
-
 
     sendResponse(res, 201, "User registered successfully", {
       id: newUser.id,
@@ -69,7 +67,6 @@ exports.login = async (req, res, next) => {
     });
 
     setAuthCookie(res, token);
-
 
     sendResponse(res, 200, "User signed in successfully", {
       id: user.id,
@@ -100,7 +97,7 @@ exports.verifyEmail = async (req, res, next) => {
     const { code } = req.body;
     const verifiedUser = await verifyUserEmail(code);
 
-    await sendWelcomeEmail(verifiedUser.email, verifiedUser.fullName);
+    await sendWelcomeEmail(verifiedUser.email, verifiedUser.firstName);
     await trackEvent(eventTypes.USER_VERIFIED_EMAIL, {
       userId: verifiedUser.id,
       email: verifiedUser.email,
