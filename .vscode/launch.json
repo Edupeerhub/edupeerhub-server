@@ -1,0 +1,31 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {   
+      "internalConsoleOptions": "openOnSessionStart",
+      "name": "Tests",      
+      "request": "launch",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],      
+      "runtimeArgs": ["run-script", "test"],
+      "runtimeExecutable": "npm",
+      "cwd": "${workspaceFolder}",      
+      "console": "integratedTerminal",
+      "type": "node"
+    },
+    {
+      "name": "Launch Server via Npm",
+      "request": "launch",
+      "runtimeArgs": ["run-script", "dev"],
+      "runtimeExecutable": "npm",
+      "cwd": "${workspaceFolder}",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal",
+      "type": "node"
+    }
+  ]
+}
