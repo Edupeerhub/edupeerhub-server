@@ -12,7 +12,7 @@ const { test } = require("@src/shared/config/db.config");
 
 
 const {
-  createVerifiedUser,
+  createUser,
   userObject: user,
   uuid,
 } = require("@src/shared/tests/utils");
@@ -97,6 +97,7 @@ async function createTestStudents(count = 5) {
       passwordHash: "password123",
       role: "student",
       isVerified: true,
+      isOnboarded: true,
     })),
     { returning: true }
   );
@@ -136,7 +137,7 @@ describe("Student test", () => {
     subjects = await createTestSubjects();
     await createTestExams();
     testSession = session(app);
-    loggedInUser = await createVerifiedUser();
+    loggedInUser = await createUser({isOnboarded: true, verified: true});
     await testSession
       .post("/api/auth/login")
       .send({
@@ -301,12 +302,12 @@ describe("Student test", () => {
       const students = await createTestStudents(1);
       const student = students[0];
       const response = await authenticatedSession
-        .put(`/api/student/${uuid()}`)
+        .put(`/api/student/${student.userId}`)
         .send(updatedProfile);
       expect(response.statusCode).toBe(403);
       expect(response.body).toEqual({
         error: null,
-        message: "Please complete onboarding to access this resource",
+        message: "Forbidden",
         success: false,
       });
     });

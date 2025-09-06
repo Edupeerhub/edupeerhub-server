@@ -8,7 +8,7 @@ const { User, Tutor, Subject, Student } = require("@models");
 const session = require("supertest-session");
 const { test } = require("@src/shared/config/db.config");
 const {
-  createVerifiedUser,
+  createUser,
   userObject: user,
   uuid,
 } = require("@src/shared/tests/utils");
@@ -107,7 +107,7 @@ async function createTestTutors(count = 5) {
       bio: `Bio for tutor ${i}`,
       rating: 0,
       education: `Education ${i}`,
-      timezone: "UTC",
+      timezone: "UTC+0",
       approvalStatus: i % 2 === 0 ? "approved" : "pending",
       profileVisibility: i % 2 === 0 ? "active" : "hidden",
     })),
@@ -137,8 +137,8 @@ const updatedProfile = {
   approvalStatus: "approved",
   profileVisibility: "active",
   education: "BSc Early Child Education",
-  timezone: "UTC",
-  subjects: [],
+  timezone: "UTC+2",
+  subjects: [1, 2, 3],
 };
 
 const tutorValidator = {
@@ -168,7 +168,7 @@ describe("Tutor test", () => {
     subjects = await createTestSubjects();
 
     testSession = session(app);
-    loggedInUser = await createVerifiedUser();
+    loggedInUser = await createUser({});
     await testSession
       .post("/api/auth/login")
       .send({
@@ -297,6 +297,7 @@ describe("Tutor test", () => {
         .put(`/api/tutor/${loggedInUser.id}`)
         .send(updatedProfile);
       expect(response.statusCode).toBe(200);
+      expect(response.body.data.subjects.length).toBe(updatedProfile.subjects.length);
       expect(response.body).toEqual({
         success: true,
         message: "success",
@@ -306,9 +307,15 @@ describe("Tutor test", () => {
           // createdAt: expect.any(String),
           education: updatedProfile.education,
           // profileVisibility: updatedProfile.profileVisibility,
-          rating: updatedProfile.rating,
+          rating: 0, // shouldn't be able to update rating
           // rejectionReason: null,
-          subjects: [],
+          subjects: expect.arrayOf(
+            expect.objectContaining({
+              description: expect.any(String),
+              id: expect.any(Number),
+              name: expect.any(String),
+            })
+          ),
           timezone: updatedProfile.timezone,
           // updatedAt: expect.any(String),
           // userId: loggedInUser.id,
@@ -368,7 +375,7 @@ describe("Tutor test", () => {
         `/api/tutor/recommendations/`
       );
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeLessThan(5)
+      expect(response.body.data.count).toBeLessThan(5);
       expect(response.body).toEqual({
         success: true,
         message: "success",

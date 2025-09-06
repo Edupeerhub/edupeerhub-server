@@ -59,14 +59,9 @@ module.exports = {
     try {
       const requester = req.user;
       const targetId = req.params.id;
-      if (!requester) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
 
       if (requester.role !== "admin" && requester.id !== targetId) {
-        return res
-          .status(403)
-          .json({ message: "You're not allowed to do that" });
+        throw new ApiError("Forbidden", 403);
       }
 
       const student = await studentService.updateStudent(targetId, req.body);

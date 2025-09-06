@@ -13,7 +13,7 @@ exports.uuid = uuidv4;
 
 exports.userObject = user;
 
-exports.createVerifiedUser = async () =>
+exports.createUser = async ({verified = true, isOnboarded = true}) =>
   await User.create({
     email: user.email,
     firstName: user.firstName,
@@ -22,20 +22,6 @@ exports.createVerifiedUser = async () =>
     profileImageUrl: "randomAvatar",
     verificationToken: "123456",
     verificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    isVerified: true,
-    isOnboarded: false,
-  });
-
-
-  exports.createUnVerifiedUser = async () =>
-  await User.create({
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    passwordHash: user.password,
-    profileImageUrl: "randomAvatar",
-    verificationToken: "123456",
-    verificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    isVerified: false,
-    isOnboarded: false,
+    isVerified: verified,
+    isOnboarded: isOnboarded,
   });
