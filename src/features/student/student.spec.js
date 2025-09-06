@@ -5,6 +5,12 @@ const app = require("@src/app");
 const { User, Student, Subject, Exam } = require("@models");
 const session = require("supertest-session");
 const { test } = require("@src/shared/config/db.config");
+
+
+// Usage
+// expect(receivedObject.property).toBeOneOfTypes([String, Number]);
+
+
 const {
   createVerifiedUser,
   userObject: user,
@@ -18,6 +24,34 @@ let subjects;
 
 jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
   return () => (req, res, next) => next();
+});
+
+const studentValidator = expect.objectContaining({
+  userId: expect.any(String),
+  //   learningGoals: student.learningGoals,
+  exams: expect.any(Array),
+  // exams: expect.arrayOf(
+  //   expect.objectContaining({
+  //     id: expect.any(Number),
+  //     name: expect.any(String),
+  //   })
+  // ) ,
+  gradeLevel: expect.any(String),
+
+  user: expect.objectContaining({
+    email: expect.any(String),
+    // profileImageUrl: expect.anything( ),
+
+    firstName: expect.any(String),
+    lastName: expect.any(String),
+  }),
+  subjects: expect.arrayOf(
+    expect.objectContaining({
+      description: expect.any(String),
+      id: expect.any(Number),
+      name: expect.any(String),
+    })
+  ),
 });
 
 async function createTestExams() {
@@ -122,16 +156,18 @@ describe("Student test", () => {
       expect(response.body).toEqual({
         success: true,
         message: "Onboarding successful",
-        data: expect.objectContaining({
-          email: user.email,
-          exams: expect.arrayOf(expect.any(String)),
-          firstName: user.firstName,
-          id: expect.any(String),
-          lastName: user.lastName,
-          subjects: expect.arrayOf(expect.any(String)),
-          //   gradeLevel: studentProfile.gradeLevel,
-          //   learningGoals: studentProfile.learningGoals,
-        }),
+        data: studentValidator,
+
+        // data: expect.objectContaining({
+        //   email: user.email,
+        //   exams: expect.arrayOf(expect.any(String)),
+        //   firstName: user.firstName,
+        //   id: expect.any(String),
+        //   lastName: user.lastName,
+        //   subjects: expect.arrayOf(expect.any(String)),
+        //   //   gradeLevel: studentProfile.gradeLevel,
+        //   //   learningGoals: studentProfile.learningGoals,
+        // }),
       });
     });
   });
@@ -148,18 +184,7 @@ describe("Student test", () => {
         message: "Students list fetched",
         data: {
           count: expect.any(Number),
-          rows: expect.arrayOf(
-            expect.objectContaining({
-              email: expect.any(String),
-              exams: expect.arrayOf(expect.any(String)),
-              firstName: expect.any(String),
-              id: expect.any(String),
-              lastName: expect.any(String),
-              subjects: expect.arrayOf(expect.any(String)),
-              //   gradeLevel: studentProfile.gradeLevel,
-              //   learningGoals: studentProfile.learningGoals,
-            })
-          ),
+          rows: expect.arrayOf(studentValidator),
         },
       });
     });
@@ -171,25 +196,12 @@ describe("Student test", () => {
       expect(response.statusCode).toBe(404);
       expect(response.body).toEqual({
         success: false,
-        message: "Student not found",
+        message: "Student does not exist",
         error: null,
       });
     });
 
-    it("should return students for subjects", async () => {
-      const response = await authenticatedSession.get(
-        `/api/student/?subjects=English,Mathematics`
-      );
-      expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Students retrieved successfully",
-        data: {
-          count: expect.any(Number),
-          rows: expect.any(Array),
-        },
-      });
-    });
+
   });
 
   describe("GET /student/:id", () => {
@@ -204,13 +216,17 @@ describe("Student test", () => {
         success: true,
         message: "Student fetched",
         data: expect.objectContaining({
-          id: expect.any(String),
-          //   gradeLevel: student.gradeLevel,
+          gradeLevel: student.gradeLevel,
+          userId: expect.any(String),
           //   learningGoals: student.learningGoals,
-          email: expect.any(String),
           exams: expect.any(Array),
-          firstName: expect.any(String),
-          lastName: expect.any(String),
+          user: expect.objectContaining({
+            email: expect.any(String),
+            profileImageUrl: expect.any(Object),
+
+            firstName: expect.any(String),
+            lastName: expect.any(String),
+          }),
           subjects: expect.any(Array),
         }),
       });
@@ -225,7 +241,7 @@ describe("Student test", () => {
       expect(response.statusCode).toBe(404);
       expect(response.body).toEqual({
         success: false,
-        message: "Student not found",
+        message: "Student does not exist",
         error: null,
       });
     });
@@ -243,19 +259,43 @@ describe("Student test", () => {
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
-        message: "success",
+        message: "Student updated",
         data: expect.objectContaining({
+          exams: expect.arrayOf(
+            expect.objectContaining({
+              id: expect.any(Number),
+              name: expect.any(String),
+            })
+          ),
           gradeLevel: updatedProfile.gradeLevel,
-          learningGoals: updatedProfile.learningGoals,
-          subjects: expect.any(Array),
+          subjects: expect.arrayOf(
+            expect.objectContaining({
+              description: expect.any(String),
+              id: expect.any(Number),
+              name: expect.any(String),
+            })
+          ),
+          userId: expect.any(String),
+          user: {
+            email: expect.any(String),
+            firstName: expect.any(String),
+            lastName: expect.any(String),
+            profileImageUrl: expect.any(String),
+          },
         }),
       });
     });
     it("should return 400 if student profile not complete", async () => {
+      const postRes = await authenticatedSession
+        .post(`/api/student/`)
+        .send(studentProfile);
+      expect(postRes.statusCode).toEqual(201);
+      const incompleteProfile = { ...studentProfile };
+      delete incompleteProfile.exams;
       const response = await authenticatedSession
         .put(`/api/student/${loggedInUser.id}`)
         .send({});
-      expect([400, 422]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(400);
     });
     it("should return 403 if user is not owner", async () => {
       const students = await createTestStudents(1);

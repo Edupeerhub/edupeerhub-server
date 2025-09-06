@@ -25,7 +25,7 @@ module.exports = () => {
       paranoid: true,
       defaultScope: {
         attributes: {
-          exclude: ["learningGoals", "gradeLevel"],
+          exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
         },
       },
     }
@@ -34,6 +34,29 @@ module.exports = () => {
   Student.associate = (models) => {
     Student.belongsTo(models.User, { foreignKey: "userId", as: "user" });
 
+    Student.addScope("join", {
+      include: [
+        {
+          model: models.User.scope("join"),
+          as: "user",
+        },
+
+        {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+          through: { attributes: [] },
+        },
+        {
+          model: models.Exam,
+          as: "exams",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+      attributes: {
+        exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+      },
+    });
     Student.belongsToMany(models.Exam, {
       through: "student_exams",
       // foreignKey: "studentId",

@@ -28,6 +28,14 @@ module.exports = () => {
     {
       tableName: "subjects",
       underscored: true,
+      scopes: {
+        defaultScope: {
+          attributes: ["id", "name", "description", "is_active"],
+        },
+        join: {
+          attributes: ["id", "name", "description"],
+        },
+      },
     }
   );
 
@@ -41,7 +49,10 @@ module.exports = () => {
     });
 
     //Student associations
-    models.Student.belongsToMany(Subject, { through: "student_subjects" , as: "subjects"});
+    models.Student.belongsToMany(Subject, {
+      through: "student_subjects",
+      as: "subjects",
+    });
     Subject.belongsToMany(models.Student, {
       through: "student_subjects",
       as: "student",

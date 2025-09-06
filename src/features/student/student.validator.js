@@ -32,10 +32,12 @@ exports.updateStudent = {
     learningGoals: Joi.alternatives()
       .try(Joi.array().items(Joi.string()), Joi.string())
       .label("learningGoals"),
-    subjects: Joi.array().items(uuid).label("subjects"),
+    // subjects: Joi.array().items(uuid).label("subjects"),
+    subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
+
     exams: Joi.array().items(uuid).label("exams"),
-    accountStatus: Joi.string().valid('active', 'inactive').messages({
-    'any.only': 'accountStatus must be one of [active, inactive]'
-    })
+    accountStatus: Joi.string().valid("active", "inactive").messages({
+      "any.only": "accountStatus must be one of [active, inactive]",
+    }),
   }),
 };

@@ -5,7 +5,12 @@ const ApiError = require("@src/shared/utils/apiError");
 module.exports = {
   async listStudents(req, res, next) {
     try {
-      const students = await studentService.listStudents();
+      const page = req.query?.page;
+      const limit = req.query?.limit;
+      const students = await studentService.listStudents({
+        page,
+        limit,
+      });
       sendResponse(res, 200, "Students list fetched", students);
     } catch (err) {
       next(err);
@@ -15,7 +20,7 @@ module.exports = {
   async getStudent(req, res, next) {
     try {
       const student = await studentService.getStudentById(req.params.id);
-      if (!student) {        
+      if (!student) {
         throw new ApiError("Student not found", 404);
       }
       sendResponse(res, 200, "Student fetched", student);
