@@ -25,3 +25,17 @@ exports.createVerifiedUser = async () =>
     isVerified: true,
     isOnboarded: false,
   });
+
+
+  exports.createUnVerifiedUser = async () =>
+  await User.create({
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    passwordHash: user.password,
+    profileImageUrl: "randomAvatar",
+    verificationToken: "123456",
+    verificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    isVerified: false,
+    isOnboarded: false,
+  });

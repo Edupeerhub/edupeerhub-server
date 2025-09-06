@@ -124,7 +124,7 @@ exports.resendVerificationEmail = async (userId) => {
   });
 
   if (!user) throw new ApiError("User not found", 404);
-  if (user.isVerified) throw new ApiError("User is already verified", 400);
+  if (user.isVerified) throw new ApiError("User is already verified", 403);
 
   const nextAllowedTime =
     new Date(user.verificationTokenExpiresAt).getTime() -

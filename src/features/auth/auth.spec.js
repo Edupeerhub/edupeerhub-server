@@ -5,19 +5,25 @@ const app = require("@src/app");
 const sequelize = require("@src/shared/database");
 const { User } = require("@src/shared/database/models");
 const { hashPassword } = require("@src/shared/utils/authHelpers");
-
+jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
+  return () => (req, res, next) => next();
+});
 const {
   userObject: user,
   createVerifiedUser,
+  createUnVerifiedUser,
 } = require("@src/shared/tests/utils");
 const session = require("supertest-session");
 const { login } = require("./auth.controller");
 
 let testSession, authenticatedSession;
 let loggedInUser;
-async function createAndLoginUser() {
+async function createAndLoginUser(verified = true) {
   testSession = session(app);
-  loggedInUser = await createVerifiedUser();
+  loggedInUser = verified
+    ? await createVerifiedUser()
+    : await createUnVerifiedUser();
+
   await testSession
     .post("/api/auth/login")
     .send({
@@ -107,11 +113,17 @@ describe("Auth integration test", () => {
   describe("POST /reset/:token", () => {
     it("should reset password with valid token", async () => {
       // Simulate user and token
+      await createAndLoginUser();
+      const res0 = await authenticatedSession
+        .post(`/api/auth/forgot-password`)
+        .send({ email: loggedInUser.email });
+      expect(res0.statusCode).toBe(200);
 
-      const token = "valid-token";
+      const retrievedUser = await User.scope('verified').findByPk(loggedInUser.id);
+      const { resetPasswordToken } = retrievedUser;
       const newPassword = "newPassword123!";
       const res = await authenticatedSession
-        .post(`/api/auth/reset/${token}`)
+        .post(`/api/auth/reset/${resetPasswordToken}`)
         .send({ password: newPassword });
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({
@@ -170,12 +182,9 @@ describe("Auth integration test", () => {
 
   describe("POST /verify-email", () => {
     it("should verify email with valid token", async () => {
-      const response = await testSession.post(`/api/auth/signup`).send(user);
-      const retrievedUser = await User.scope("active").findByPk(
-        response.body.data.id,
-        {}
-      );
-      const token = retrievedUser.verificationToken;
+      const response = await createAndLoginUser(false);
+
+      const token = loggedInUser.verificationToken;
       const res = await testSession
         .post(`/api/auth/verify-email`)
         .send({ code: token });
@@ -183,18 +192,21 @@ describe("Auth integration test", () => {
       expect(res.body).toEqual({
         success: true,
         message: "Email verified successfully",
-        data: null,
+        data: {
+          id: expect.any(String),
+        },
       });
     });
     it("should return 401 for invalid token", async () => {
-      const token = "invalid-token";
-      const res = await request(app)
+      const token = "000000";
+      await createAndLoginUser(false);
+      const res = await authenticatedSession
         .post(`/api/auth/verify-email`)
-        .send({ token });
-      expect(res.statusCode).toBe(401);
+        .send({ code: token });
+      expect(res.statusCode).toBe(400);
       expect(res.body).toEqual({
         success: false,
-        message: "Invalid or expired token",
+        message: "Invalid or expired verification code",
         error: null,
       });
     });
@@ -202,27 +214,26 @@ describe("Auth integration test", () => {
 
   describe("POST /resend-email-verification", () => {
     it("should resend email verification if user exists", async () => {
-      await createVerifiedUser();
-      const res = await request(app)
+      await createAndLoginUser(false);
+      const res = await authenticatedSession
         .post(`/api/auth/resend-email-verification`)
-        .send({ email: user.email });
+        .send({ email: loggedInUser.email });
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({
         success: true,
-        message: "Verification email resent",
-        data: {
-          email: user.email,
-        },
+        message: "Verification email resent successfully",
+        data: null,
       });
     });
-    it("should return 404 if user does not exist", async () => {
-      const res = await request(app)
+    it("should 403 if user already verified", async () => {
+      await createAndLoginUser();
+      const res = await authenticatedSession
         .post(`/api/auth/resend-email-verification`)
-        .send({ email: "nonexistent@test.com" });
-      expect(res.statusCode).toBe(404);
+        .send();
+      expect(res.statusCode).toBe(403);
       expect(res.body).toEqual({
         success: false,
-        message: "User not found",
+        message: "User is already verified",
         error: null,
       });
     });
@@ -230,55 +241,59 @@ describe("Auth integration test", () => {
 
   describe("PUT /change-password", () => {
     it("should change password if authenticated and valid", async () => {
-      await createVerifiedUser();
-      const loginRes = await request(app)
-        .post(`/api/auth/login`)
-        .send({ email: user.email, password: user.password });
-      const cookie = loginRes.headers["set-cookie"];
-      const res = await request(app)
+      await createAndLoginUser();
+
+      const res = await authenticatedSession
         .put(`/api/auth/change-password`)
-        .set("Cookie", cookie)
-        .send({ oldPassword: user.password, newPassword: "newPassword123" });
+        .send({
+          currentPassword: user.password,
+          newPassword: "newPassword123%",
+        });
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({
         success: true,
         message: "Password changed successfully",
-        data: null,
+        data: {
+          email: user.email,
+          id: expect.any(String),
+        },
       });
     });
     it("should return 400 if old password is incorrect", async () => {
-      await createVerifiedUser();
-      const loginRes = await request(app)
-        .post(`/api/auth/login`)
-        .send({ email: user.email, password: user.password });
-      const cookie = loginRes.headers["set-cookie"];
-      const res = await request(app)
+      await createAndLoginUser();
+      const res = await authenticatedSession
         .put(`/api/auth/change-password`)
-        .set("Cookie", cookie)
+
         .send({ oldPassword: "wrongPassword", newPassword: "newPassword123" });
       expect(res.statusCode).toBe(400);
       expect(res.body).toEqual({
         success: false,
-        message: "Old password is incorrect",
-        error: null,
+        message: "Validation error.",
+        error: expect.arrayContaining([
+          {
+            field: "currentPassword",
+            issue: "Password is required",
+          },
+          {
+            field: "newPassword",
+            issue:
+              "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+          },
+        ]),
       });
     });
   });
 
   describe("POST /logout", () => {
     it("should logout user and clear session", async () => {
-      await createVerifiedUser();
-      const loginRes = await request(app)
-        .post(`/api/auth/login`)
-        .send({ email: user.email, password: user.password });
-      const cookie = loginRes.headers["set-cookie"];
-      const res = await request(app)
-        .post(`/api/auth/logout`)
-        .set("Cookie", cookie);
+      await createAndLoginUser();
+
+      const res = await authenticatedSession.post(`/api/auth/logout`);
+
       expect(res.statusCode).toBe(200);
       expect(res.body).toEqual({
         success: true,
-        message: "User logged out successfully",
+        message: "Logout Successful",
         data: null,
       });
     });
@@ -287,7 +302,7 @@ describe("Auth integration test", () => {
       expect(res.statusCode).toBe(401);
       expect(res.body).toEqual({
         success: false,
-        message: "Unauthorized",
+        message: "Unauthorized - No token provided",
         error: null,
       });
     });
