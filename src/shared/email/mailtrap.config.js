@@ -6,6 +6,6 @@ exports.mailtrapClient = new MailtrapClient({
 });
 
 exports.sender = {
-  email: "hello@demomailtrap.co",
+  email: "hello@edupeerhub.com",
   name: "Edupeerhub",
 };

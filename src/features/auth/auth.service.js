@@ -96,6 +96,8 @@ exports.verifyUserEmail = async (code) => {
     },
     attributes: [
       "id",
+      "email",
+      "firstName",
       "isVerified",
       "verificationToken",
       "verificationTokenExpiresAt",
@@ -171,6 +173,7 @@ exports.resetUserPassword = async (token, password) => {
     },
     attributes: [
       "id",
+      "email",
       "passwordHash",
       "resetPasswordToken",
       "resetPasswordExpiresAt",

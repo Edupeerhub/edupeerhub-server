@@ -20,6 +20,7 @@ const {
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
 const ApiError = require("@src/shared/utils/apiError");
+const { setAuthCookie, clearAuthCookie } = require("@src/shared/utils/cookies");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -42,13 +43,7 @@ exports.signup = async (req, res, next) => {
       fullName: `${newUser.firstName} ${newUser.lastName}`,
     });
 
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production",
-      // domain: ".edupeerhub.com",
-    });
+    setAuthCookie(res, token);
 
     sendResponse(res, 201, "User registered successfully", {
       id: newUser.id,
@@ -72,13 +67,7 @@ exports.login = async (req, res, next) => {
       date: user.lastLogin,
     });
 
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production",
-      // domain: ".edupeerhub.com",
-    });
+    setAuthCookie(res, token);
 
     sendResponse(res, 200, "User signed in successfully", {
       id: user.id,
@@ -99,13 +88,8 @@ exports.profile = async (req, res, next) => {
 };
 
 exports.logout = (req, res, next) => {
-  res.clearCookie("jwt", {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production",
-    // domain: ".edupeerhub.com",
-  });
+  clearAuthCookie(res);
+
   sendResponse(res, 200, "Logout Successful");
 };
 
@@ -114,7 +98,7 @@ exports.verifyEmail = async (req, res, next) => {
     const { code } = req.body;
     const verifiedUser = await verifyUserEmail(code);
 
-    await sendWelcomeEmail(verifiedUser.email, verifiedUser.fullName);
+    await sendWelcomeEmail(verifiedUser.email, verifiedUser.firstName);
     await trackEvent(eventTypes.USER_VERIFIED_EMAIL, {
       userId: verifiedUser.id,
       email: verifiedUser.email,

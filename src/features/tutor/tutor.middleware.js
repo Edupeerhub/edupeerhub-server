@@ -9,15 +9,13 @@ exports.availabilityValidator = async (req, res, next) => {
 
 //tutor profile validator
 exports.profileSchema = Joi.object({
-  bio: Joi.string().max(1000).required(),
+  bio: Joi.string().max(1000),
   education: Joi.string().max(255).required(),
-  profileVisibility: Joi.valid().valid("active", "hidden"),
+  profileVisibility: Joi.valid("active", "hidden"),
 
-  timezone: Joi.string().pattern(
-    /^UTC[+-][0.9]{0,2}?$/, {invert :true}
-  ),
-  subjectIds: Joi.array().items(Joi.string().uuid()).default([]),
-  
+  timezone: Joi.string().pattern(/^UTC[+-][0-9]{1,2}$/),
+
+  subjectIds: Joi.array().items(Joi.number().integer()).default([]),
 });
 
 exports.canEditProfileValidator = async (req, res, next) => {
