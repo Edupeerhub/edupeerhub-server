@@ -24,15 +24,13 @@ module.exports = {
     if (!userId) {
       throw new ApiError("User id required", 400);
     }
+
+    const user = await User.findByPk(userId);
+
     const payload = data || {};
     const existing = await Student.findByPk(userId);
     if (existing) {
       throw new ApiError("Student profile already exists", 409);
-    }
-
-    const user = await User.findByPk(userId);
-    if (!user) {
-      throw new ApiError("User not found", 404);
     }
 
     // normalize learningGoals to array of strings

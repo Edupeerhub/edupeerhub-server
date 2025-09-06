@@ -9,7 +9,7 @@ router.use(authMiddleware.protectRoute);
 //  GET /api/students 		// Get all students
 router.get(
   "/",
-  authMiddleware.requireVerifiedUser,
+  authMiddleware.requireVerifiedAndOnboardedUser,
 
   studentController.listStudents
 );
@@ -17,7 +17,7 @@ router.get(
 // GET /api/students/:id          // Individual student profile
 router.get(
   "/:id",
-  authMiddleware.requireVerifiedUser,
+  authMiddleware.requireVerifiedAndOnboardedUser,
 
   validate(studentValidator.getStudentById.params, "params"),
   studentController.getStudent
@@ -34,7 +34,7 @@ router.put(
 
 router.delete(
   "/:id",
-  authMiddleware.requireVerifiedUser,
+  authMiddleware.requireVerifiedAndOnboardedUser,
   validate(studentValidator.getStudentById.params, "params"),
   studentController.deleteStudent
 );
@@ -42,7 +42,7 @@ router.delete(
 // POST /api/students/onboarding/:id        // Create student profile
 router.post(
   "/",
-
+  authMiddleware.requireVerifiedUser,
   validate(studentValidator.createStudent.body, "body"),
   studentController.onboarding
 );
