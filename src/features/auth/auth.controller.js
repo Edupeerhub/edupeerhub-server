@@ -134,11 +134,8 @@ exports.forgotPassword = async (req, res, next) => {
         result.userEmail,
         `${process.env.CLIENT_URL}/reset-password/${result.resetToken}`
       );
-      sendResponse(res, 200, "Password reset link sent to your email");
-    }else{
-      throw new ApiError( "User not found", 404,);
     }
-
+    sendResponse(res, 200, "Password reset link sent to your email");
   } catch (error) {
     next(error);
   }
