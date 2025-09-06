@@ -20,14 +20,7 @@ exports.createTutor = async ({ profile, userId }) => {
 };
 
 exports.getTutor = async (userId) => {
-  return await Tutor.findByPk(userId, {
-    include: [
-      {
-        model: Subject,
-        as: "subjects",
-      },
-    ],
-  });
+  return await Tutor.scope("join").findByPk(userId);
 };
 
 exports.getTutors = async ({
@@ -47,7 +40,7 @@ exports.getTutors = async ({
       [Op.in]: subjects,
     };
   }
-  return await Tutor.findAndCountAll({
+  return await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus,
       profileVisibility,
@@ -72,7 +65,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
       [Op.in]: subjects,
     };
   }
-  return await Tutor.findAndCountAll({
+  return await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus: "approved",
       profileVisibility: "active",
@@ -123,15 +116,13 @@ async function addSubjectsToProfile({ profile, subjectIds }) {
     return;
   }
 
-  const selectedSubjects = await Subject.findAll(
-    {
+  const selectedSubjects = await Subject.findAll({
     where: {
       id: {
         [Op.in]: subjectIds,
       },
     },
-  }
-);
+  });
 
   await profile.setSubjects(selectedSubjects);
 }

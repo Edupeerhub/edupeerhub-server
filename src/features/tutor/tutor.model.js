@@ -53,6 +53,10 @@ module.exports = () => {
             through: { attributes: [] },
             as: "subjects",
           },
+          {
+            model: sequelize.models.User,
+            as: "user",
+          },
         ],
       },
     }
@@ -67,6 +71,21 @@ module.exports = () => {
     Tutor.belongsToMany(models.Subject, {
       through: "tutor_subjects",
       as: "subjects",
+    });
+
+    Tutor.addScope("join", {
+      include: [
+        {
+          model: models.User.scope("join"),
+          as: "user",
+        },
+        {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+          through: { attributes: [] },
+        },
+      ],
+      attributes: ["bio", "rating", "education", "timezone"],
     });
   };
 
