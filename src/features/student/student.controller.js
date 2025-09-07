@@ -1,4 +1,4 @@
-const { Student, User, Subject, Exam, StudentSubject, StudentExam } = require("../../shared/database/models");
+const { Student, User, StudentSubject, StudentExam } = require("../../shared/database/models");
 const sequelize = require("../../shared/database/index");
 const ApiError = require("../../shared/utils/apiError");
 const sendResponse = require ("../../shared/utils/sendResponse");
