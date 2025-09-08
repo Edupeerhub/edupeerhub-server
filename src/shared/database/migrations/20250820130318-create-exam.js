@@ -20,7 +20,7 @@ module.exports = {
       description: {
         type: Sequelize.TEXT,
       },
-      isActive: {
+      is_active: {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
         allowNull: false,
