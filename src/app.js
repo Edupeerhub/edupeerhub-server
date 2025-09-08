@@ -3,6 +3,8 @@ const httpLogger = require("@src/shared/middlewares/httpLogger.middleware");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
+
+const studentRoutes = require("@features/student/student.route");
 const errorHandler = require("@src/shared/middlewares/error.middleware");
 const authRoutes = require("@features/auth/auth.route");
 const tutorRoutes = require("@features/tutor/tutor.route");
@@ -32,6 +34,7 @@ app.use(httpLogger);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/student", studentRoutes);
 app.use("/api/tutor", tutorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/subject", subjectRoutes);

@@ -126,7 +126,7 @@ exports.resendVerificationEmail = async (userId) => {
   });
 
   if (!user) throw new ApiError("User not found", 404);
-  if (user.isVerified) throw new ApiError("User is already verified", 400);
+  if (user?.isVerified) throw new ApiError("User is already verified", 400);
 
   const nextAllowedTime =
     new Date(user.verificationTokenExpiresAt).getTime() -
@@ -201,9 +201,7 @@ exports.changeUserPassword = async (userId, oldPassword, newPassword) => {
   const isMatch = await user.isValidPassword(oldPassword);
   if (!isMatch) throw new ApiError("Current password is incorrect", 400);
 
-  const hashedPassword = await hashPassword(newPassword);
-
-  user.passwordHash = hashedPassword;
+  user.passwordHash = newPassword;
   await user.save();
   return { id: user.id, email: user.email };
 };

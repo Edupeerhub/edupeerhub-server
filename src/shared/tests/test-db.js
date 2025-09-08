@@ -1,10 +1,12 @@
 const fs = require("fs");
 const path = require("path");
 const logger = require("@utils/logger");
+const request = require("supertest");
 
 const NODE_ENV = "test";
 
-const envFilePath = path.resolve(process.cwd(), "./src/", `.env.${NODE_ENV}`);
+
+const envFilePath = path.resolve(process.cwd(), `.env.${NODE_ENV}`);
 
 if (fs.existsSync(envFilePath)) {
   require("dotenv").config({ path: envFilePath });
@@ -69,6 +71,29 @@ const gracefulExit = async (signal) => {
 
 process.on("SIGTERM", () => gracefulExit("SIGTERM"));
 process.on("SIGINT", () => gracefulExit("SIGINT"));
+
+
+// // A custom matcher that checks if the received value is one of the given types.
+// expect.extend({
+//   toBeOneOfTypes(received, validTypes) {
+//     const receivedType = typeof received;
+//     const pass = validTypes.includes(receivedType);
+    
+//     if (pass) {
+//       return {
+//         message: () =>
+//           `expected ${receivedType} not to be one of ${validTypes.join(', ')}`,
+//         pass: true,
+//       };
+//     } else {
+//       return {
+//         message: () =>
+//           `expected ${receivedType} to be one of ${validTypes.join(', ')}`,
+//         pass: false,
+//       };
+//     }
+//   },
+// });
 
 module.exports = {
   connectToDB,

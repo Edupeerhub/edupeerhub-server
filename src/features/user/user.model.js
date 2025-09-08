@@ -124,10 +124,20 @@ module.exports = () => {
             isDeleted: false,
           },
         },
+        join: {
+          attributes: ["firstName", "lastName", "email", "profileImageUrl"],
+        },
       },
       hooks: {
         beforeCreate: async (user, options) => {
           user.passwordHash = await authHelpers.hashPassword(user.passwordHash);
+        },
+        beforeUpdate: async (user, options) => {
+          if (user.changed("passwordHash")) {
+            user.passwordHash = await authHelpers.hashPassword(
+              user.passwordHash
+            );
+          }
         },
       },
       indexes: [
@@ -146,7 +156,11 @@ module.exports = () => {
   userAuthPlugin(User);
 
   User.associate = (models) => {
-    User.hasOne(models.Student, { foreignKey: "userId", as: "student" });
+    User.hasOne(models.Student, {
+      foreignKey: "userId",
+      as: "student",
+      scope: "join",
+    });
     User.hasOne(models.Tutor, { foreignKey: "userId", as: "tutor" });
     User.hasOne(models.Admin, { foreignKey: "userId", as: "admin" });
   };

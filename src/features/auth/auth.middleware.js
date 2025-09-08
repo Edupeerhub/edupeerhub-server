@@ -32,7 +32,7 @@ exports.protectRoute = async (req, res, next) => {
       ],
     });
 
-    if (!user) throw new ApiError("Unauthorized - User not found", 401);
+    if (!user) throw new ApiError("Unauthorized", 401);
 
     if (user.isDeleted) throw new ApiError("Account no longer exists", 403);
 

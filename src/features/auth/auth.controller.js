@@ -19,6 +19,7 @@ const {
 } = require("@src/shared/email/email.service");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
+const ApiError = require("@src/shared/utils/apiError");
 const { setAuthCookie, clearAuthCookie } = require("@src/shared/utils/cookies");
 
 exports.signup = async (req, res, next) => {
@@ -134,7 +135,6 @@ exports.forgotPassword = async (req, res, next) => {
         `${process.env.CLIENT_URL}/reset-password/${result.resetToken}`
       );
     }
-
     sendResponse(res, 200, "Password reset link sent to your email");
   } catch (error) {
     next(error);

@@ -13,15 +13,15 @@ exports.uuid = uuidv4;
 
 exports.userObject = user;
 
-exports.createVerifiedUser = async () =>
+exports.createUser = async ({verified = true, isOnboarded = true}) =>
   await User.create({
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    passwordHash: user.password, //TODO: refactor to use hook to hash password
+    passwordHash: user.password,
     profileImageUrl: "randomAvatar",
-    verificationToken: "code",
-    verificationTokenExpiresAt: Date.now(),
-    isVerified: true,
-    isOnboarded: false,
+    verificationToken: "123456",
+    verificationTokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    isVerified: verified,
+    isOnboarded: isOnboarded,
   });
