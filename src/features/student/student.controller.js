@@ -20,9 +20,7 @@ module.exports = {
   async getStudent(req, res, next) {
     try {
       const student = await studentService.getStudentById(req.params.id);
-      if (!student) {
-        throw new ApiError("Student not found", 404);
-      }
+
       sendResponse(res, 200, "Student fetched", student);
     } catch (err) {
       next(err);
@@ -30,8 +28,7 @@ module.exports = {
   },
 
   async onboarding(req, res, next) {
-    try {  
-
+    try {
       const student = await studentService.createStudentForUser(
         req.user.id,
         req.body

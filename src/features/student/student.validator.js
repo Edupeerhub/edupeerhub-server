@@ -9,7 +9,7 @@ exports.getStudentById = {
 
 exports.createStudent = {
   body: Joi.object({
-    gradeLevel: Joi.string().required(),
+    gradeLevel: Joi.string(),
     learningGoals: Joi.array()
       .items(
         // Just incase we wanna send string or object instead of array
@@ -33,7 +33,11 @@ exports.updateStudent = {
       .try(Joi.array().items(Joi.string()), Joi.string())
       .label("learningGoals"),
     // subjects: Joi.array().items(uuid).label("subjects"),
-    subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
+    subjects: Joi.array()
+      .items(Joi.number())
+      .min(1)
+      .required()
+      .label("subjects"),
 
     exams: Joi.array().items(uuid).label("exams"),
     accountStatus: Joi.string().valid("active", "inactive").messages({

@@ -1,48 +1,40 @@
-'use strict';
-const { v4: uuid4 } = require("uuid");
+"use strict";
 
 module.exports = {
-  async up (queryInterface) {
-
+  async up(queryInterface) {
     await queryInterface.bulkInsert("exams", [
       {
-        id: uuid4(),
         name: "JAMB",
         description: "For university entrance",
-        isActive: true,
+        is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
       },
       {
-        id: uuid4(),
         name: "WAEC",
         description: "For Senior Secondary School Certificates",
-        isActive: true,
+        is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
       },
       {
-        id: uuid4(),
         name: "NABTEB",
         description: "For technical and business exams",
-        isActive: true,
+        is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
       },
       {
-        id: uuid4(),
         name: "BECE",
         description: "For Junior Secondary School completion",
-        isActive: true,
+        is_active: true,
         created_at: new Date(),
         updated_at: new Date(),
       },
-    ])
-
+    ]);
   },
 
-
-  async down (queryInterface) {
+  async down(queryInterface) {
     await queryInterface.bulkDelete("exams", null, {});
-  }
+  },
 };

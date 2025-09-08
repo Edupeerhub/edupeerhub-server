@@ -9,7 +9,7 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    return queryInterface.addColumn("tutor_profiles", "deleted_at", {
+    return queryInterface.addColumn("users", "deleted_at", {
       type: Sequelize.DataTypes.DATE,
     });
   },
@@ -22,7 +22,7 @@ module.exports = {
      * await queryInterface.dropTable('users');
      */
 
-    return queryInterface.removeColumn("tutor_profiles", "deleted_at", {
+    return queryInterface.removeColumn("users", "deleted_at", {
       type: Sequelize.DataTypes.DATE,
     });
   },

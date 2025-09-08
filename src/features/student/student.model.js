@@ -22,10 +22,10 @@ module.exports = () => {
     {
       tableName: "student_profiles",
       underscored: true,
-      paranoid: true,
+      // paranoid: true,
       defaultScope: {
         attributes: {
-          exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+          exclude: ["createdAt", "updatedAt"],
         },
       },
     }
@@ -54,7 +54,7 @@ module.exports = () => {
         },
       ],
       attributes: {
-        exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+        exclude: ["createdAt", "updatedAt"],
       },
     });
     Student.belongsToMany(models.Exam, {

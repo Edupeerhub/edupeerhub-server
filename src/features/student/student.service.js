@@ -21,10 +21,6 @@ module.exports = {
   },
   // onboarding
   async createStudentForUser(userId, data) {
-    if (!userId) {
-      throw new ApiError("User id required", 400);
-    }
-
     const user = await User.findByPk(userId);
 
     const payload = data || {};

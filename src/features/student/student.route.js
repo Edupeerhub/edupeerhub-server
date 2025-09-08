@@ -33,12 +33,12 @@ router.put(
 );
 
 // DELETE /api/students/:id        // Delete student profile
-router.delete(
-  "/:id",
-  authMiddleware.requireVerifiedAndOnboardedUser,
-  validate(studentValidator.getStudentById.params, "params"),
-  studentController.deleteStudent
-);
+// router.delete(
+//   "/:id",
+//   authMiddleware.requireVerifiedAndOnboardedUser,  // TODO: Move to general user route
+//   validate(studentValidator.getStudentById.params, "params"),
+//   studentController.deleteStudent
+// );
 
 // POST /api/students/onboarding/:id        // Create student profile
 router.post(
