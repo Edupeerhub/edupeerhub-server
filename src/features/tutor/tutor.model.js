@@ -1,4 +1,4 @@
-const sequelize = require("../../shared/database/index");
+const sequelize = require("@src/shared/database/index");
 const DataTypes = require("sequelize");
 
 module.exports = () => {
@@ -8,10 +8,11 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
+        field: "user_id",
       },
       bio: {
         type: DataTypes.TEXT,
-        allowNull: false,
+        allowNull: true,
       },
       rating: {
         type: DataTypes.FLOAT,
@@ -22,9 +23,13 @@ module.exports = () => {
         defaultValue: "pending",
         allowNull: false,
       },
+      rejectionReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
-        defaultValue: "active",
+        defaultValue: "hidden",
         allowNull: false,
       },
       education: {
@@ -33,17 +38,55 @@ module.exports = () => {
       },
       timezone: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
     },
     {
       tableName: "tutor_profiles",
       underscored: true,
+      paranoid: true,
+
+      defaultScope: {
+        include: [
+          {
+            model: sequelize.models.Subject,
+            through: { attributes: [] },
+            as: "subjects",
+          },
+          {
+            model: sequelize.models.User,
+            as: "user",
+          },
+        ],
+      },
     }
   );
 
   Tutor.associate = (models) => {
-    Tutor.belongsTo(models.User, { foreignKey: "user_id", as: "user" });
+    Tutor.belongsTo(models.User, {
+      foreignKey: "userId",
+      as: "user",
+    });
+
+    Tutor.belongsToMany(models.Subject, {
+      through: "tutor_subjects",
+      as: "subjects",
+    });
+
+    Tutor.addScope("join", {
+      include: [
+        {
+          model: models.User.scope("join"),
+          as: "user",
+        },
+        {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+          through: { attributes: [] },
+        },
+      ],
+      attributes: ["bio", "rating", "education", "timezone"],
+    });
   };
 
   return Tutor;

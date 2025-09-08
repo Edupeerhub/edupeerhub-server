@@ -1,5 +1,5 @@
-const sequelize = require("../../shared/database/index");
-const DataTypes = require("sequelize");
+const sequelize = require("@src/shared/database/index");
+const { DataTypes } = require("sequelize");
 
 module.exports = () => {
   const Student = sequelize.define(
@@ -8,14 +8,11 @@ module.exports = () => {
       userId: {
         type: DataTypes.UUID,
         primaryKey: true,
-        // references: {
-        //   model: "users",
-        //   key: "id",
-        // },
+        field: "user_id",
       },
       gradeLevel: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       learningGoals: {
         type: DataTypes.TEXT,
@@ -26,30 +23,43 @@ module.exports = () => {
       tableName: "student_profiles",
       underscored: true,
       paranoid: true,
+      defaultScope: {
+        attributes: {
+          exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+        },
+      },
     }
   );
 
   Student.associate = (models) => {
-    // one - one relationship w/user
-    Student.belongsTo(models.User, {
-      // targetKey: "id",
-      // as: "user",
-      foreignKey: "userId",
-      as: "user",
-  
-    });
+    Student.belongsTo(models.User, { foreignKey: "userId", as: "user" });
 
-    // many to many relationship w/subject
-    Student.belongsToMany(models.Subject, {
-      through: models.StudentSubject,
-      foreignKey: "studentId",      
-      as: "subjects",
-    });
+    Student.addScope("join", {
+      include: [
+        {
+          model: models.User.scope("join"),
+          as: "user",
+        },
 
-    // one to many relationship w/exams
+        {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+          through: { attributes: [] },
+        },
+        {
+          model: models.Exam,
+          as: "exams",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+      attributes: {
+        exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+      },
+    });
     Student.belongsToMany(models.Exam, {
-      through: models.StudentExam,
-      foreignKey: "studentId",      
+      through: "student_exams",
+      // foreignKey: "studentId",
       as: "exams",
     });
   };

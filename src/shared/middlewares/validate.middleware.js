@@ -1,4 +1,4 @@
-const ApiError = require("../utils/apiError");
+const ApiError = require("@utils/apiError");
 
 // Helper to prevent leaking sensitive values in validation errors
 const shouldIncludeValue = (fieldName) => {
@@ -16,7 +16,7 @@ const shouldIncludeValue = (fieldName) => {
 const validate =
   (schema, property = "body") =>
   (req, res, next) => {
-    const { error } = schema.validate(req[property], {
+    const { error, value } = schema.validate(req[property], {
       abortEarly: false,
       stripUnknown: true,
     });
@@ -29,6 +29,8 @@ const validate =
       }));
       return next(new ApiError("Validation error.", 400, formatted));
     }
+
+    req[property] = value;
 
     next();
   };

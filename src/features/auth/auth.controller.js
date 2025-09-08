@@ -1,4 +1,4 @@
-const sendResponse = require("../../shared/utils/sendResponse");
+const sendResponse = require("@utils/sendResponse");
 const {
   addStreamUser,
   changeUserPassword,
@@ -16,10 +16,11 @@ const {
   sendResetSuccessEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
-} = require("../../shared/mailtrap/emails");
-const trackEvent = require("../events/events.service");
-const eventTypes = require("../events/eventTypes");
-const { date } = require("joi");
+} = require("@src/shared/email/email.service");
+const trackEvent = require("@features/events/events.service");
+const eventTypes = require("@features/events/eventTypes");
+const ApiError = require("@src/shared/utils/apiError");
+const { setAuthCookie, clearAuthCookie } = require("@src/shared/utils/cookies");
 
 exports.signup = async (req, res, next) => {
   try {
@@ -31,7 +32,7 @@ exports.signup = async (req, res, next) => {
       password,
     });
 
-    // await sendVerificationEmail(newUser.email, newUser.verificationToken);
+    await sendVerificationEmail(newUser.email, newUser.verificationToken);
     // await addStreamUser(newUser);
 
     const token = newUser.generateAuthToken();
@@ -42,13 +43,7 @@ exports.signup = async (req, res, next) => {
       fullName: `${newUser.firstName} ${newUser.lastName}`,
     });
 
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production",
-      // domain: ".edupeerhub.com",
-    });
+    setAuthCookie(res, token);
 
     sendResponse(res, 201, "User registered successfully", {
       id: newUser.id,
@@ -72,13 +67,7 @@ exports.login = async (req, res, next) => {
       date: user.lastLogin,
     });
 
-    res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      secure: process.env.NODE_ENV === "production",
-      // domain: ".edupeerhub.com",
-    });
+    setAuthCookie(res, token);
 
     sendResponse(res, 200, "User signed in successfully", {
       id: user.id,
@@ -99,13 +88,8 @@ exports.profile = async (req, res, next) => {
 };
 
 exports.logout = (req, res, next) => {
-  res.clearCookie("jwt", {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production",
-    // domain: ".edupeerhub.com",
-  });
+  clearAuthCookie(res);
+
   sendResponse(res, 200, "Logout Successful");
 };
 
@@ -114,7 +98,7 @@ exports.verifyEmail = async (req, res, next) => {
     const { code } = req.body;
     const verifiedUser = await verifyUserEmail(code);
 
-    // await sendWelcomeEmail(verifiedUser.email, verifiedUser.fullName);
+    await sendWelcomeEmail(verifiedUser.email, verifiedUser.firstName);
     await trackEvent(eventTypes.USER_VERIFIED_EMAIL, {
       userId: verifiedUser.id,
       email: verifiedUser.email,
@@ -133,7 +117,7 @@ exports.verifyEmail = async (req, res, next) => {
 exports.resendEmail = async (req, res, next) => {
   try {
     const user = await resendVerificationEmail(req.user.id);
-    // await sendVerificationEmail(user.email, user.verificationToken);
+    await sendVerificationEmail(user.email, user.verificationToken);
 
     sendResponse(res, 200, "Verification email resent successfully");
   } catch (error) {
@@ -145,13 +129,12 @@ exports.forgotPassword = async (req, res, next) => {
   try {
     const result = await forgotUserPassword(req.body.email);
 
-    // if (result) {
-    //   await sendPasswordResetEmail(
-    //     result.userEmail,
-    //     `${process.env.CLIENT_URL}/reset-password/${result.resetToken}`
-    //   );
-    // }
-
+    if (result) {
+      await sendPasswordResetEmail(
+        result.userEmail,
+        `${process.env.CLIENT_URL}/reset-password/${result.resetToken}`
+      );
+    }
     sendResponse(res, 200, "Password reset link sent to your email");
   } catch (error) {
     next(error);
@@ -163,7 +146,7 @@ exports.resetPassword = async (req, res, next) => {
     const { token } = req.params;
     const email = await resetUserPassword(token, req.body.password);
 
-    // await sendResetSuccessEmail(email);
+    await sendResetSuccessEmail(email);
     sendResponse(res, 200, "Password reset successful");
   } catch (error) {
     next(error);
@@ -178,7 +161,7 @@ exports.changePassword = async (req, res, next) => {
       req.body.newPassword
     );
 
-    // await sendPasswordChangeSuccessEmail(user.email);
+    await sendPasswordChangeSuccessEmail(result.email);
     sendResponse(res, 200, "Password changed successfully", {
       id: result.id,
       email: result.email,
@@ -187,15 +170,3 @@ exports.changePassword = async (req, res, next) => {
     next(error);
   }
 };
-
-// onboarding will be per user role of student or mentor
-// exports.onboard = async (req, res, next) => {
-//   try {
-//     const updatedUser = await onBoardUser({ userId: req.user.id, ...req.body });
-
-//     await addStreamUser(updatedUser);
-//     sendResponse(res, 200, "Onboard successful", updatedUser);
-//   } catch (error) {
-//     next(error);
-//   }
-// };

@@ -1,5 +1,5 @@
 const morgan = require("morgan");
-const logger = require("../utils/logger");
+const logger = require("@utils/logger");
 
 const httpLogger = morgan((tokens, req, res) => {
   try {

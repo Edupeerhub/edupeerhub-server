@@ -1,16 +1,19 @@
 const express = require("express");
-const httpLogger = require("./shared/middlewares/httpLogger.middleware");
+const httpLogger = require("@src/shared/middlewares/httpLogger.middleware");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const errorHandler = require("./shared/middlewares/error.middleware");
-const authRoutes = require("./features/auth/auth.route");
-const ApiError = require("./shared/utils/apiError");
-const sendResponse = require("./shared/utils/sendResponse");
-const studentRoutes = require("./features/student/student.route")
+
+const studentRoutes = require("@features/student/student.route");
+const errorHandler = require("@src/shared/middlewares/error.middleware");
+const authRoutes = require("@features/auth/auth.route");
+const tutorRoutes = require("@features/tutor/tutor.route");
+const adminRoutes = require("@features/admin/admin.route");
+const subjectRoutes = require("@features/subject/subject.route");
+const ApiError = require("@utils/apiError");
+const sendResponse = require("@utils/sendResponse");
 
 const app = express();
-
 
 // Trust first proxy
 app.set("trust proxy", 1);
@@ -23,19 +26,23 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 app.use(httpLogger);
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/students", studentRoutes)
+app.use("/api/student", studentRoutes);
+app.use("/api/tutor", tutorRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/subject", subjectRoutes);
 
 app.get("/api/health", (req, res) => {
   sendResponse(res, 200, "Server is healthy", {
     status: "OK",
+    uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });

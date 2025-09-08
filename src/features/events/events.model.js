@@ -1,5 +1,5 @@
-const sequelize = require("../../shared/database/index");
-const DataTypes = require("sequelize");
+const sequelize = require("@src/shared/database/index");
+const { DataTypes } = require("sequelize");
 module.exports = () => {
   const EventLog = sequelize.define(
     "EventLog",

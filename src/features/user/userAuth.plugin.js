@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const ApiError = require("../../shared/utils/apiError");
+const ApiError = require("@utils/apiError");
 
 function userAuthPlugin(model) {
   const jwtSecret = process.env.JWT_SECRET;
