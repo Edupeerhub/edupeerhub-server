@@ -1,0 +1,126 @@
+name: Dev Database Migration and Seeding
+
+on:
+  push:
+    branches:
+      - development
+  pull_request:
+    branches:
+      - development
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+
+jobs:
+  run-tests:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U testuser; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+
+      - name: Setup test environment
+        run: |
+          echo "DB_HOST=localhost" > .env.test
+          echo "DB_USER=testuser" >> .env.test
+          echo "DB_PASS=testpass" >> .env.test
+          echo "DB_NAME=testdb" >> .env.test
+          echo "DB_PORT=5432" >> .env.test
+          echo "JWT_SECRET=test-jwt-secret-key" >> .env.test
+          echo "PORT=3000" >> .env.test
+          echo "NODE_ENV=test" >> .env.test
+
+      - name: Verify environment setup
+        run: |
+          echo "Contents of .env.test:"
+          cat .env.test
+          echo ""
+          echo "Testing database connection..."
+          PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "SELECT version();"
+
+      - name: Load environment and run migrations
+        run: |
+          # Export variables from .env.test
+          export $(grep -v '^#' .env.test | xargs)
+          echo "DB_HOST is: $DB_HOST"
+          echo "DB_NAME is: $DB_NAME"
+          # Run migrations with environment loaded
+          npx sequelize-cli db:migrate --debug
+        env:
+          NODE_ENV: test
+
+      - name: Run tests
+        id: test
+        run: |
+          # Export variables from .env.test
+          export $(grep -v '^#' .env.test | xargs)
+          npm test
+        env:
+          NODE_ENV: test
+
+      - name: Cleanup
+        if: always()
+        run: rm -f .env.test
+
+  migrate-dev:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    runs-on: ubuntu-latest
+    needs: run-tests
+
+    env:
+      NODE_ENV: dev_ci
+      DATABASE_URL: ${{ secrets.DEV_DB_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations
+        run: npm run migrate
+
+      - name: Seed dev database
+        run: npm run seed

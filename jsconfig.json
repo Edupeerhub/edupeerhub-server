@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@src/*": ["./src/*"],
+      "@models": ["./src/shared/database/models"],
+      "@utils/*": ["./src/shared/utils/*"],
+      "@features/*": ["./src/features/*"]
+    }
+  },
+
+    "exclude": ["node_modules"],
+    "include": [
+      "./src/**/*",         
+    ]
+  
+}
