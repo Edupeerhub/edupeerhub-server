@@ -44,8 +44,6 @@ module.exports = () => {
     {
       tableName: "tutor_profiles",
       underscored: true,
-      // paranoid: true,
-
       defaultScope: {
         include: [
           {
@@ -85,7 +83,7 @@ module.exports = () => {
           through: { attributes: [] },
         },
       ],
-      attributes: ["bio", "rating", "education", "timezone"],
+      attributes: ["userId", "bio", "rating", "education", "timezone"],
     });
   };
 

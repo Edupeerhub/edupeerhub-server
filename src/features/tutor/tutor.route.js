@@ -15,33 +15,26 @@ const {
   scheduleSearchValidator,
   availabilityValidator,
   canEditProfileValidator,
-  profileSchema,
+  updateProfileSchema,
+  createProfileSchema,
 } = require("./tutor.middleware");
 const router = express.Router();
 
 router.use(protectRoute);
 router.use(requireVerifiedUser);
 
-// GET /api/tutors              // Browse tutors with filters
+router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/", searchValidator, tutorController.getTutors);
-
-//GET tutor recommendations
-router.get("/recommendations", tutorController.getTutorRecommendations);
-// GET /api/tutors/:id          // Individual tutor profile
 router.get("/:id", tutorController.getTutor);
-// DELETE /api/tutors/:id          // Individual tutor profile
 // router.delete("/:id", tutorController.deleteTutor);  // TODO: Move to general user route
-// POST /api/tutors         // Create tutor profile
-router.post("/", validate(profileSchema), tutorController.createTutor);
-// PUT /api/tutors/:id     // Update tutor profile
 router.put(
   "/:id",
-  validate(profileSchema),
+  validate(updateProfileSchema),
   // canEditProfileValidator,
   tutorController.updateTutor
 );
+router.get("/recommendations", tutorController.getTutorRecommendations);
 
-// GET /api/tutors/:id/schedule  // Get tutor's schedule
 router.get(
   "/:id/schedule",
   scheduleSearchValidator,
