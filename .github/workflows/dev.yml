@@ -18,7 +18,6 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
 
-    # Set up PostgreSQL service for testing
     services:
       postgres:
         image: postgres:15
@@ -104,7 +103,7 @@ jobs:
     needs: run-tests
 
     env:
-      NODE_ENV: sequelize_dev_actions_env
+      NODE_ENV: development
       DATABASE_URL: ${{ secrets.DEV_DB_URL }}
 
     steps:

@@ -13,6 +13,9 @@ module.exports = {
       idle: 10000,
     },
     dialect: "postgres",
+    dialectOptions: process.env.CI
+      ? { ssl: { require: true, rejectUnauthorized: false } }
+      : { ssl: false },
     logging: console.log,
   },
   test: {
@@ -21,9 +24,6 @@ module.exports = {
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     dialect: "postgres",
-    // dialectOptions: process.env.CI
-    //   ? { ssl: { require: true, rejectUnauthorized: false } } // SSL for Actions
-    //   : { ssl: false }, // local test DB
     logging: false,
   },
   sequelize_dev_actions_env: {
