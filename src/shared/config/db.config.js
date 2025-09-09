@@ -13,9 +13,6 @@ module.exports = {
       idle: 10000,
     },
     dialect: "postgres",
-    dialectOptions: process.env.CI
-      ? { ssl: { require: true, rejectUnauthorized: false } }
-      : { ssl: false },
     logging: console.log,
   },
   test: {
@@ -26,7 +23,7 @@ module.exports = {
     dialect: "postgres",
     logging: false,
   },
-  sequelize_dev_actions_env: {
+  dev_ci: {
     use_env_variable: "DATABASE_URL",
     dialect: "postgres",
     dialectOptions: {

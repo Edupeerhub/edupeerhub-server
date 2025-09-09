@@ -103,8 +103,7 @@ jobs:
     needs: run-tests
 
     env:
-      NODE_ENV: development
-      CI: true
+      NODE_ENV: dev_ci
       DATABASE_URL: ${{ secrets.DEV_DB_URL }}
 
     steps:
