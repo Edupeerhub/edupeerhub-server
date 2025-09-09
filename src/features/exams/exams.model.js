@@ -19,7 +19,7 @@ module.exports = () => {
       description: {
         type: DataTypes.TEXT,
       },
-      is_active: {
+      isActive: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,
         allowNull: false,
