@@ -8,7 +8,7 @@ module.exports = {
       student_user_id: {
         type: Sequelize.UUID,
         allowNull: false,
-        references: { model: "student_profiles", key: "userId" },
+        references: { model: "student_profiles", key: "user_id" },
         onDelete: "CASCADE",
       },
       subject_id: {
