@@ -26,7 +26,7 @@ router.use(requireVerifiedUser);
 router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/", searchValidator, tutorController.getTutors);
 router.get("/:id", tutorController.getTutor);
-// router.delete("/:id", tutorController.deleteTutor);  // TODO: Move to general user route
+
 router.put(
   "/:id",
   validate(updateProfileSchema),

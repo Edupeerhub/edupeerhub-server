@@ -6,15 +6,12 @@ const studentController = require("./student.controller");
 const authMiddleware = require("@features/auth/auth.middleware");
 
 router.use(authMiddleware.protectRoute);
-//  GET /api/students 		// Get all students
 router.get(
   "/",
   authMiddleware.requireVerifiedAndOnboardedUser,
-
   studentController.listStudents
 );
 
-// GET /api/students/:id          // Individual student profile
 router.get(
   "/:id",
   authMiddleware.requireVerifiedAndOnboardedUser,
@@ -23,7 +20,6 @@ router.get(
   studentController.getStudent
 );
 
-// PUT /api/students/:id     // Update student profile
 router.put(
   "/:id",
   authMiddleware.requireVerifiedAndOnboardedUser,
@@ -32,15 +28,6 @@ router.put(
   studentController.updateStudent
 );
 
-// DELETE /api/students/:id        // Delete student profile
-// router.delete(
-//   "/:id",
-//   authMiddleware.requireVerifiedAndOnboardedUser,  // TODO: Move to general user route
-//   validate(studentValidator.getStudentById.params, "params"),
-//   studentController.deleteStudent
-// );
-
-// POST /api/students/onboarding/:id        // Create student profile
 router.post(
   "/",
   authMiddleware.requireVerifiedUser,

@@ -101,16 +101,6 @@ exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   return await this.getTutor(id);
 };
 
-exports.deleteTutorProfile = async (id) => {
-  // const tutor = await Tutor.findByPk(id);
-  // return await tutor.destroy()
-  return await Tutor.destroy({
-    where: {
-      userId: id,
-    },
-  });
-};
-
 exports.getTutorAvailability = async ({ id, startTime, endTime }) => {};
 
 exports.updateTutorAvailability = async ({ id, availability }) => {};

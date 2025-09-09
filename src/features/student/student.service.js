@@ -91,15 +91,4 @@ module.exports = {
 
     return this.getStudentById(student.userId || student.id);
   },
-
-  async deleteStudent(id) {
-    const student = await Student.findByPk(id);
-    if (!student) {
-      throw new ApiError("Student not found", 404);
-    }
-    await student.setSubjects([]);
-    await student.setExams([]);
-    await student.destroy();
-    return { id };
-  },
 };

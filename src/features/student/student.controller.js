@@ -62,24 +62,4 @@ module.exports = {
       next(err);
     }
   },
-
-  async deleteStudent(req, res, next) {
-    try {
-      const requester = req.user;
-      const targetId = req.params.id;
-      if (!requester) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      if (requester.role !== "admin" || !targetId) {
-        return res
-          .status(403)
-          .json({ message: "Only Students and Admins can delete accounts" });
-      }
-
-      const result = await studentService.deleteStudent(req.params.id);
-      sendResponse(res, 200, "Student deleted", result);
-    } catch (err) {
-      next(err);
-    }
-  },
 };
