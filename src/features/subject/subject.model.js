@@ -19,8 +19,9 @@ module.exports = () => {
         type: DataTypes.TEXT,
         allowNull: false,
       },
-      is_active: {
+      isActive: {
         type: DataTypes.BOOLEAN,
+        field: "is_active",
         defaultValue: false,
         allowNull: false,
       },
@@ -30,7 +31,7 @@ module.exports = () => {
       underscored: true,
       scopes: {
         defaultScope: {
-          attributes: ["id", "name", "description", "is_active"],
+          attributes: ["id", "name", "description", "isActive"],
         },
         join: {
           attributes: ["id", "name", "description"],

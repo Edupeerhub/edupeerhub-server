@@ -13,14 +13,15 @@ router.use(protectRoute);
 
 //get subjects
 router.get("/", async (req, res) => {
+  const admin = req.user.role === "admin";
   const query = {};
-  const userOrTutor = req.user.role === "tutor" || req.user.role === "student";
 
-  if (userOrTutor) {
-    query.where = {
-      isActive: true,
-    };
+  if (admin) {
+    query.where = {};
+  } else {
+    query.where = { isActive: true };
   }
+
   const subjects = await Subject.findAll({
     where: query,
   });
@@ -60,7 +61,5 @@ router.delete("/:id", requireAdmin, async (req, res) => {
   }
   sendResponse(res, 200, "success");
 });
-
-
 
 module.exports = router;

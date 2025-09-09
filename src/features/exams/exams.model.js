@@ -21,6 +21,7 @@ module.exports = () => {
       },
       isActive: {
         type: DataTypes.BOOLEAN,
+        field: "is_active",
         defaultValue: true,
         allowNull: false,
       },
