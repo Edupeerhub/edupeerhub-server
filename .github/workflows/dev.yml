@@ -12,10 +12,28 @@ on:
       - synchronize
       - reopened
       - closed
+
 jobs:
   run-tests:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
+
+    # Set up PostgreSQL service for testing
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_USER: testuser
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,37 +47,56 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until pg_isready -h localhost -p 5432 -U testuser; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+
       - name: Setup test environment
         run: |
-          echo "DB_HOST=${{ secrets.TEST_DB_HOST }}" > .env.test
-          echo "DB_USER=${{ secrets.TEST_DB_USER }}" >> .env.test
-          echo "DB_PASS=${{ secrets.TEST_DB_PASS }}" >> .env.test
-          echo "DB_NAME=${{ secrets.TEST_DB_NAME }}" >> .env.test
-          echo "JWT_SECRET=${{ secrets.TEST_JWT_SECRET }}" >> .env.test
+          echo "DB_HOST=localhost" > .env.test
+          echo "DB_USER=testuser" >> .env.test
+          echo "DB_PASS=testpass" >> .env.test
+          echo "DB_NAME=testdb" >> .env.test
+          echo "DB_PORT=5432" >> .env.test
+          echo "JWT_SECRET=test-jwt-secret-key" >> .env.test
           echo "PORT=3000" >> .env.test
           echo "NODE_ENV=test" >> .env.test
 
-      - name: Print test environment
+      - name: Verify environment setup
         run: |
-          echo "NODE_ENV=$NODE_ENV"
-          echo "CI=$CI"
-          echo "DOTENV_CONFIG_PATH=$DOTENV_CONFIG_PATH"
-          echo "DB_HOST=$DB_HOST"
-          echo "DB_NAME=$DB_NAME"
+          echo "Contents of .env.test:"
+          cat .env.test
+          echo ""
+          echo "Testing database connection..."
+          PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "SELECT version();"
 
-      - name: Run migrations for test DB
+      - name: Load environment and run migrations
+        run: |
+          # Export variables from .env.test
+          export $(grep -v '^#' .env.test | xargs)
+          echo "DB_HOST is: $DB_HOST"
+          echo "DB_NAME is: $DB_NAME"
+          # Run migrations with environment loaded
+          npx sequelize-cli db:migrate --debug
         env:
-          DOTENV_CONFIG_PATH: .env.test
-          CI: true
           NODE_ENV: test
-        run: npx sequelize-cli db:migrate --debug
 
       - name: Run tests
         id: test
+        run: |
+          # Export variables from .env.test
+          export $(grep -v '^#' .env.test | xargs)
+          npm test
         env:
-          DOTENV_CONFIG_PATH: .env.test
           NODE_ENV: test
-        run: npm test
+
+      - name: Cleanup
+        if: always()
+        run: rm -f .env.test
 
   migrate-dev:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
@@ -68,7 +105,7 @@ jobs:
 
     env:
       NODE_ENV: sequelize_dev_actions_env
-      DATABASE_URL: ${{ secrets.DEV_DB_URL  }}
+      DATABASE_URL: ${{ secrets.DEV_DB_URL }}
 
     steps:
       - name: Checkout code
