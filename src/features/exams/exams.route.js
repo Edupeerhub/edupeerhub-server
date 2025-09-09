@@ -11,17 +11,10 @@ router.use(protectRoute);
 //get exams
 router.get("/", async (req, res) => {
   const admin = req.user.role === "admin";
-  const query = {};
 
-  if (admin) {
-    query.where = {};
-  } else {
-    query.where = { isActive: true };
-  }
+  const where = admin ? {} : { isActive: true };
 
-  const exams = await Exam.findAll({
-    where: query,
-  });
+  const exams = await Exam.findAll({ where });
 
   sendResponse(res, 200, "success", exams);
 });

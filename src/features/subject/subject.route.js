@@ -14,17 +14,10 @@ router.use(protectRoute);
 //get subjects
 router.get("/", async (req, res) => {
   const admin = req.user.role === "admin";
-  const query = {};
 
-  if (admin) {
-    query.where = {};
-  } else {
-    query.where = { isActive: true };
-  }
+  const where = admin ? {} : { isActive: true };
 
-  const subjects = await Subject.findAll({
-    where: query,
-  });
+  const subjects = await Subject.findAll({ where });
 
   sendResponse(res, 200, "success", subjects);
 });
