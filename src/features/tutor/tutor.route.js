@@ -25,6 +25,7 @@ router.use(requireVerifiedUser);
 
 router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/", searchValidator, tutorController.getTutors);
+router.get("/recommendations", tutorController.getTutorRecommendations);
 router.get("/:id", tutorController.getTutor);
 
 router.put(
@@ -33,7 +34,6 @@ router.put(
   // canEditProfileValidator,
   tutorController.updateTutor
 );
-router.get("/recommendations", tutorController.getTutorRecommendations);
 
 router.get(
   "/:id/schedule",

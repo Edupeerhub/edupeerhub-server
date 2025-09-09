@@ -9,6 +9,8 @@ exports.availabilityValidator = async (req, res, next) => {
 
 //tutor profile validator
 exports.createProfileSchema = Joi.object({
+  bio: Joi.string().max(1000),
+  timezone: Joi.string().pattern(/^UTC(?:[+-][0-9]{1,2})?$/),
   education: Joi.string().max(255).required(),
   subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
 });
