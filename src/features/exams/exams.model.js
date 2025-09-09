@@ -29,7 +29,6 @@ module.exports = () => {
       tableName: "exams",
       underscored: true,
       timestamps: true,
-      paranoid: true,
     }
   );
 
