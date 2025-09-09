@@ -15,7 +15,7 @@ module.exports = () => {
         allowNull: true,
       },
       learningGoals: {
-        type: DataTypes.ARRAY(DataTypes.STRING),
+        type: DataTypes.ARRAY(DataTypes.TEXT),
         allowNull: false,
       },
     },
