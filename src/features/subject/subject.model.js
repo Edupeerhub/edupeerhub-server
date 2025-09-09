@@ -40,25 +40,23 @@ module.exports = () => {
     }
   );
 
-  Subject.associate = (models) => {
-    //Tutor associations
-
-    Subject.belongsToMany(models.Tutor, {
-      through: "tutor_subjects",
-      // uniqueKey: "subjectId",
-      // otherKey: "userId",
-    });
-
-    //Student associations
-    models.Student.belongsToMany(Subject, {
-      through: "student_subjects",
-      as: "subjects",
-    });
-    Subject.belongsToMany(models.Student, {
-      through: "student_subjects",
-      as: "student",
-    });
-  };
+  // Subject.associate = (models) => {
+  //Tutor associations
+  // Subject.belongsToMany(models.Tutor, {
+  //   through: "tutor_subjects",
+  //   // uniqueKey: "subjectId",
+  //   // otherKey: "userId",
+  // });
+  // //Student associations
+  // models.Student.belongsToMany(Subject, {
+  //   through: "student_subjects",
+  //   as: "subjects",
+  // });
+  // Subject.belongsToMany(models.Student, {
+  //   through: "student_subjects",
+  //   as: "student",
+  // });
+  // };
 
   return Subject;
 };

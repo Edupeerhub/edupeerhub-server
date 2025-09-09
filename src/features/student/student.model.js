@@ -56,6 +56,11 @@ module.exports = () => {
         exclude: ["createdAt", "updatedAt"],
       },
     });
+    Student.belongsToMany(models.Subject, {
+      through: "student_subjects",
+      as: "subjects",
+    });
+
     Student.belongsToMany(models.Exam, {
       through: "student_exams",
       // foreignKey: "studentId",
