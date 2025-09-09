@@ -1,6 +1,8 @@
 const sendResponse = require("@utils/sendResponse");
 const studentService = require("./student.service");
 const ApiError = require("@src/shared/utils/apiError");
+const trackEvent = require("../events/events.service");
+const eventTypes = require("../events/eventTypes");
 
 module.exports = {
   async listStudents(req, res, next) {
@@ -33,6 +35,12 @@ module.exports = {
         req.user.id,
         req.body
       );
+      await trackEvent(eventTypes.USER_ONBOARDED, {
+        userId: student.userId,
+        email: student.user.email,
+        role: student.user.role,
+        fullName: `${student.user.firstName} ${student.user.lastName}`,
+      });
       sendResponse(res, 201, "Onboarding successful", student);
     } catch (err) {
       next(err);

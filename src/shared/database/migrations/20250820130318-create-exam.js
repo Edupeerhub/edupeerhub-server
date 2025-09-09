@@ -1,8 +1,5 @@
 "use strict";
 
-const { toDefaultValue } = require("sequelize/lib/utils");
-const sequelize = require("..");
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {

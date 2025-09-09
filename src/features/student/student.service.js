@@ -29,12 +29,12 @@ module.exports = {
       throw new ApiError("Student profile already exists", 409);
     }
 
-    await user.update({ isOnboarded: true });
+    await user.update({ isOnboarded: true, role: "student" });
 
     const student = await Student.create({
       userId,
       gradeLevel: payload.gradeLevel,
-      learningGoals: normalizeLearningGoals(payload.learningGoals),
+      learningGoals: payload.learningGoals,
     });
 
     if (payload.subjects) {
@@ -60,7 +60,7 @@ module.exports = {
       student.gradeLevel = payload.gradeLevel;
     }
     if (payload.learningGoals) {
-      student.learningGoals = normalizeLearningGoals(payload.learningGoals);
+      student.learningGoals = payload.learningGoals;
     }
     if (typeof payload.isOnboarded === "boolean") {
       student.isOnboarded = payload.isOnboarded;
@@ -103,14 +103,3 @@ module.exports = {
     return { id };
   },
 };
-
-// Helper to normalize learningGoals to JSON/text storage
-function normalizeLearningGoals(lg) {
-  if (Array.isArray(lg)) {
-    return JSON.stringify(lg);
-  }
-  if (typeof lg === "string") {
-    return lg;
-  }
-  return null;
-}

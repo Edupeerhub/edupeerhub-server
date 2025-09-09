@@ -76,6 +76,7 @@ exports.getUsers = async (query) => {
 
 exports.getUser = async (id) => {
   const user = await User.unscoped().findByPk(id, {
+    paranoid: false,
     attributes: [
       "id",
       "email",
@@ -88,6 +89,7 @@ exports.getUser = async (id) => {
       "accountStatus",
       "suspendedAt",
       "suspensionReason",
+      "deletedAt",
     ],
     include: [...STUDENT_INCLUDES, ...TUTOR_INCLUDES],
   });
@@ -103,11 +105,11 @@ exports.getUser = async (id) => {
 };
 
 exports.restoreUser = async (id) => {
-  const user = await User.scope("includeDeleted").findByPk(id);
-  if (!user) throw new ApiError("User not found", 404);
+  const user = await User.findByPk(id, { paranoid: false });
+  if (user && user.deletedAt) {
+    await user.restore();
+  }
 
-  user.isDeleted = false;
-  await user.save();
   return user;
 };
 

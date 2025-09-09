@@ -52,7 +52,7 @@ exports.loginUser = async ({ email, password }) => {
       "lastName",
       "role",
       "accountStatus",
-      "isDeleted",
+      "deletedAt",
       "passwordHash",
     ],
   });
@@ -60,7 +60,7 @@ exports.loginUser = async ({ email, password }) => {
   if (!user) throw new ApiError("Invalid email or password", 401);
   if (user.accountStatus === "suspended")
     throw new ApiError("Your account is suspended", 403);
-  if (user.isDeleted) throw new ApiError("Account no longer exists", 403);
+  if (user.deletedAt) throw new ApiError("Account no longer exists", 403);
 
   const isMatch = await user.isValidPassword(password);
   if (!isMatch) throw new ApiError("Invalid email or password", 401);

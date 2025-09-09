@@ -5,6 +5,10 @@ const sequelize = require("@src/shared/database");
 const { required } = require("joi");
 
 exports.createTutor = async ({ profile, userId }) => {
+  const existing = await Tutor.findByPk(userId);
+  if (existing) {
+    throw new ApiError("Tutor profile already exists", 409);
+  }
   const newTutor = await Tutor.create(profile);
 
   await addSubjectsToProfile({

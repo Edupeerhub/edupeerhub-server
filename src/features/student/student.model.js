@@ -15,14 +15,13 @@ module.exports = () => {
         allowNull: true,
       },
       learningGoals: {
-        type: DataTypes.TEXT,
+        type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false,
       },
     },
     {
       tableName: "student_profiles",
       underscored: true,
-      // paranoid: true,
       defaultScope: {
         attributes: {
           exclude: ["createdAt", "updatedAt"],
