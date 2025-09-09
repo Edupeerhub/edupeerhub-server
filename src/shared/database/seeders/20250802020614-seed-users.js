@@ -27,7 +27,7 @@ module.exports = {
             is_verified: true,
             is_onboarded: true,
             account_status: "active",
-            is_deleted: false,
+            deleted_at: null,
             created_at: new Date(),
             updated_at: new Date(),
           },
@@ -91,7 +91,7 @@ module.exports = {
         {
           user_id: studentId,
           grade_level: "10",
-          learning_goals: "Improve math and science skills",
+          learning_goals: ["Improve math", "Improve science"],
           created_at: new Date(),
           updated_at: new Date(),
         },

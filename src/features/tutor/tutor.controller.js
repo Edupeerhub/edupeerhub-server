@@ -3,6 +3,8 @@ const tutorService = require("./tutor.service");
 
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
+const trackEvent = require("../events/events.service");
+const eventTypes = require("../events/eventTypes");
 exports.getTutors = async (req, res) => {
   //params
   const page = req.query?.page ?? 1;
@@ -46,7 +48,14 @@ exports.createTutor = async (req, res) => {
     userId: req.user.id,
   });
 
-  sendResponse(res, 201, "created successfully", newTutor);
+  await trackEvent(eventTypes.USER_ONBOARDED, {
+    userId: newTutor.userId,
+    email: newTutor.user.email,
+    role: newTutor.user.role,
+    fullName: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
+  });
+
+  sendResponse(res, 201, "Onboarding successful", newTutor);
 };
 
 exports.updateTutor = async (req, res) => {

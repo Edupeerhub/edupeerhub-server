@@ -1,9 +1,6 @@
 const express = require("express");
-
-const validate = require("@src/shared/middlewares/validate.middleware");
-
 const { protectRoute } = require("@features/auth/auth.middleware");
-const { Subject } = require("@models");
+const { Exam } = require("@models");
 const { requireAdmin } = require("@features/admin/admin.middleware");
 const sendResponse = require("@utils/sendResponse");
 
@@ -11,7 +8,7 @@ const router = express.Router();
 
 router.use(protectRoute);
 
-//get subjects
+//get exams
 router.get("/", async (req, res) => {
   const query = {};
   const userOrTutor = req.user.role === "tutor" || req.user.role === "student";
@@ -21,46 +18,44 @@ router.get("/", async (req, res) => {
       isActive: true,
     };
   }
-  const subjects = await Subject.findAll({
+  const exams = await Exam.findAll({
     where: query,
   });
 
-  sendResponse(res, 200, "success", subjects);
+  sendResponse(res, 200, "success", exams);
 });
 
-//add subject
+//add Exam
 router.post("/", requireAdmin, async (req, res) => {
-  const newSubject = await Subject.create(req.body);
-  sendResponse(res, 200, "success", newSubject);
+  const newExam = await Exam.create(req.body);
+  sendResponse(res, 200, "success", newExam);
 });
 
-//update subject
+//update Exam
 router.put("/:id", requireAdmin, async (req, res) => {
-  const [, [updatedSubject]] = await Subject.update(req.body, {
+  const [, [updatedExam]] = await Exam.update(req.body, {
     where: {
       id: req.params.id,
     },
     returning: true,
   });
-  sendResponse(res, 200, "success", updatedSubject);
+  sendResponse(res, 200, "success", updatedExam);
 });
 
-//delete subject
+//delete Exam
 
 router.delete("/:id", requireAdmin, async (req, res) => {
-  const deleteCount = await Subject.destroy({
+  const deleteCount = await Exam.destroy({
     where: {
       id: req.params.id,
     },
   });
 
   if (deleteCount === 0) {
-    sendResponse(res, 404, "Subject does not exist");
+    sendResponse(res, 404, "Exam does not exist");
     return;
   }
   sendResponse(res, 200, "success");
 });
-
-
 
 module.exports = router;

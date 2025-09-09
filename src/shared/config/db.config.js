@@ -23,7 +23,7 @@ module.exports = {
     dialect: "postgres",
     logging: false,
   },
-  sequelize_dev_actions_env: {
+  dev_ci: {
     use_env_variable: "DATABASE_URL",
     dialect: "postgres",
     dialectOptions: {

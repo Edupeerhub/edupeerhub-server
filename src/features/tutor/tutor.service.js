@@ -1,33 +1,30 @@
-const ApiError = require("../../shared/utils/apiError");
+const ApiError = require("@utils/apiError");
 const { where, Op } = require("sequelize");
-const {
-  Subject,
-  User,
-  Tutor,
-  Student,
-} = require("../../shared/database/models");
-const sequelize = require("../../shared/database");
+const { Subject, User, Tutor, Student } = require("@models");
+const sequelize = require("@src/shared/database");
 const { required } = require("joi");
 
 exports.createTutor = async ({ profile, userId }) => {
+  const existing = await Tutor.findByPk(userId);
+  if (existing) {
+    throw new ApiError("Tutor profile already exists", 409);
+  }
   const newTutor = await Tutor.create(profile);
+
+  await addSubjectsToProfile({
+    profile: newTutor,
+    subjectIds: profile.subjects,
+  });
   await User.update(
     { role: "tutor", isOnboarded: true },
     { where: { id: userId } }
   );
 
-  return newTutor;
+  return this.getTutor(userId);
 };
 
 exports.getTutor = async (userId) => {
-  return await Tutor.findByPk(userId, {
-    include: [
-      {
-        model: Subject,
-        as: "subjects",
-      },
-    ],
-  });
+  return await Tutor.scope("join").findByPk(userId);
 };
 
 exports.getTutors = async ({
@@ -47,7 +44,7 @@ exports.getTutors = async ({
       [Op.in]: subjects,
     };
   }
-  return await Tutor.findAndCountAll({
+  return await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus,
       profileVisibility,
@@ -72,7 +69,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
       [Op.in]: subjects,
     };
   }
-  return await Tutor.findAndCountAll({
+  return await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus: "approved",
       profileVisibility: "active",
@@ -84,7 +81,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
 };
 
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {
-  let [count, [newTutorProfile]] = await Tutor.update(tutorProfile, {
+  const [count, [newTutorProfile]] = await Tutor.update(tutorProfile, {
     where: { user_id: id },
     returning: true,
   });
@@ -96,10 +93,21 @@ exports.updateTutorProfile = async ({ id, tutorProfile }) => {
       "Tutor profile not found"
     );
   }
-  const subjectIds = tutorProfile?.subjects?.map((subject) => subject.id);
 
-  if (!Array.isArray(subjectIds)) {
-    return newTutorProfile;
+  await addSubjectsToProfile({
+    profile: newTutorProfile,
+    subjectIds: tutorProfile.subjects,
+  });
+  return await this.getTutor(id);
+};
+
+exports.getTutorAvailability = async ({ id, startTime, endTime }) => {};
+
+exports.updateTutorAvailability = async ({ id, availability }) => {};
+
+async function addSubjectsToProfile({ profile, subjectIds }) {
+  if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
+    return;
   }
 
   const selectedSubjects = await Subject.findAll({
@@ -110,15 +118,5 @@ exports.updateTutorProfile = async ({ id, tutorProfile }) => {
     },
   });
 
-  await newTutorProfile.setSubjects(selectedSubjects);
-  newTutorProfile = await this.getTutor(id);
-  return newTutorProfile;
-};
-
-exports.deleteTutorProfile = async (id) => {
-  return await Tutor.destroy({ where: { user_id: id }, returning: true });
-};
-
-exports.getTutorAvailability = async ({ id, startTime, endTime }) => {};
-
-exports.updateTutorAvailability = async ({ id, availability }) => {};
+  await profile.setSubjects(selectedSubjects);
+}

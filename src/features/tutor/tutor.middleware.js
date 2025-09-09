@@ -8,14 +8,21 @@ exports.availabilityValidator = async (req, res, next) => {
 };
 
 //tutor profile validator
-exports.profileSchema = Joi.object({
+exports.createProfileSchema = Joi.object({
   bio: Joi.string().max(1000),
+  timezone: Joi.string().pattern(/^UTC(?:[+-][0-9]{1,2})?$/),
   education: Joi.string().max(255).required(),
+  subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
+});
+
+exports.updateProfileSchema = Joi.object({
+  bio: Joi.string().max(1000),
+  education: Joi.string().max(255),
   profileVisibility: Joi.valid("active", "hidden"),
 
-  timezone: Joi.string().pattern(/^UTC[+-][0-9]{1,2}$/),
+  timezone: Joi.string().pattern(/^UTC(?:[+-][0-9]{1,2})?$/),
 
-  subjectIds: Joi.array().items(Joi.number().integer()).default([]),
+  subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
 });
 
 exports.canEditProfileValidator = async (req, res, next) => {
