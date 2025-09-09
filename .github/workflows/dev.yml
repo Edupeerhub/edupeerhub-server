@@ -39,12 +39,20 @@ jobs:
           echo "PORT=3000" >> .env.test
           echo "NODE_ENV=test" >> .env.test
 
+      - name: Print test environment
+        run: |
+          echo "NODE_ENV=$NODE_ENV"
+          echo "CI=$CI"
+          echo "DOTENV_CONFIG_PATH=$DOTENV_CONFIG_PATH"
+          echo "DB_HOST=$DB_HOST"
+          echo "DB_NAME=$DB_NAME"
+
       - name: Run migrations for test DB
         env:
           DOTENV_CONFIG_PATH: .env.test
           CI: true
           NODE_ENV: test
-        run: npm run migrate
+        run: npx sequelize-cli db:migrate --debug
 
       - name: Run tests
         id: test
