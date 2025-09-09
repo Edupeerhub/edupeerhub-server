@@ -7,7 +7,7 @@ module.exports = {
       student_user_id: {
         type: Sequelize.UUID,
         allowNull: false,
-        references: { model: "students", key: "userId" },
+        references: { model: "student_profiles", key: "userId" },
         onDelete: "CASCADE",
       },
       exam_id: {
