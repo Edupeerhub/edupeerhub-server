@@ -71,6 +71,11 @@ module.exports = () => {
       as: "subjects",
     });
 
+    Tutor.hasMany(models.Booking, {
+      foreignKey: "tutorId",
+      as: "bookings",
+    });
+
     Tutor.addScope("join", {
       include: [
         {

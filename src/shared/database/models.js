@@ -11,6 +11,7 @@ const definers = [
   require("@features/admin/admin.model"),
   require("@features/exams/exams.model"),
   require("@features/events/events.model"),
+  require("@features/booking/booking.model"),
 ];
 
 ///Add models
@@ -43,6 +44,7 @@ module.exports = {
   Admin: sequelize.models.Admin,
   EventLog: sequelize.models.EventLog,
   Exam: sequelize.models.Exam,
+  Booking: sequelize.models.Booking,
   // StudentExam: sequelize.models.StudentExam,
 };
 

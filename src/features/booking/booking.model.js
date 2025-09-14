@@ -1,0 +1,329 @@
+// UUID id
+// UUID tutorID
+//UUID studentID
+//UUID subjectID
+// Date scheuledStart
+// Date scheduledEnd
+//Enum(pending,confirmed,completed,cancelled) status
+// Varchar meeting link
+// Varchar tutor_notes
+// Varchar student_notes
+// UUID CancelledBy
+// Date CancelledAt
+// Text CancelledReasonconst { DataTypes } = require('sequelize');
+const { DataTypes } = require("sequelize");
+
+module.exports = (sequelize) => {
+  const Booking = sequelize.define(
+    "Booking",
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+        allowNull: false,
+      },
+
+      tutorId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        // references: {
+        //   model: "tutors",
+        //   as: "tutor",
+        //   key: "id",
+        // },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT",
+      },
+
+      studentId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        // references: {
+        //   model: "students",
+        //   key: "id",
+        // },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT",
+      },
+
+      subjectId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "subjects",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "RESTRICT",
+      },
+
+      scheduledStart: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        validate: {
+          isDate: true,
+          isAfter: new Date().toISOString(),
+        },
+      },
+
+      scheduledEnd: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        validate: {
+          isDate: true,
+          isAfterStart(value) {
+            if (value <= this.scheduledStart) {
+              throw new Error("Scheduled end must be after scheduled start");
+            }
+          },
+        },
+      },
+
+      status: {
+        type: DataTypes.ENUM("pending", "confirmed", "completed", "cancelled"),
+        allowNull: false,
+        defaultValue: "pending",
+      },
+
+      meetingLink: {
+        type: DataTypes.STRING(500),
+        allowNull: true,
+        validate: {
+          isUrl: true,
+        },
+      },
+
+      tutorNotes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+
+      studentNotes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+
+      cancelledBy: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL",
+      },
+
+      cancelledAt: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+
+      cancelledReason: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+
+      // hourlyRate: {
+      //   type: DataTypes.DECIMAL(10, 2),
+      //   allowNull: true,
+      //   validate: {
+      //     min: 0
+      //   }
+      // },
+
+      // totalAmount: {
+      //   type: DataTypes.DECIMAL(10, 2),
+      //   allowNull: true,
+      //   validate: {
+      //     min: 0
+      //   }
+      // },
+
+      // paymentStatus: {
+      //   type: DataTypes.ENUM('pending', 'paid', 'refunded', 'failed'),
+      //   allowNull: false,
+      //   defaultValue: 'pending'
+      // },
+
+      isRecurring: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+
+      recurringPattern: {
+        type: DataTypes.JSON, // Store recurring pattern data
+        allowNull: true,
+      },
+
+      parentBookingId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "bookings",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
+
+      reminderSent: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+
+      actualStartTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+
+      actualEndTime: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+
+      rating: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        validate: {
+          min: 1,
+          max: 5,
+        },
+      },
+    },
+    {
+      tableName: "bookings",
+      timestamps: true,
+      indexes: [
+        {
+          fields: ["tutorId"],
+        },
+        {
+          fields: ["studentId"],
+        },
+        {
+          fields: ["subjectId"],
+        },
+        {
+          fields: ["status"],
+        },
+        {
+          fields: ["scheduledStart"],
+        },
+        {
+          fields: ["scheduledEnd"],
+        },
+        // {
+        //   fields: ["paymentStatus"],
+        // },
+        {
+          unique: false,
+          fields: ["tutorId", "scheduledStart", "scheduledEnd"],
+          name: "tutor_time_conflict_check",
+        },
+        {
+          unique: false,
+          fields: ["studentId", "scheduledStart", "scheduledEnd"],
+          name: "student_time_conflict_check",
+        },
+      ],
+      hooks: {
+        beforeValidate: (booking) => {
+          // Calculate total amount if hourly rate and duration are provided
+          if (booking.hourlyRate && booking.duration) {
+            booking.totalAmount = (
+              (booking.hourlyRate * booking.duration) /
+              60
+            ).toFixed(2);
+          }
+
+          // Set cancelled timestamp when status changes to cancelled
+          if (booking.status === "cancelled" && !booking.cancelledAt) {
+            booking.cancelledAt = new Date();
+          }
+        },
+
+        beforeUpdate: (booking) => {
+          // Ensure cancellation fields are set when status is cancelled
+          if (booking.status === "cancelled") {
+            if (!booking.cancelledAt) {
+              booking.cancelledAt = new Date();
+            }
+            if (!booking.cancelledReason) {
+              booking.cancelledReason = "No reason provided";
+            }
+          }
+        },
+      },
+    }
+  );
+
+  // Define associations
+  Booking.associate = (models) => {
+    // Many-to-one relationships
+    Booking.belongsTo(models.Tutor, {
+      foreignKey: "tutorId",
+      as: "tutor",
+    });
+
+    Booking.belongsTo(models.Student, {
+      foreignKey: "studentId",
+      as: "student",
+    });
+
+    Booking.belongsTo(models.Subject, {
+      foreignKey: "subjectId",
+      as: "subject",
+    });
+    models.Subject.hasMany(models.Booking, {
+      foreignKey: "subjectId",
+      as: "bookings",
+    });
+
+    // Self-referential relationship for recurring bookings
+    Booking.belongsTo(models.Booking, {
+      foreignKey: "parentBookingId",
+      as: "parentBooking",
+    });
+
+    Booking.hasMany(models.Booking, {
+      foreignKey: "parentBookingId",
+      as: "childBookings",
+    });
+
+    // Polymorphic relationship for cancelledBy (could be tutor or student)
+    Booking.belongsTo(models.User, {
+      foreignKey: "cancelledBy",
+      as: "cancelledByUser",
+    });
+  };
+
+  // Instance methods
+  Booking.prototype.canBeCancelled = function () {
+    const now = new Date();
+    const scheduledStart = new Date(this.scheduledStart);
+    const hoursUntilStart = (scheduledStart - now) / (1000 * 60 * 60);
+
+    return (
+      this.status !== "completed" &&
+      this.status !== "cancelled" &&
+      hoursUntilStart > 2
+    ); // Can only cancel 2+ hours before start
+  };
+
+  Booking.prototype.isUpcoming = function () {
+    const now = new Date();
+    return new Date(this.scheduledStart) > now && this.status === "confirmed";
+  };
+
+  Booking.prototype.getDurationInMinutes = function () {
+    const start = new Date(this.scheduledStart);
+    const end = new Date(this.scheduledEnd);
+    return Math.round((end - start) / (1000 * 60));
+  };
+
+  return Booking;
+};
