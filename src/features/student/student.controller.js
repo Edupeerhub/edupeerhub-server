@@ -3,6 +3,7 @@ const studentService = require("./student.service");
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
+const { addStreamUser } = require("../auth/auth.service");
 
 module.exports = {
   async listStudents(req, res, next) {
@@ -35,6 +36,15 @@ module.exports = {
         req.user.id,
         req.body
       );
+
+      await addStreamUser({
+        id: student.userId,
+        email: student.user.email,
+        role: student.user.role,
+        firstName: student.user.firstName,
+        lastName: student.user.lastName,
+      });
+
       await trackEvent(eventTypes.USER_ONBOARDED, {
         userId: student.userId,
         email: student.user.email,
@@ -57,6 +67,13 @@ module.exports = {
       }
 
       const student = await studentService.updateStudent(targetId, req.body);
+      await addStreamUser({
+        id: student.userId,
+        email: student.user.email,
+        role: student.user.role,
+        firstName: student.user.firstName,
+        lastName: student.user.lastName,
+      });
       sendResponse(res, 200, "Student updated", student);
     } catch (err) {
       next(err);
