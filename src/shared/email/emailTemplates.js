@@ -156,9 +156,70 @@ exports.TUTOR_REJECTION_TEMPLATE = (name, reason) =>
           <blockquote style="background: #fff; border-left: 4px solid #e53935; margin: 15px 0; padding: 10px 15px; color: #555;">
             ${reason || "No specific reason provided."}
           </blockquote>
-          <p>You’re welcome to update your application and reapply in the future.</p>
+          <p>You're welcome to update your application and reapply in the future.</p>
           <p>Thank you for your interest and understanding.</p>
           <p>Best regards,<br>Edupeerhub Team</p>
         `,
     "#e53935" // red rejection header
   );
+
+exports.SESSION_REMINDER_TEMPLATE = ({
+  recipientName,
+  recipientRole,
+  otherPersonName,
+  otherPersonRole,
+  subject,
+  sessionDate,
+  timeUntil,
+  meetingUrl,
+  duration,
+}) => {
+  const roleCapitalized = recipientRole.charAt(0).toUpperCase() + recipientRole.slice(1);
+  const otherRoleCapitalized = otherPersonRole.charAt(0).toUpperCase() + otherPersonRole.slice(1);
+  
+  return emailWrapper(
+    "Session Reminder",
+    `
+      <p>Hi <strong>${recipientName}</strong>,</p>
+      
+      <p>🔔 This is a friendly reminder that your <strong>${subject}</strong> tutoring session is starting in <span style="color: #e74c3c; font-weight: bold;">${timeUntil}</span>.</p>
+      
+      <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #2D9A95; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #2D9A95;">📅 Session Details</h3>
+        <p style="margin: 5px 0;"><strong>👥 ${roleCapitalized}:</strong> ${recipientName}</p>
+        <p style="margin: 5px 0;"><strong>🎓 ${otherRoleCapitalized}:</strong> ${otherPersonName}</p>
+        <p style="margin: 5px 0;"><strong>📚 Subject:</strong> ${subject}</p>
+        <p style="margin: 5px 0;"><strong>🕐 Date & Time:</strong> ${sessionDate}</p>
+        <p style="margin: 5px 0;"><strong>⏱️ Duration:</strong> ${duration} minutes</p>
+      </div>
+      
+      ${meetingUrl ? `
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${meetingUrl}" style="background-color: #28a745; color: white; padding: 15px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">🎥 Join Session</a>
+        </div>
+        <p style="font-size: 0.9em; color: #666;"><em>Click the link above when it's time for your session, or copy this URL: <br>
+        <code style="background: #f1f1f1; padding: 2px 6px; border-radius: 3px;">${meetingUrl}</code></em></p>
+      ` : `
+        <p><strong>📞 Meeting Details:</strong> Meeting link will be provided by your ${otherPersonRole}.</p>
+      `}
+      
+      <hr style="margin: 20px 0; border: 1px solid #eee;">
+      
+      <h4 style="color: #2D9A95;">📋 Before Your Session:</h4>
+      <ul style="line-height: 1.8;">
+        <li>✅ Ensure stable internet connection</li>
+        <li>✅ Test your camera and microphone</li>
+        <li>✅ Prepare any materials or questions</li>
+        <li>✅ Find a quiet, well-lit space</li>
+        ${recipientRole === 'student' ? '<li>✅ Have your textbooks and notes ready</li>' : ''}
+        ${recipientRole === 'tutor' ? '<li>✅ Review the lesson plan and materials</li>' : ''}
+      </ul>
+      
+      <p>Need help? Contact EduPeerHub support or your ${otherPersonRole} directly.</p>
+      <p style="font-size: 0.9em; color: #666;"><em>You will receive additional reminders as your session approaches.</em></p>
+      
+      <p>Best regards,<br>Edupeerhub Team</p>
+    `,
+    "#FF9800" // orange header for reminders
+  );
+};

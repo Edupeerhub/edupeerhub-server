@@ -15,6 +15,7 @@ if (fs.existsSync(envFilePath)) {
 
 const app = require("./app");
 const sequelize = require("@src/shared/database/index");
+const notificationService = require("@features/notification/notification.service");
 
 const PORT = process.env.PORT || 3000;
 
@@ -30,6 +31,10 @@ const startServer = async () => {
       logger.info("✅ Database synced (development only)");
     }
 
+    // Initialize notification services
+    await notificationService.initialize();
+    logger.info("✅ Notification services started");
+
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV}]`);
       logger.info(`API Base URL: http://localhost:${PORT}/api`);
@@ -43,6 +48,10 @@ const startServer = async () => {
 const gracefulExit = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   try {
+    // Shutdown notification services first
+    await notificationService.shutdown();
+    logger.info("Notification services stopped");
+    
     await sequelize.close();
     logger.info("Database connection closed");
   } catch (error) {
