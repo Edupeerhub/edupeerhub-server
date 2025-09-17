@@ -15,8 +15,11 @@ if (fs.existsSync(envFilePath)) {
 
 const app = require("./app");
 const sequelize = require("@src/shared/database/index");
-
+const ReminderSystem = require("@features/notification/ReminderSystem");
 const PORT = process.env.PORT || 3000;
+
+// Initialize reminder system
+const reminderSystem = new ReminderSystem();
 
 const startServer = async () => {
   try {
@@ -29,6 +32,10 @@ const startServer = async () => {
       await sequelize.sync();
       logger.info("✅ Database synced (development only)");
     }
+
+    // Start reminder system
+    reminderSystem.start();
+    logger.info("✅ Reminder system started");
 
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV}]`);
@@ -43,6 +50,9 @@ const startServer = async () => {
 const gracefulExit = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   try {
+    // Stop reminder system
+    reminderSystem.stop();
+    
     await sequelize.close();
     logger.info("Database connection closed");
   } catch (error) {
@@ -54,3 +64,6 @@ process.on("SIGTERM", () => gracefulExit("SIGTERM"));
 process.on("SIGINT", () => gracefulExit("SIGINT"));
 
 startServer();
+
+// Export for use in other parts of the application
+module.exports = { reminderSystem };
