@@ -4,7 +4,7 @@ on:
     workflows: ["Developemnt CI"]
     types: [completed]
     branches:
-      - development
+      # - development
       - staging
       - main
 
@@ -19,18 +19,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - branch: development
-            env_name: development
-            service_env: development
-            default_port: 3001
+          # - branch: development
+          #   env_name: development
+          #   service_env: development
+          #   migration_env: dev_ci
+          #   default_port: 3001
           - branch: staging
             env_name: staging
             service_env: staging
             default_port: 3002
+            migration_env: staging
           - branch: main
             env_name: production
             service_env: production
             default_port: 3000
+            migration_env: production
 
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == matrix.branch
     environment: ${{ matrix.env_name }}
