@@ -173,14 +173,16 @@ jobs:
             [Install]
             WantedBy=multi-user.target
             SERVICEEOF
+
             sudo systemctl daemon-reload
             sudo systemctl enable "${SERVICE_NAME}" || true
             sudo systemctl restart "${SERVICE_NAME}"
             sudo systemctl status "${SERVICE_NAME}" --no-pager -l || true
-            
+
+
             # Health check
             sleep 2
             if command -v curl >/dev/null 2>&1; then
               curl -fsS "http://localhost:${PORT_VALUE}/api/health" || true
             fi
-            echo Deployment completed: ${SERVICE_NAME} running on port ${PORT_VALUE}"
+            echo Deployment completed: ${SERVICE_NAME} running on port ${PORT_VALUE}
