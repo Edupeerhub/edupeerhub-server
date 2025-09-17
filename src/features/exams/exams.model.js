@@ -19,8 +19,9 @@ module.exports = () => {
       description: {
         type: DataTypes.TEXT,
       },
-      is_active: {
+      isActive: {
         type: DataTypes.BOOLEAN,
+        field: "is_active",
         defaultValue: true,
         allowNull: false,
       },
@@ -29,7 +30,6 @@ module.exports = () => {
       tableName: "exams",
       underscored: true,
       timestamps: true,
-      paranoid: true,
     }
   );
 
