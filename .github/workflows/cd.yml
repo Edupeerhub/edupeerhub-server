@@ -35,12 +35,14 @@ jobs:
             default_port: 3000
             migration_env: production
 
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == matrix.branch
+    if: github.event.workflow_run.conclusion == 'success' 
     environment: ${{ matrix.env_name }}
     steps:
       - name: Checkout (for metadata only)
+        if: github.event.workflow_run.head_branch == matrix.branch
         uses: actions/checkout@v4
       - name: Deploy via SSH to ${{ matrix.env_name }}
+        if: github.event.workflow_run.head_branch == matrix.branch
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.HOST }}
