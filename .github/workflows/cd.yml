@@ -35,7 +35,7 @@ jobs:
             default_port: 3000
             migration_env: production
 
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.conclusion == 'success' 
     environment: ${{ matrix.env_name }}
     steps:
       - name: Checkout (for metadata only)
