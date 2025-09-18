@@ -16,7 +16,7 @@ const shouldIncludeValue = (fieldName) => {
 const validate =
   (schema, property = "body") =>
   (req, res, next) => {
-    const { error, value } = schema.validate(req[property], {
+    const { error, value } = schema.required().validate(req[property], {
       abortEarly: false,
       stripUnknown: true,
     });
