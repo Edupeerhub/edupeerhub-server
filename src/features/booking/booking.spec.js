@@ -368,14 +368,14 @@ describe("Booking API", () => {
         await createStudentAndLogin();
 
         const now = new Date();
-        const start = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
         const availabilityRes = await tutorSession
           .post("/api/booking/availability")
           .send({
             subjectId: subjects[0].id,
-            scheduledStart: start.toISOString(),
-            scheduledEnd: end.toISOString(),
+            scheduledStart: start,
+            scheduledEnd: end,
             tutorNotes: "Available for booking",
           });
 
@@ -392,13 +392,27 @@ describe("Booking API", () => {
           success: true,
           message: "Booking created successfully",
           data: expect.objectContaining({
-            id: bookingId,
-            tutorId: tutorUser.id,
-            studentId: studentUser.id,
-            subjectId: subjects[0].id,
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
+            id: expect.any(String),
+            subjectId: expect.any(Number),
+            scheduledStart: start,
+            scheduledEnd: end,
+            tutorNotes: expect.any(String),
+            actualEndTime: null,
+            actualStartTime: null,
+            cancellationReason: null,
+            cancelledAt: null,
+            cancelledBy: null,
+            createdAt: expect.any(String),
+            isRecurring: false,
+            meetingLink: null,
+            parentBookingId: null,
+            recurringPattern: null,
+            reminderSent: false,
             status: "pending",
+            studentId: studentUser.id,
+            studentNotes: null,
+            tutorId: tutorUser.id,
+            updatedAt: expect.any(String),
           }),
         });
       });
@@ -411,14 +425,14 @@ describe("Booking API", () => {
         await createStudentAndLogin();
 
         const now = new Date();
-        const start = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
         const availabilityRes = await tutorSession
           .post("/api/booking/availability")
           .send({
             subjectId: subjects[0].id,
-            scheduledStart: start.toISOString(),
-            scheduledEnd: end.toISOString(),
+            scheduledStart: start,
+            scheduledEnd: end,
             tutorNotes: "Available for booking",
           });
         const bookingId = availabilityRes.body.data.id;
@@ -435,12 +449,82 @@ describe("Booking API", () => {
           data: expect.arrayContaining([
             expect.objectContaining({
               id: expect.any(String),
-              tutorId: tutorUser.id,
-              studentId: studentUser.id,
-              subjectId: subjects[0].id,
-              scheduledStart: expect.any(String),
-              scheduledEnd: expect.any(String),
+              subjectId: expect.any(Number),
+              scheduledStart: start,
+              scheduledEnd: end,
+              tutorNotes: expect.any(String),
+              actualEndTime: null,
+              actualStartTime: null,
+              cancellationReason: null,
+              cancelledAt: null,
+              cancelledBy: null,
+              createdAt: expect.any(String),
+              isRecurring: false,
+              meetingLink: null,
+              parentBookingId: null,
+              recurringPattern: null,
+              reminderSent: false,
               status: "pending",
+              studentId: studentUser.id,
+              studentNotes: null,
+              tutorId: tutorUser.id,
+              updatedAt: expect.any(String),
+            }),
+          ]),
+        });
+      });
+    });
+
+    describe("GET /api/booking/tutors/:tutorId", () => {
+      it("should return tutor bookings to student", async () => {
+        // Login as tutor and create availability
+        await createTutorAndLogin();
+        await createStudentAndLogin();
+
+        const now = new Date();
+        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
+        const availabilityRes = await tutorSession
+          .post("/api/booking/availability")
+          .send({
+            subjectId: subjects[0].id,
+            scheduledStart: start,
+            scheduledEnd: end,
+            tutorNotes: "Available for booking",
+          });
+        const bookingId = availabilityRes.body.data.id;
+
+        // Student fetches booking by id
+        const response = await studentSession.get(
+          `/api/booking/tutors/${tutorUser.id}`
+        );
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({
+          success: true,
+          message: "Bookings retrieved successfully",
+          data: expect.arrayContaining([
+            expect.objectContaining({
+              id: expect.any(String),
+              subjectId: expect.any(Number),
+              scheduledStart: start,
+              scheduledEnd: end,
+              tutorNotes: expect.any(String),
+              actualEndTime: null,
+              actualStartTime: null,
+              cancellationReason: null,
+              cancelledAt: null,
+              cancelledBy: null,
+              createdAt: expect.any(String),
+              isRecurring: false,
+              meetingLink: null,
+              parentBookingId: null,
+              recurringPattern: null,
+              reminderSent: false,
+              status: "open",
+              studentId: null,
+              studentNotes: null,
+              tutorId: tutorUser.id,
+              updatedAt: expect.any(String),
             }),
           ]),
         });
@@ -454,14 +538,14 @@ describe("Booking API", () => {
         await createStudentAndLogin();
 
         const now = new Date();
-        const start = new Date(now.getTime() + 4 * 60 * 60 * 1000);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
         const availabilityRes = await tutorSession
           .post("/api/booking/availability")
           .send({
             subjectId: subjects[0].id,
-            scheduledStart: start.toISOString(),
-            scheduledEnd: end.toISOString(),
+            scheduledStart: start,
+            scheduledEnd: end,
             tutorNotes: "Available for booking",
           });
         const bookingId = availabilityRes.body.data.id;
@@ -495,14 +579,14 @@ describe("Booking API", () => {
         await createStudentAndLogin();
 
         const now = new Date();
-        const start = new Date(now.getTime() + 5 * 60 * 60 * 1000);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
         const availabilityRes = await tutorSession
           .post("/api/booking/availability")
           .send({
             subjectId: subjects[0].id,
-            scheduledStart: start.toISOString(),
-            scheduledEnd: end.toISOString(),
+            scheduledStart: start,
+            scheduledEnd: end,
             tutorNotes: "Available for booking",
           });
         const bookingId = availabilityRes.body.data.id;

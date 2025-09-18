@@ -8,11 +8,11 @@ exports.createAvailabilityValidator = Joi.object({
 });
 
 exports.updateAvailabilityValidator = Joi.object({
-  subjectId: Joi.number().required(),
-  scheduledStart: Joi.date().required(),
-  scheduledEnd: Joi.date().required(),
-  status: Joi.string().valid("confirmed"),
+  subjectId: Joi.number(),
+  scheduledStart: Joi.date(),
+  scheduledEnd: Joi.date(),
   tutorNotes: Joi.string(),
+  status: Joi.string().valid("confirmed", "open"),
 });
 
 exports.cancelBookingAvailabilityValidator = Joi.object({

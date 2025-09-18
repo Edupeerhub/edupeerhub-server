@@ -9,7 +9,7 @@ const ApiError = require("@src/shared/utils/apiError");
 //Student
 exports.createBooking = async (req, res) => {
   const availability = await bookingService.fetchBookingById(
-    req.params.availabilityId
+    req.params.bookingId
   );
   if (!availability) {
     throw new ApiError("Booking not found", 404);
@@ -25,6 +25,7 @@ exports.createBooking = async (req, res) => {
 
   const booking = await bookingService.updateBooking(req.params.bookingId, {
     studentId: req.user.id,
+    status: "pending",
   });
   sendResponse(res, 201, "Booking created successfully", booking);
 };
@@ -90,7 +91,11 @@ exports.cancelBooking = async (req, res) => {
   if (checkBooking.studentId !== req.user.id) {
     throw new ApiError("Unauthorized access to booking", 403);
   }
-  await bookingService.cancelBooking(req.user.id, req.params.bookingId);
+  await bookingService.updateBooking(req.params.bookingId, {
+    cancelledBy: req.user.id,
+    status: "cancelled",
+    ...req.body,
+  });
   sendResponse(res, 200, "Booking cancelled successfully");
 };
 
@@ -137,6 +142,10 @@ exports.updateAvailability = async (req, res) => {
   if (checkAvailability.tutorId !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
+
+  if (req.body.status === "confirmed" && !checkAvailability.studentId) {
+    delete req.body.status;
+  }
   const availability = await bookingService.updateBooking(
     req.params.availabilityId,
     req.body
@@ -161,11 +170,11 @@ exports.cancelAvailability = async (req, res) => {
     cancelledBy: req.user.id,
     status: "cancelled",
   };
-  const availability = await bookingService.updateBooking(    
+  const availability = await bookingService.updateBooking(
     req.params.availabilityId,
     updatedBody
   );
-  
+
   sendResponse(res, 200, "Availability updated successfully", availability);
 };
 exports.deleteAvailability = async (req, res) => {
@@ -179,7 +188,7 @@ exports.deleteAvailability = async (req, res) => {
     throw new ApiError("Unauthorized access to availability", 403);
   }
   if (checkAvailability.status !== "open") {
-    throw new ApiError("Forbidden - Cannot cancel availability", 400);
+    throw new ApiError("Forbidden - Cannot delete availability", 400);
   }
 
   await bookingService.deleteBooking(req.params.availabilityId);
