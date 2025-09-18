@@ -6,6 +6,19 @@ const user = {
   email: "john@example.com",
   password: "StrongPass123!",
 };
+exports.tutorObject = {
+  firstName: "Tutor",
+  lastName: "Dupe",
+  email: "tutor@example.com",
+  password: "StrongPass123!",
+};
+
+exports.studentObject = {
+  firstName: "Student",
+  lastName: "Dupe",
+  email: "student@example.com",
+  password: "StrongPass123!",
+};
 
 const { v4: uuidv4 } = require("uuid");
 
@@ -28,7 +41,6 @@ exports.createUser = async ({ verified = true, isOnboarded = true }) =>
 
 // Helper to create a Tutor (with user and subject association)
 exports.createTutor = async ({
-  
   bio = "Test tutor bio",
   education = "BSc Test Education",
   timezone = "UTC",
@@ -40,10 +52,10 @@ exports.createTutor = async ({
   isOnboarded = true,
 } = {}) => {
   const createdUser = await User.create({
-    email: user.email,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    passwordHash: user.password,
+    email: this.tutorObject.email,
+    firstName: this.tutorObject.firstName,
+    lastName: this.tutorObject.lastName,
+    passwordHash: this.tutorObject.password,
     role: "tutor",
     profileImageUrl: "randomAvatar",
     isVerified,
@@ -67,18 +79,17 @@ exports.createTutor = async ({
 
 // Helper to create a Student (with user and subject association)
 exports.createStudent = async ({
- 
   gradeLevel = "Grade 1",
   learningGoals = ["Goal 1"],
   subjectIds = [],
   isVerified = true,
   isOnboarded = true,
-} ) => {
+} = {}) => {
   const createdUser = await User.create({
-email:     user.email,
-firstName:     user.firstName,
-lastName:     user.lastName,
-    passwordHash: user.password,
+    email: this.studentObject.email,
+    firstName: this.studentObject.firstName,
+    lastName: this.studentObject.lastName,
+    passwordHash: this.studentObject.password,
     role: "student",
     profileImageUrl: "randomAvatar",
     isVerified,

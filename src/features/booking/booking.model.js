@@ -81,9 +81,9 @@ module.exports = (sequelize) => {
       },
 
       status: {
-        type: DataTypes.ENUM("pending", "confirmed", "completed", "cancelled"),
+        type: DataTypes.ENUM("open", "pending", "confirmed", "completed", "cancelled"),
         allowNull: false,
-        defaultValue: "pending",
+        defaultValue: "open",
       },
 
       meetingLink: {
@@ -120,7 +120,7 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
 
-      cancelledReason: {
+      cancellationReason: {
         type: DataTypes.TEXT,
         allowNull: true,
       },
@@ -185,14 +185,14 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
 
-      rating: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        validate: {
-          min: 1,
-          max: 5,
-        },
-      },
+      // rating: {
+      //   type: DataTypes.INTEGER,
+      //   allowNull: true,
+      //   validate: {
+      //     min: 1,
+      //     max: 5,
+      //   },
+      // },
     },
     {
       tableName: "bookings",
@@ -231,7 +231,7 @@ module.exports = (sequelize) => {
         },
       ],
       hooks: {
-        beforeValidate: (booking) => {
+        beforeValidate: (booking,options) => {
           // Calculate total amount if hourly rate and duration are provided
           if (booking.hourlyRate && booking.duration) {
             booking.totalAmount = (
@@ -239,22 +239,14 @@ module.exports = (sequelize) => {
               60
             ).toFixed(2);
           }
-
-          // Set cancelled timestamp when status changes to cancelled
-          if (booking.status === "cancelled" && !booking.cancelledAt) {
-            booking.cancelledAt = new Date();
-          }
         },
 
-        beforeUpdate: (booking) => {
+        beforeUpdate: (booking,options) => {
           // Ensure cancellation fields are set when status is cancelled
-          if (booking.status === "cancelled") {
-            if (!booking.cancelledAt) {
-              booking.cancelledAt = new Date();
-            }
-            if (!booking.cancelledReason) {
-              booking.cancelledReason = "No reason provided";
-            }
+          if (booking.status === "cancelled" && booking.changed("status")) {
+            booking.cancelledAt = new Date().toISOString();
+            // if (!booking.cancelledAt) {
+            // }
           }
         },
       },
