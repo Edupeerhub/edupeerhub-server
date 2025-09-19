@@ -7,16 +7,7 @@ const bookingController = require("./booking.controller");
 
 const authMiddleware = require("@features/auth/auth.middleware");
 const validate = require("@src/shared/middlewares/validate.middleware");
-
-const dateMiddleware = (req, res, next) => {
-  if (!req.query.date) {
-    req.params.date = new Date(new Date().setHours(0, 0, 0, 0));
-  } else {
-    req.params.date = new Date(new Date(req.query.date).setHours(0, 0, 0, 0));
-  }
-
-  next();
-};
+const ApiError = require("@src/shared/utils/apiError");
 
 bookingRouter.use(authMiddleware.protectRoute);
 bookingRouter.use(authMiddleware.requireVerifiedAndOnboardedUser);
@@ -27,7 +18,7 @@ bookingRouter.use(authMiddleware.requireVerifiedAndOnboardedUser);
 bookingRouter.get(
   "/availability",
   authMiddleware.requireTutorRole,
-  dateMiddleware,
+  bookingValidator.dateMiddleware,
   bookingController.fetchTutorAvailabilities
 );
 bookingRouter.get(
@@ -71,13 +62,13 @@ bookingRouter.get(
   "/tutors/:tutorId",
   authMiddleware.requireStudentRole,
   idValidator("tutorId"),
-  dateMiddleware,
+  bookingValidator.dateMiddleware,
   bookingController.fetchStudentTutorBookings
 );
 bookingRouter.get(
   "/",
   authMiddleware.requireStudentRole,
-  dateMiddleware,
+  bookingValidator.dateMiddleware,
   bookingController.fetchStudentBookings
 );
 bookingRouter.get(

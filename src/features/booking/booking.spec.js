@@ -609,4 +609,121 @@ describe("Booking API", () => {
       });
     });
   });
+
+
+
+
+});
+describe("Date middleware", () => {
+  const dateMiddleware = require("./booking.validator").dateMiddleware;
+  
+  let req, res, next;
+  
+  beforeEach(() => {
+    req = {
+      query: {},
+      params: {}
+    };
+    res = {};
+    next = jest.fn();
+  });
+
+  it("should set current date when no date query parameter is provided", () => {
+    const today = new Date();
+    const expectedDate = new Date(today.setHours(0, 0, 0, 0));
+    
+    dateMiddleware(req, res, next);
+    
+    expect(req.params.date).toBeInstanceOf(Date);
+    expect(req.params.date.getTime()).toBeCloseTo(expectedDate.getTime(), -1);
+    expect(req.params.date.getHours()).toBe(0);
+    expect(req.params.date.getMinutes()).toBe(0);
+    expect(req.params.date.getSeconds()).toBe(0);
+    expect(req.params.date.getMilliseconds()).toBe(0);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("should set date with time normalized to midnight when valid date string is provided", () => {
+    req.query.date = "2023-12-25";
+    
+    dateMiddleware(req, res, next);
+    
+    const expectedDate = new Date("2023-12-25");
+    expectedDate.setHours(0, 0, 0, 0);
+    
+    expect(req.params.date).toBeInstanceOf(Date);
+    expect(req.params.date.getTime()).toBe(expectedDate.getTime());
+    expect(req.params.date.getHours()).toBe(0);
+    expect(req.params.date.getMinutes()).toBe(0);
+    expect(req.params.date.getSeconds()).toBe(0);
+    expect(req.params.date.getMilliseconds()).toBe(0);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle ISO date format correctly", () => {
+    req.query.date = "2023-12-25T15:30:45.123Z";
+    
+    dateMiddleware(req, res, next);
+    
+    const expectedDate = new Date("2023-12-25T15:30:45.123Z");
+    expectedDate.setHours(0, 0, 0, 0);
+    
+    expect(req.params.date).toBeInstanceOf(Date);
+    expect(req.params.date.getTime()).toBe(expectedDate.getTime());
+    expect(req.params.date.getHours()).toBe(0);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw ApiError when date query parameter is a number", () => {
+    req.query.date = "123456789";
+    
+    expect(() => {
+      dateMiddleware(req, res, next);
+    }).toThrow("Invalid date");
+    
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should throw ApiError when date query parameter is numeric timestamp", () => {
+    req.query.date = "1640390400000"; // timestamp for 2021-12-25
+    
+    expect(() => {
+      dateMiddleware(req, res, next);
+    }).toThrow("Invalid date");
+    
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should throw ApiError for invalid date strings", () => {
+    req.query.date = "invalid-date-string";   
+    
+   expect(() => {
+      dateMiddleware(req, res, next);
+    }).toThrow("Invalid date");
+    
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it("should handle empty string date", () => {
+    req.query.date = "";
+    
+    dateMiddleware(req, res, next);
+    
+    expect(req.params.date).toBeInstanceOf(Date);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("should handle date format like MM/DD/YYYY", () => {
+    req.query.date = "12/25/2023";
+    
+    dateMiddleware(req, res, next);
+    
+    const expectedDate = new Date("12/25/2023");
+    expectedDate.setHours(0, 0, 0, 0);
+    
+    expect(req.params.date).toBeInstanceOf(Date);
+    expect(req.params.date.getTime()).toBe(expectedDate.getTime());
+    expect(req.params.date.getHours()).toBe(0);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
 });
