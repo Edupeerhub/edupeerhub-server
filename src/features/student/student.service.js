@@ -68,20 +68,6 @@ module.exports = {
 
     await student.save();
 
-    // ensure user is marked onboarded after profile update
-    // try {
-    //   const userId = student.userId || student.id;
-    //   const user = await User.findByPk(userId);
-    //   if (user && !user.isOnboarded) {
-    //     await user.update({ isOnboarded: true });
-    //   }
-    // } catch (err) {
-    //   console.error(
-    //     "Failed to set user.isOnboarded on update:",
-    //     err.message || err
-    //   );
-    // }
-
     if (payload.subjects) {
       await student.setSubjects(payload.subjects);
     }

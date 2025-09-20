@@ -63,7 +63,7 @@ module.exports = {
       const targetId = req.params.id;
 
       if (requester.role !== "admin" && requester.id !== targetId) {
-        throw new ApiError("Forbidden", 403);
+        throw new ApiError("You're not allowed to update this profile", 403);
       }
 
       const student = await studentService.updateStudent(targetId, req.body);
