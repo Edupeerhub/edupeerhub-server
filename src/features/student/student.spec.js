@@ -277,7 +277,7 @@ describe("Student test", () => {
       expect(response.statusCode).toBe(403);
       expect(response.body).toEqual({
         success: false,
-        message: "Forbidden",
+        message: "You're not allowed to update this profile",
         error: null,
       });
     });
