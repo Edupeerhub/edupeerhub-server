@@ -73,7 +73,7 @@ async function createTestSubjects() {
 }
 
 const createTutorAndLogin = async () => {
-  const { user } = await createTutor();
+  const { user } = await createTutor({ subjectIds: [1, 2] });
   tutorUser = user;
   // Login as student
   tutorSession = session(app);
@@ -481,7 +481,7 @@ describe("Booking API", () => {
           data: expect.arrayContaining([
             expect.objectContaining({
               id: expect.any(String),
-            tutor: expect.objectContaining(tutorMatcher),
+              tutor: expect.objectContaining(tutorMatcher),
 
               scheduledStart: start,
               scheduledEnd: end,
@@ -535,7 +535,7 @@ describe("Booking API", () => {
           data: expect.arrayContaining([
             expect.objectContaining({
               id: expect.any(String),
-            tutor: expect.objectContaining(tutorMatcher),
+              tutor: expect.objectContaining(tutorMatcher),
 
               scheduledStart: start,
               scheduledEnd: end,

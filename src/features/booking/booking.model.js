@@ -1,4 +1,6 @@
+const ApiError = require("@src/shared/utils/apiError");
 const { DataTypes } = require("sequelize");
+const { validate } = require("uuid");
 
 module.exports = (sequelize) => {
   const Booking = sequelize.define(
@@ -224,6 +226,15 @@ module.exports = (sequelize) => {
         },
       ],
       hooks: {
+        beforeCreate: async (booking, options) => {
+          // const tutorSubject = await TutorSubject.findOne({
+          //   where: {
+          //     tutor_id: booking.tutor_id,
+          //     subject_id: booking.subject_id,
+          //   },
+          // });
+          await validateTutorSubject(booking);
+        },
         beforeValidate: (booking, options) => {
           // Calculate total amount if hourly rate and duration are provided
           if (booking.hourlyRate && booking.duration) {
@@ -234,17 +245,27 @@ module.exports = (sequelize) => {
           }
         },
 
-        beforeUpdate: (booking, options) => {
+        beforeUpdate: async (booking, options) => {
           // Ensure cancellation fields are set when status is cancelled
           if (booking.status === "cancelled" && booking.changed("status")) {
             booking.cancelledAt = new Date().toISOString();
-            // if (!booking.cancelledAt) {
-            // }
+          }
+          if (booking.changed("subjectId")) {
+            await validateTutorSubject(booking);
           }
         },
       },
     }
   );
+
+  const validateTutorSubject = async (booking) => {
+    const tutorSubjects = (await booking.getTutor()).subjects;
+
+    const tutorSubject = tutorSubjects.some((s) => s.id === booking.subjectId);
+    if (!tutorSubject) {
+      throw new ApiError("Subject not registered for this tutor", 400);
+    }
+  };
 
   // Define associations
   Booking.associate = (models) => {
@@ -315,28 +336,37 @@ module.exports = (sequelize) => {
             {
               model: models.User.unscoped(),
               as: "user",
-              attributes: [ 'email', 'id', 'firstName', 'lastName', 'profileImageUrl']
+              attributes: [
+                "email",
+                "id",
+                "firstName",
+                "lastName",
+                "profileImageUrl",
+              ],
             },
-              {
-          model: models.Subject.scope("join"),
-          as: "subjects",
-        },
+            {
+              model: models.Subject.scope("join"),
+              as: "subjects",
+            },
           ],
         },
         {
           model: models.Student.unscoped(),
           as: "student",
           attributes: {
-            exclude: [
-              'createdAt', 'gradeLevel', 'updatedAt', 'userId',
-            ]
+            exclude: ["createdAt", "gradeLevel", "updatedAt", "userId"],
           },
           include: [
             {
               model: models.User.unscoped(),
               as: "user",
-              attributes: [ 'email', 'id', 'firstName', 'lastName', 'profileImageUrl']
-
+              attributes: [
+                "email",
+                "id",
+                "firstName",
+                "lastName",
+                "profileImageUrl",
+              ],
             },
           ],
         },
