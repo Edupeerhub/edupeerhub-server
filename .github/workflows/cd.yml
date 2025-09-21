@@ -40,7 +40,7 @@ jobs:
     steps:
       - name: Checkout (for metadata only)
         if: github.event.workflow_run.head_branch == matrix.branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Deploy via SSH to ${{ matrix.env_name }}
         if: github.event.workflow_run.head_branch == matrix.branch
         uses: appleboy/ssh-action@v0.1.10
