@@ -42,6 +42,13 @@ bookingRouter.patch(
   bookingController.updateAvailability
 );
 bookingRouter.patch(
+  "/availability/:availabilityId/status",
+  authMiddleware.requireTutorRole,
+  validate(bookingValidator.updateAvailabilityStatusValidator),
+  idValidator("availabilityId"),
+  bookingController.updateAvailabilityStatus
+);
+bookingRouter.patch(
   "/availability/:availabilityId/cancel",
   authMiddleware.requireTutorRole,
   idValidator("availabilityId"),

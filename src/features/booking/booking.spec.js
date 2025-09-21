@@ -126,8 +126,11 @@ describe("Booking API", () => {
           message: "Availability created successfully",
           data: expect.objectContaining({
             id: expect.any(String),
-
-            subjectId: payload.subjectId,
+            subject: expect.objectContaining({
+              id: payload.subjectId,
+              description: expect.any(String),
+              name: expect.any(String),
+            }),
             scheduledStart: start,
             scheduledEnd: end,
             tutorNotes: payload.tutorNotes,
@@ -137,21 +140,14 @@ describe("Booking API", () => {
             cancellationReason: null,
             cancelledAt: null,
             cancelledBy: null,
-            createdAt: expect.any(String),
 
-            isRecurring: false,
             meetingLink: null,
-            parentBookingId: null,
-            recurringPattern: null,
+
             reminderSent: false,
-
             status: "open",
-            studentId: null,
+            student: null,
             studentNotes: null,
-
-            tutorId: tutorUser.id,
-
-            updatedAt: expect.any(String),
+            tutor: expect.objectContaining(tutorMatcher),
           }),
         });
       });
@@ -335,10 +331,12 @@ describe("Booking API", () => {
       });
     });
 
-    describe("PATCH /api/booking/availability/:availabilityId/cancel", () => {
-      it("should allow tutor to cancel their own availability", async () => {
+    describe("PATCH /api/booking/availability/:availabilityId/status", () => {
+      it("should allow tutor to confirm or reject booking", async () => {
         // Login as tutor
         await createTutorAndLogin();
+        await createStudentAndLogin();
+
         const now = new Date();
         const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString(); // 1 hour from now
         const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours from now
@@ -355,6 +353,77 @@ describe("Booking API", () => {
           .send(payload); // 1 hour from now
 
         expect(response.statusCode).toBe(201); // 1 hour from now
+        const studentBooking = await studentSession
+          .post(`/api/booking/${response.body.data.id}`)
+          .send();
+        expect(studentBooking.statusCode).toBe(201);
+        const availabilityId = response.body.data.id;
+        const statusPayload = {
+          status: "confirmed",
+        };
+
+        const updateAvailabilityRes = await tutorSession
+          .patch(`/api/booking/availability/${availabilityId}/status`)
+          .send(statusPayload);
+
+        expect(updateAvailabilityRes.statusCode).toBe(200);
+        expect(updateAvailabilityRes.body).toEqual({
+          success: true,
+          message: "Availability status updated successfully",
+          data: expect.objectContaining({
+            id: expect.any(String),
+            subject: expect.objectContaining({
+              id: payload.subjectId,
+              description: expect.any(String),
+              name: expect.any(String),
+            }),
+            scheduledStart: start,
+            scheduledEnd: end,
+            tutorNotes: payload.tutorNotes,
+            actualEndTime: null,
+            actualStartTime: null,
+            cancellationReason: null,
+            cancelledAt: null,
+            cancelledBy: null,
+
+            meetingLink: null,
+
+            reminderSent: false,
+            status: statusPayload.status,
+            student: expect.objectContaining(studentMatcher),
+            studentNotes: null,
+            tutor: expect.objectContaining(tutorMatcher),
+          }),
+        });
+      });
+    });
+
+    describe("PATCH /api/booking/availability/:availabilityId/cancel", () => {
+      it("should allow tutor to cancel their own availability", async () => {
+        // Login as tutor
+        await createTutorAndLogin();
+        await createStudentAndLogin();
+        const now = new Date();
+        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString(); // 1 hour from now
+        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours from now
+
+        const payload = {
+          subjectId: subjects[0].id,
+          scheduledStart: start,
+          scheduledEnd: end,
+          tutorNotes: "Available for booking",
+        };
+
+        const response = await tutorSession
+          .post("/api/booking/availability")
+          .send(payload); // 1 hour from now
+
+        expect(response.statusCode).toBe(201); // 1 hour from now
+
+        const studentBooking = await studentSession
+          .post(`/api/booking/${response.body.data.id}`)
+          .send();
+        expect(studentBooking.statusCode).toBe(201);
 
         const availabilityId = response.body.data.id;
         const cancelPayload = { cancellationReason: "No reason provided" };
@@ -386,7 +455,7 @@ describe("Booking API", () => {
 
             reminderSent: false,
             status: "cancelled",
-            student: null,
+            student: expect.objectContaining(studentMatcher),
             studentNotes: null,
             tutor: expect.objectContaining(tutorMatcher),
           }),

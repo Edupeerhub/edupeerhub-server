@@ -4,6 +4,8 @@ const bookingService = require("./booking.service");
 
 
 const ApiError = require("@src/shared/utils/apiError");
+const trackEvent = require("@features/events/events.service");
+const eventTypes = require("@features/events/eventTypes");
 
 //--------------
 //Student
@@ -91,10 +93,17 @@ exports.cancelBooking = async (req, res) => {
   if (checkBooking.student.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to booking", 403);
   }
-  await bookingService.updateBooking(req.params.bookingId, {
+  const booking = await bookingService.updateBooking(req.params.bookingId, {
     cancelledBy: req.user.id,
     status: "cancelled",
     ...req.body,
+  });
+  trackEvent(eventTypes.SESSION_CANCELLED, {
+    sessionId: booking.id,
+    tutorId: booking.tutor.user.id,
+    studentId: booking.student.user.id,
+    cancelledBy: booking.cancelledBy,
+    cancellationReason: booking.cancellationReason,
   });
   sendResponse(res, 200, "Booking cancelled successfully");
 };
@@ -107,6 +116,12 @@ exports.createAvailability = async (req, res) => {
     req.user.id,
     req.body
   );
+  trackEvent(eventTypes.SESSION_SCHEDULED, {
+    sessionId: availability.id,
+    tutorId: availability.tutor.user.id,
+    subject: availability.subject,
+    scheduledAt: new Date().toISOString(),
+  });
   sendResponse(res, 201, "Availability created successfully", availability);
 };
 
@@ -144,15 +159,31 @@ exports.updateAvailability = async (req, res) => {
     throw new ApiError("Unauthorized access to availability", 403);
   }
 
-  if (req.body.status === "confirmed" && !checkAvailability.student) {
-    delete req.body.status;
-  }
   const availability = await bookingService.updateBooking(
     req.params.availabilityId,
     req.body
   );
 
   sendResponse(res, 200, "Availability updated successfully", availability);
+};
+
+exports.updateAvailabilityStatus = async (req, res) => {
+  const checkAvailability = await bookingService.fetchBookingById(
+    req.params.availabilityId
+  );
+  if (!checkAvailability) {
+    throw new ApiError("Availability not found", 404);
+  }
+  if (checkAvailability.tutor.user.id !== req.user.id) {
+    throw new ApiError("Unauthorized access to availability", 403);
+  }
+
+  const availability = await bookingService.updateBooking(
+    req.params.availabilityId,
+    req.body
+  );
+
+  sendResponse(res, 200, "Availability status updated successfully", availability);
 };
 
 exports.cancelAvailability = async (req, res) => {
@@ -165,6 +196,9 @@ exports.cancelAvailability = async (req, res) => {
   if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
+    if (!checkAvailability.student?.user) {
+    throw new ApiError("Cannot cancel open availability", 400);
+  }
 
   const updatedBody = {
     ...req.body,
@@ -175,7 +209,13 @@ exports.cancelAvailability = async (req, res) => {
     req.params.availabilityId,
     updatedBody
   );
-
+  trackEvent(eventTypes.SESSION_CANCELLED, {
+    sessionId: availability.id,
+    tutorId: availability.tutor.user.id,
+    studentId: availability.student.user.id,
+    cancelledBy: availability.cancelledBy,
+    cancellationReason: availability.cancellationReason,
+  });
   sendResponse(res, 200, "Availability updated successfully", availability);
 };
 exports.deleteAvailability = async (req, res) => {

@@ -56,7 +56,9 @@ exports.createBooking = async (userId, availabilityData) => {
     ...availabilityData,
     tutorId: userId,
   });
-  return availability;
+
+  return this.fetchBookingById(availability.id);
+  // return availability;
 };
 
 exports.deleteBooking = async (bookingId) => {

@@ -12,7 +12,10 @@ exports.updateAvailabilityValidator = Joi.object({
   subjectId: Joi.number(),
   scheduledStart: Joi.date(),
   scheduledEnd: Joi.date(),
-  tutorNotes: Joi.string(),
+  tutorNotes: Joi.string(),  
+});
+
+exports.updateAvailabilityStatusValidator = Joi.object({
   status: Joi.string().valid("confirmed", "open"),
 });
 
