@@ -15,7 +15,7 @@ exports.createBooking = async (req, res) => {
     throw new ApiError("Booking not found", 404);
   }
 
-  if (availability.studentId !== null) {
+  if (availability.student !== null) {
     throw new ApiError("Booking is not available", 400);
   }
 
@@ -55,7 +55,7 @@ exports.fetchStudentBookingById = async (req, res) => {
     throw new ApiError("Booking not found", 404);
   }
 
-  if (booking.studentId !== req.user.id) {
+  if (booking.student.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to booking", 403);
   }
 
@@ -70,7 +70,7 @@ exports.updateBooking = async (req, res) => {
   if (!checkBooking) {
     throw new ApiError("Booking not found", 404);
   }
-  if (checkBooking.tutorId !== req.user.id) {
+  if (checkBooking.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to booking", 403);
   }
   const booking = await bookingService.updateBooking(
@@ -88,7 +88,7 @@ exports.cancelBooking = async (req, res) => {
   if (!checkBooking) {
     throw new ApiError("Booking not found", 404);
   }
-  if (checkBooking.studentId !== req.user.id) {
+  if (checkBooking.student.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to booking", 403);
   }
   await bookingService.updateBooking(req.params.bookingId, {
@@ -102,6 +102,7 @@ exports.cancelBooking = async (req, res) => {
 //--------------
 //Tutor
 exports.createAvailability = async (req, res) => {
+  
   const availability = await bookingService.createBooking(
     req.user.id,
     req.body
@@ -126,7 +127,7 @@ exports.fetchTutorAvailability = async (req, res) => {
     throw new ApiError("Availability not found", 404);
   }
 
-  if (booking.tutorId !== req.user.id) {
+  if (booking.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
   sendResponse(res, 200, "Availability retrieved successfully", booking);
@@ -139,11 +140,11 @@ exports.updateAvailability = async (req, res) => {
   if (!checkAvailability) {
     throw new ApiError("Availability not found", 404);
   }
-  if (checkAvailability.tutorId !== req.user.id) {
+  if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
 
-  if (req.body.status === "confirmed" && !checkAvailability.studentId) {
+  if (req.body.status === "confirmed" && !checkAvailability.student) {
     delete req.body.status;
   }
   const availability = await bookingService.updateBooking(
@@ -161,7 +162,7 @@ exports.cancelAvailability = async (req, res) => {
   if (!checkAvailability) {
     throw new ApiError("Availability not found", 404);
   }
-  if (checkAvailability.tutorId !== req.user.id) {
+  if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
 
@@ -184,7 +185,7 @@ exports.deleteAvailability = async (req, res) => {
   if (!checkAvailability) {
     throw new ApiError("Availability not found", 404);
   }
-  if (checkAvailability.tutorId !== req.user.id) {
+  if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
   if (checkAvailability.status !== "open") {

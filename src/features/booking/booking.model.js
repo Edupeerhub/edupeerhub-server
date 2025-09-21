@@ -1,16 +1,3 @@
-// UUID id
-// UUID tutorID
-//UUID studentID
-//UUID subjectID
-// Date scheuledStart
-// Date scheduledEnd
-//Enum(pending,confirmed,completed,cancelled) status
-// Varchar meeting link
-// Varchar tutor_notes
-// Varchar student_notes
-// UUID CancelledBy
-// Date CancelledAt
-// Text CancelledReasonconst { DataTypes } = require('sequelize');
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
@@ -81,7 +68,13 @@ module.exports = (sequelize) => {
       },
 
       status: {
-        type: DataTypes.ENUM("open", "pending", "confirmed", "completed", "cancelled"),
+        type: DataTypes.ENUM(
+          "open",
+          "pending",
+          "confirmed",
+          "completed",
+          "cancelled"
+        ),
         allowNull: false,
         defaultValue: "open",
       },
@@ -231,7 +224,7 @@ module.exports = (sequelize) => {
         },
       ],
       hooks: {
-        beforeValidate: (booking,options) => {
+        beforeValidate: (booking, options) => {
           // Calculate total amount if hourly rate and duration are provided
           if (booking.hourlyRate && booking.duration) {
             booking.totalAmount = (
@@ -241,7 +234,7 @@ module.exports = (sequelize) => {
           }
         },
 
-        beforeUpdate: (booking,options) => {
+        beforeUpdate: (booking, options) => {
           // Ensure cancellation fields are set when status is cancelled
           if (booking.status === "cancelled" && booking.changed("status")) {
             booking.cancelledAt = new Date().toISOString();
@@ -290,6 +283,68 @@ module.exports = (sequelize) => {
     Booking.belongsTo(models.User, {
       foreignKey: "cancelledBy",
       as: "cancelledByUser",
+    });
+
+    Booking.addScope("join", {
+      attributes: {
+        exclude: [
+          "createdAt",
+          "updatedAt",
+          "isRecurring",
+          "recurringPattern",
+          "parentBookingId",
+          "tutorId",
+          "studentId",
+          "subjectId",
+        ],
+      },
+      include: [
+        {
+          model: models.Tutor.unscoped(),
+          as: "tutor",
+          attributes: {
+            exclude: [
+              "userId",
+              "createdAt",
+              "updatedAt",
+              "approvalStatus",
+              "rejectionReason",
+            ],
+          },
+          include: [
+            {
+              model: models.User.unscoped(),
+              as: "user",
+              attributes: [ 'email', 'id', 'firstName', 'lastName', 'profileImageUrl']
+            },
+              {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+        },
+          ],
+        },
+        {
+          model: models.Student.unscoped(),
+          as: "student",
+          attributes: {
+            exclude: [
+              'createdAt', 'gradeLevel', 'updatedAt', 'userId',
+            ]
+          },
+          include: [
+            {
+              model: models.User.unscoped(),
+              as: "user",
+              attributes: [ 'email', 'id', 'firstName', 'lastName', 'profileImageUrl']
+
+            },
+          ],
+        },
+        {
+          model: models.Subject.scope("join"),
+          as: "subject",
+        },
+      ],
     });
   };
 

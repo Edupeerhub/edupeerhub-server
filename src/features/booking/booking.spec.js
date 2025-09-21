@@ -21,6 +21,39 @@ jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
   return () => (req, res, next) => next();
 });
 
+const tutorMatcher = {
+  bio: "Test tutor bio",
+  rating: 0,
+  profileVisibility: "active",
+  education: "BSc Test Education",
+  timezone: "UTC",
+  subjects: expect.any(Array),
+  user: expect.objectContaining({
+    id: expect.any(String),
+    firstName: expect.any(String),
+    lastName: expect.any(String),
+    email: "tutor@example.com",
+    profileImageUrl: "randomAvatar",
+  }),
+};
+
+const studentMatcher = {
+  learningGoals: expect.any(Object),
+  user: expect.objectContaining({
+    email: "student@example.com",
+    firstName: "Student",
+    id: expect.any(String),
+    lastName: "Dupe",
+    profileImageUrl: "randomAvatar",
+  }),
+};
+
+const subjectMatcher = {
+  id: expect.any(Number),
+  description: expect.any(String),
+  name: expect.any(String),
+};
+
 async function createTestSubjects() {
   return await Subject.bulkCreate(
     [
@@ -148,6 +181,7 @@ describe("Booking API", () => {
         const availabilityRes = await tutorSession
           .get("/api/booking/availability")
           .expect(200); // 1 hour from now
+        console.log(JSON.stringify(availabilityRes.body));
 
         expect(availabilityRes.statusCode).toBe(200); // 1 hour from now
         expect(availabilityRes.body).toEqual({
@@ -155,7 +189,11 @@ describe("Booking API", () => {
           message: "Availabilities retrieved successfully",
           data: expect.arrayOf({
             id: expect.any(String),
-            subjectId: payload.subjectId,
+            subject: expect.objectContaining({
+              id: payload.subjectId,
+              description: expect.any(String),
+              name: expect.any(String),
+            }),
             scheduledStart: start,
             scheduledEnd: end,
             tutorNotes: payload.tutorNotes,
@@ -164,17 +202,14 @@ describe("Booking API", () => {
             cancellationReason: null,
             cancelledAt: null,
             cancelledBy: null,
-            createdAt: expect.any(String),
-            isRecurring: false,
+
             meetingLink: null,
-            parentBookingId: null,
-            recurringPattern: null,
+
             reminderSent: false,
             status: "open",
-            studentId: null,
+            student: null,
             studentNotes: null,
-            tutorId: tutorUser.id,
-            updatedAt: expect.any(String),
+            tutor: expect.objectContaining(tutorMatcher),
           }),
         });
       });
@@ -211,7 +246,9 @@ describe("Booking API", () => {
           message: "Availability retrieved successfully",
           data: expect.objectContaining({
             id: expect.any(String),
-            subjectId: payload.subjectId,
+            subject: expect.objectContaining({
+              id: payload.subjectId,
+            }),
             scheduledStart: start,
             scheduledEnd: end,
             tutorNotes: payload.tutorNotes,
@@ -220,17 +257,14 @@ describe("Booking API", () => {
             cancellationReason: null,
             cancelledAt: null,
             cancelledBy: null,
-            createdAt: expect.any(String),
-            isRecurring: false,
+
             meetingLink: null,
-            parentBookingId: null,
-            recurringPattern: null,
+
             reminderSent: false,
             status: "open",
-            studentId: null,
+            student: null,
             studentNotes: null,
-            tutorId: tutorUser.id,
-            updatedAt: expect.any(String),
+            tutor: expect.objectContaining(tutorMatcher),
           }),
         });
       });
@@ -270,13 +304,16 @@ describe("Booking API", () => {
           .send(updatedPayload);
 
         expect(updateAvailabilityRes.statusCode).toBe(200);
-
         expect(updateAvailabilityRes.body).toEqual({
           success: true,
           message: "Availability updated successfully",
           data: expect.objectContaining({
             id: expect.any(String),
-            subjectId: updatedPayload.subjectId,
+            subject: expect.objectContaining({
+              id: updatedPayload.subjectId,
+              description: expect.any(String),
+              name: expect.any(String),
+            }),
             scheduledStart: start,
             scheduledEnd: end,
             tutorNotes: updatedPayload.tutorNotes,
@@ -285,17 +322,14 @@ describe("Booking API", () => {
             cancellationReason: null,
             cancelledAt: null,
             cancelledBy: null,
-            createdAt: expect.any(String),
-            isRecurring: false,
+
             meetingLink: null,
-            parentBookingId: null,
-            recurringPattern: null,
+
             reminderSent: false,
             status: "open",
-            studentId: null,
+            student: null,
             studentNotes: null,
-            tutorId: tutorUser.id,
-            updatedAt: expect.any(String),
+            tutor: expect.objectContaining(tutorMatcher),
           }),
         });
       });
@@ -334,7 +368,11 @@ describe("Booking API", () => {
           message: "Availability updated successfully",
           data: expect.objectContaining({
             id: expect.any(String),
-            subjectId: payload.subjectId,
+            subject: expect.objectContaining({
+              id: payload.subjectId,
+              description: expect.any(String),
+              name: expect.any(String),
+            }),
             scheduledStart: start,
             scheduledEnd: end,
             tutorNotes: payload.tutorNotes,
@@ -343,17 +381,14 @@ describe("Booking API", () => {
             cancellationReason: cancelPayload.cancellationReason,
             cancelledAt: expect.any(String),
             cancelledBy: tutorUser.id,
-            createdAt: expect.any(String),
-            isRecurring: false,
+
             meetingLink: null,
-            parentBookingId: null,
-            recurringPattern: null,
+
             reminderSent: false,
             status: "cancelled",
-            studentId: null,
+            student: null,
             studentNotes: null,
-            tutorId: tutorUser.id,
-            updatedAt: expect.any(String),
+            tutor: expect.objectContaining(tutorMatcher),
           }),
         });
       });
@@ -393,7 +428,7 @@ describe("Booking API", () => {
           message: "Booking created successfully",
           data: expect.objectContaining({
             id: expect.any(String),
-            subjectId: expect.any(Number),
+            tutor: expect.objectContaining(tutorMatcher),
             scheduledStart: start,
             scheduledEnd: end,
             tutorNotes: expect.any(String),
@@ -402,17 +437,14 @@ describe("Booking API", () => {
             cancellationReason: null,
             cancelledAt: null,
             cancelledBy: null,
-            createdAt: expect.any(String),
-            isRecurring: false,
+
             meetingLink: null,
-            parentBookingId: null,
-            recurringPattern: null,
+
             reminderSent: false,
             status: "pending",
-            studentId: studentUser.id,
+            student: expect.objectContaining(studentMatcher),
             studentNotes: null,
-            tutorId: tutorUser.id,
-            updatedAt: expect.any(String),
+            subject: expect.objectContaining(subjectMatcher),
           }),
         });
       });
@@ -449,7 +481,8 @@ describe("Booking API", () => {
           data: expect.arrayContaining([
             expect.objectContaining({
               id: expect.any(String),
-              subjectId: expect.any(Number),
+            tutor: expect.objectContaining(tutorMatcher),
+
               scheduledStart: start,
               scheduledEnd: end,
               tutorNotes: expect.any(String),
@@ -458,17 +491,14 @@ describe("Booking API", () => {
               cancellationReason: null,
               cancelledAt: null,
               cancelledBy: null,
-              createdAt: expect.any(String),
-              isRecurring: false,
+
               meetingLink: null,
-              parentBookingId: null,
-              recurringPattern: null,
+
               reminderSent: false,
               status: "pending",
-              studentId: studentUser.id,
+              student: expect.objectContaining(studentMatcher),
               studentNotes: null,
-              tutorId: tutorUser.id,
-              updatedAt: expect.any(String),
+              subject: expect.objectContaining(subjectMatcher),
             }),
           ]),
         });
@@ -505,7 +535,8 @@ describe("Booking API", () => {
           data: expect.arrayContaining([
             expect.objectContaining({
               id: expect.any(String),
-              subjectId: expect.any(Number),
+            tutor: expect.objectContaining(tutorMatcher),
+
               scheduledStart: start,
               scheduledEnd: end,
               tutorNotes: expect.any(String),
@@ -514,17 +545,14 @@ describe("Booking API", () => {
               cancellationReason: null,
               cancelledAt: null,
               cancelledBy: null,
-              createdAt: expect.any(String),
-              isRecurring: false,
+
               meetingLink: null,
-              parentBookingId: null,
-              recurringPattern: null,
+
               reminderSent: false,
               status: "open",
-              studentId: null,
+              student: null,
               studentNotes: null,
-              tutorId: tutorUser.id,
-              updatedAt: expect.any(String),
+              subject: expect.objectContaining(subjectMatcher),
             }),
           ]),
         });
@@ -560,13 +588,25 @@ describe("Booking API", () => {
           success: true,
           message: "Booking retrieved successfully",
           data: expect.objectContaining({
-            id: bookingId,
-            tutorId: tutorUser.id,
-            studentId: studentUser.id,
-            subjectId: subjects[0].id,
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
+            id: expect.any(String),
+            tutor: expect.objectContaining(tutorMatcher),
+
+            scheduledStart: start,
+            scheduledEnd: end,
+            tutorNotes: expect.any(String),
+            actualEndTime: null,
+            actualStartTime: null,
+            cancellationReason: null,
+            cancelledAt: null,
+            cancelledBy: null,
+
+            meetingLink: null,
+
+            reminderSent: false,
             status: "pending",
+            student: expect.objectContaining(studentMatcher),
+            studentNotes: null,
+            subject: expect.objectContaining(subjectMatcher),
           }),
         });
       });
@@ -609,20 +649,16 @@ describe("Booking API", () => {
       });
     });
   });
-
-
-
-
 });
 describe("Date middleware", () => {
   const dateMiddleware = require("./booking.validator").dateMiddleware;
-  
+
   let req, res, next;
-  
+
   beforeEach(() => {
     req = {
       query: {},
-      params: {}
+      params: {},
     };
     res = {};
     next = jest.fn();
@@ -631,9 +667,9 @@ describe("Date middleware", () => {
   it("should set current date when no date query parameter is provided", () => {
     const today = new Date();
     const expectedDate = new Date(today.setHours(0, 0, 0, 0));
-    
+
     dateMiddleware(req, res, next);
-    
+
     expect(req.params.date).toBeInstanceOf(Date);
     expect(req.params.date.getTime()).toBeCloseTo(expectedDate.getTime(), -1);
     expect(req.params.date.getHours()).toBe(0);
@@ -645,12 +681,12 @@ describe("Date middleware", () => {
 
   it("should set date with time normalized to midnight when valid date string is provided", () => {
     req.query.date = "2023-12-25";
-    
+
     dateMiddleware(req, res, next);
-    
+
     const expectedDate = new Date("2023-12-25");
     expectedDate.setHours(0, 0, 0, 0);
-    
+
     expect(req.params.date).toBeInstanceOf(Date);
     expect(req.params.date.getTime()).toBe(expectedDate.getTime());
     expect(req.params.date.getHours()).toBe(0);
@@ -662,12 +698,12 @@ describe("Date middleware", () => {
 
   it("should handle ISO date format correctly", () => {
     req.query.date = "2023-12-25T15:30:45.123Z";
-    
+
     dateMiddleware(req, res, next);
-    
+
     const expectedDate = new Date("2023-12-25T15:30:45.123Z");
     expectedDate.setHours(0, 0, 0, 0);
-    
+
     expect(req.params.date).toBeInstanceOf(Date);
     expect(req.params.date.getTime()).toBe(expectedDate.getTime());
     expect(req.params.date.getHours()).toBe(0);
@@ -676,51 +712,51 @@ describe("Date middleware", () => {
 
   it("should throw ApiError when date query parameter is a number", () => {
     req.query.date = "123456789";
-    
+
     expect(() => {
       dateMiddleware(req, res, next);
     }).toThrow("Invalid date");
-    
+
     expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw ApiError when date query parameter is numeric timestamp", () => {
     req.query.date = "1640390400000"; // timestamp for 2021-12-25
-    
+
     expect(() => {
       dateMiddleware(req, res, next);
     }).toThrow("Invalid date");
-    
+
     expect(next).not.toHaveBeenCalled();
   });
 
   it("should throw ApiError for invalid date strings", () => {
-    req.query.date = "invalid-date-string";   
-    
-   expect(() => {
+    req.query.date = "invalid-date-string";
+
+    expect(() => {
       dateMiddleware(req, res, next);
     }).toThrow("Invalid date");
-    
+
     expect(next).not.toHaveBeenCalled();
   });
 
   it("should handle empty string date", () => {
     req.query.date = "";
-    
+
     dateMiddleware(req, res, next);
-    
+
     expect(req.params.date).toBeInstanceOf(Date);
     expect(next).toHaveBeenCalledTimes(1);
   });
 
   it("should handle date format like MM/DD/YYYY", () => {
     req.query.date = "12/25/2023";
-    
+
     dateMiddleware(req, res, next);
-    
+
     const expectedDate = new Date("12/25/2023");
     expectedDate.setHours(0, 0, 0, 0);
-    
+
     expect(req.params.date).toBeInstanceOf(Date);
     expect(req.params.date.getTime()).toBe(expectedDate.getTime());
     expect(req.params.date.getHours()).toBe(0);

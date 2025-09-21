@@ -7,8 +7,7 @@ module.exports = () => {
     {
       userId: {
         type: DataTypes.UUID,
-        primaryKey: true,
-        field: "user_id",
+        primaryKey: true,        
       },
       bio: {
         type: DataTypes.TEXT,

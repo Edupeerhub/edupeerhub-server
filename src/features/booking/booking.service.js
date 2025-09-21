@@ -22,14 +22,14 @@ exports.fetchBookings = async ({
   if (tutorId) {
     query.tutorId = tutorId;
   }
-  const bookings = await Booking.findAll({
+  const bookings = await Booking.scope("join").findAll({
     where: query,
   });
   return bookings;
 };
 
 exports.fetchBookingById = async (bookingId) => {
-  const booking = await Booking.findByPk(bookingId);
+  const booking = await Booking.scope("join").findByPk(bookingId);
   if (!booking) {
     throw new ApiError("Booking not found", 404);
   }
@@ -48,11 +48,11 @@ exports.updateBooking = async (bookingId, updatedData) => {
   if (booking[0] === 0) {
     throw new ApiError("Booking not updated", 500);
   }
-  return booking[1][0];
+  return await this.fetchBookingById(bookingId);
 };
 
 exports.createBooking = async (userId, availabilityData) => {
-  const availability = await Booking.create({
+  const availability = await Booking.scope("join").create({
     ...availabilityData,
     tutorId: userId,
   });
