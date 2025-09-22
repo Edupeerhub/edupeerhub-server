@@ -5,8 +5,8 @@ const logger = require("@utils/logger");
 const apiKey = process.env.STREAM_API_KEY;
 const apiSecret = process.env.STREAM_API_SECRET;
 
-// Disable Stream if keys are missing
-const streamDisabled = !apiKey || !apiSecret;
+// Disable Stream if keys are missing/in test mode
+const streamDisabled = !apiKey || !apiSecret || process.env.NODE_ENV === "test";
 
 let streamClient = null;
 
