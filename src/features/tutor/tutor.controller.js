@@ -72,7 +72,7 @@ exports.updateTutor = async (req, res) => {
   const tutorProfile = req.body;
 
   if (tutorId !== req.user.id) {
-    throw new ApiError("Unauthorized", 403, null);
+    throw new ApiError("You're not allowed to update this profile", 403);
   }
   const updatedTutorProfile = await tutorService.updateTutorProfile({
     id: tutorId,
