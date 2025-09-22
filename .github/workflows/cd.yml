@@ -120,9 +120,11 @@ jobs:
               echo "Migrations failed" >&2; exit 1;
             }
 
-            # Create/Update systemd service
+            # Check if service exists, create if it doesn't
             SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-            sudo bash -c "cat > '${SERVICE_FILE}'" <<SERVICEEOF
+            if ! sudo systemctl status "${SERVICE_NAME}" &>/dev/null; then
+              echo "Creating new systemd service: ${SERVICE_NAME}"
+              sudo bash -c "cat > '${SERVICE_FILE}'" <<SERVICEEOF
             [Unit]
             Description=${APP_NAME} (${ENV_NAME})
             After=network.target
@@ -137,9 +139,13 @@ jobs:
             [Install]
             WantedBy=multi-user.target
             SERVICEEOF
-
-            sudo systemctl daemon-reload
-            sudo systemctl enable "${SERVICE_NAME}" || true
+              sudo systemctl daemon-reload
+              sudo systemctl enable "${SERVICE_NAME}" || true
+            else
+              echo "Service ${SERVICE_NAME} already exists, skipping creation"
+            fi
+            
+            # Restart the service
             sudo systemctl restart "${SERVICE_NAME}"
             sudo systemctl status "${SERVICE_NAME}" --no-pager -l || true
 
@@ -297,9 +303,11 @@ jobs:
               echo "Migrations failed" >&2; exit 1;
             }
 
-            # Create/Update systemd service
+            # Check if service exists, create if it doesn't
             SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-            sudo bash -c "cat > '${SERVICE_FILE}'" <<SERVICEEOF
+            if ! sudo systemctl status "${SERVICE_NAME}" &>/dev/null; then
+              echo "Creating new systemd service: ${SERVICE_NAME}"
+              sudo bash -c "cat > '${SERVICE_FILE}'" <<SERVICEEOF
             [Unit]
             Description=${APP_NAME} (${ENV_NAME})
             After=network.target
@@ -314,9 +322,13 @@ jobs:
             [Install]
             WantedBy=multi-user.target
             SERVICEEOF
-
-            sudo systemctl daemon-reload
-            sudo systemctl enable "${SERVICE_NAME}" || true
+              sudo systemctl daemon-reload
+              sudo systemctl enable "${SERVICE_NAME}" || true
+            else
+              echo "Service ${SERVICE_NAME} already exists, skipping creation"
+            fi
+            
+            # Restart the service
             sudo systemctl restart "${SERVICE_NAME}"
             sudo systemctl status "${SERVICE_NAME}" --no-pager -l || true
 
