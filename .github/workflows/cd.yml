@@ -275,57 +275,11 @@ jobs:
             STREAM_API_KEY=${{ secrets.PRODUCTION_STREAM_API_KEY }}
             STREAM_API_SECRET=${{ secrets.PRODUCTION_STREAM_API_SECRET }}
 
-            # Mailtrap
-            MAILTRAP_TOKEN=${{ secrets.MAILTRAP_TOKEN }}
-            MAILTRAP_ENDPOINT=${{ secrets.MAILTRAP_ENDPOINT }}
-            ENVEOF
-
-            # Inject runtime values
-            sed -i "s#__PORT__#${PORT_VALUE}#" .env
-            sed -i "s#__NODE_ENV__#${SERVICE_ENV}#" .env
-            echo "Created .env for ${SERVICE_ENV} at ${DEPLOY_DIR}/.env"
-
-            # Install dependencies
-            npm ci --no-audit --no-fund
-
-            # Run database migrations with environment loaded
-            set -a
-            . ./.env || true
-            
-            set +a
-            NODE_ENV="${SERVICE_ENV}" npx sequelize-cli db:migrate || {
-              echo "Migrations failed" >&2; exit 1;
-            }
-
-            # Create/Update systemd service
-            SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-            sudo bash -c "cat > '${SERVICE_FILE}'" <<SERVICEEOF
-            [Unit]
-            Description=${APP_NAME} (${ENV_NAME})
-            After=network.target
-            [Service]
-            Type=simple
-            User=${{ secrets.SERVER_USER }}
-            WorkingDirectory=${DEPLOY_DIR}
-            EnvironmentFile=${DEPLOY_DIR}/.env
-            ExecStart=/usr/bin/node src/server.js
-            Restart=always
-            RestartSec=10
-            [Install]
-            WantedBy=multi-user.target
-            SERVICEEOF
-
-            sudo systemctl daemon-reload
-            sudo systemctl enable "${SERVICE_NAME}" || true
-            sudo systemctl restart "${SERVICE_NAME}"
-            sudo systemctl status "${SERVICE_NAME}" --no-pager -l || true
-
-            # Configure Nginx
             NGINX_CONF="/etc/nginx/sites-available/${SERVICE_NAME}"
             sudo bash -c "cat > '${NGINX_CONF}'" <<NGINXEOF
             server {
                 listen 80;
-                server_name ${ENV_NAME}.edupeerhub.com;
+                server_name ${{ secrets.PRODUCTION_SERVER_URL }};
 
                 location / {
                     proxy_pass http://localhost:${PORT_VALUE};
@@ -340,8 +294,13 @@ jobs:
             }
             NGINXEOF
 
-            # Enable the site
-            sudo ln -s "${NGINX_CONF}" "/etc/nginx/sites-enabled/"
+            # Enable the site if not already enabled
+            if [ ! -f "/etc/nginx/sites-enabled/${SERVICE_NAME}" ]; then
+              sudo ln -s "${NGINX_CONF}" "/etc/nginx/sites-enabled/"
+            fi
+            else
+              echo "Nginx configuration for ${SERVICE_NAME} already exists, skipping creation"
+            fi
             
             # Test Nginx configuration
             sudo nginx -t
@@ -350,11 +309,12 @@ jobs:
             sudo systemctl reload nginx
 
             # Configure SSL with certbot if not already configured
-            if ! sudo certbot certificates | grep -q "${ENV_NAME}.edupeerhub.com"; then
-              echo "Obtaining SSL certificate for ${ENV_NAME}.edupeerhub.com..."
-              sudo certbot --nginx -d "${ENV_NAME}.edupeerhub.com" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
+            if ! sudo certbot certificates | grep -q "${{ secrets.PRODUCTION_CLIENT_URL }}"; then
+              echo "Obtaining SSL certificate for ${{ secrets.PRODUCTION_CLIENT_URL }}..."
+              sudo certbot --nginx -d "${{ secrets.PRODUCTION_CLIENT_URL }}" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
             else
-              echo "SSL certificate for ${ENV_NAME}.edupeerhub.com already exists"
+              echo "SSL certificate for ${{ secrets.PRODUCTION_CLIENT_URL }} already exists"
+
             fi
 
 
