@@ -175,8 +175,8 @@ jobs:
             LOG_LEVEL=${{ secrets.LOG_LEVEL }}
 
             # Stream Chat
-            STREAM_API_KEY=${{ secrets.PRODUCTION_STREAM_API_KEY }}
-            STREAM_API_SECRET=${{ secrets.PRODUCTION_STREAM_API_SECRET }}
+            STREAM_API_KEY=${{ secrets.PROD_STREAM_API_KEY }}
+            STREAM_API_SECRET=${{ secrets.PROD_STREAM_API_SECRET }}
 
             # Mailtrap
             MAILTRAP_TOKEN=${{ secrets.MAILTRAP_TOKEN }}
