@@ -57,29 +57,40 @@ exports.getTutors = async ({
 
 exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
   const student = await Student.findOne({ where: { userId } });
+
   const subjects = await student.getSubjects();
+  const subjectIds = subjects.map((subject) => subject.id);
 
-  const subjectInclude = {
-    model: Subject,
-    as: "subjects",
-  };
-
-  if (subjects && subjects.length > 0) {
-    subjectInclude.query = {
-      [Op.in]: subjects,
-    };
-  }
-  return await Tutor.scope("join").findAndCountAll({
+  const recommendedTutors = await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus: "approved",
       profileVisibility: "active",
     },
-    include: [subjectInclude],
+    include: [
+      {
+        model: Subject,
+        as: "subjects",
+        where: { id: { [Op.in]: subjectIds } },
+      },
+    ],
     limit: limit,
     offset: (page - 1) * limit,
   });
-};
 
+  if (recommendedTutors.count === 0) {
+    return await Tutor.scope("join").findAndCountAll({
+      where: {
+        approvalStatus: "approved",
+        profileVisibility: "active",
+      },
+      include: [{ model: Subject, as: "subjects" }],
+      limit: limit,
+      offset: (page - 1) * limit,
+    });
+  }
+
+  return recommendedTutors;
+};
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   const [count, [newTutorProfile]] = await Tutor.update(tutorProfile, {
     where: { user_id: id },

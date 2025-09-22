@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "npm" # or pip, maven, docker, etc.
+    directory: "/"           # Location of package files
+    schedule:
+      interval: "weekly"     # daily, weekly, monthly
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

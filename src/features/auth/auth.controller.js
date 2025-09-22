@@ -19,7 +19,6 @@ const {
 } = require("@src/shared/email/email.service");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
-const ApiError = require("@src/shared/utils/apiError");
 const { setAuthCookie, clearAuthCookie } = require("@src/shared/utils/cookies");
 
 exports.signup = async (req, res, next) => {
@@ -33,7 +32,7 @@ exports.signup = async (req, res, next) => {
     });
 
     await sendVerificationEmail(newUser.email, newUser.verificationToken);
-    // await addStreamUser(newUser);
+    await addStreamUser(newUser);
 
     const token = newUser.generateAuthToken();
 
