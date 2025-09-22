@@ -149,12 +149,14 @@ jobs:
             sudo systemctl restart "${SERVICE_NAME}"
             sudo systemctl status "${SERVICE_NAME}" --no-pager -l || true
 
-            # Configure Nginx
+            # Configure Nginx if not already configured
             NGINX_CONF="/etc/nginx/sites-available/${SERVICE_NAME}"
-            sudo bash -c "cat > '${NGINX_CONF}'" <<NGINXEOF
+            if [ ! -f "${NGINX_CONF}" ]; then
+              echo "Creating new Nginx configuration: ${NGINX_CONF}"
+              sudo bash -c "cat > '${NGINX_CONF}'" <<NGINXEOF
             server {
                 listen 80;
-                server_name ${ENV_NAME}.edupeerhub.com;
+                server_name ${{ secrets.STAGING_SERVER_URL }};
 
                 location / {
                     proxy_pass http://localhost:${PORT_VALUE};
@@ -169,8 +171,13 @@ jobs:
             }
             NGINXEOF
 
-            # Enable the site
-            sudo ln -s "${NGINX_CONF}" "/etc/nginx/sites-enabled/"
+              # Enable the site if not already enabled
+            if [ ! -f "/etc/nginx/sites-enabled/${SERVICE_NAME}" ]; then
+              sudo ln -s "${NGINX_CONF}" "/etc/nginx/sites-enabled/"
+            fi
+            else
+              echo "Nginx configuration for ${SERVICE_NAME} already exists, skipping creation"
+            fi
             
             # Test Nginx configuration
             sudo nginx -t
@@ -332,12 +339,14 @@ jobs:
             sudo systemctl restart "${SERVICE_NAME}"
             sudo systemctl status "${SERVICE_NAME}" --no-pager -l || true
 
-            # Configure Nginx
+            # Configure Nginx if not already configured
             NGINX_CONF="/etc/nginx/sites-available/${SERVICE_NAME}"
-            sudo bash -c "cat > '${NGINX_CONF}'" <<NGINXEOF
+            if [ ! -f "${NGINX_CONF}" ]; then
+              echo "Creating new Nginx configuration: ${NGINX_CONF}"
+              sudo bash -c "cat > '${NGINX_CONF}'" <<NGINXEOF
             server {
                 listen 80;
-                server_name ${ENV_NAME}.edupeerhub.com;
+                server_name ${{ secrets.PRODUCTION_SERVER_URL }};
 
                 location / {
                     proxy_pass http://localhost:${PORT_VALUE};
@@ -352,8 +361,13 @@ jobs:
             }
             NGINXEOF
 
-            # Enable the site
-            sudo ln -s "${NGINX_CONF}" "/etc/nginx/sites-enabled/"
+            # Enable the site if not already enabled
+            if [ ! -f "/etc/nginx/sites-enabled/${SERVICE_NAME}" ]; then
+              sudo ln -s "${NGINX_CONF}" "/etc/nginx/sites-enabled/"
+            fi
+            else
+              echo "Nginx configuration for ${SERVICE_NAME} already exists, skipping creation"
+            fi
             
             # Test Nginx configuration
             sudo nginx -t
