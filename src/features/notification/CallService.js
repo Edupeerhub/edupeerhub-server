@@ -1,7 +1,9 @@
 // services/CallService.js
 const { StreamChat } = require("stream-chat");
-const { generateDmChannelId } = require("../utils/generateDmChannelId.js");
-const EmailService = require("./EmailService.js"); // your existing email service
+const {
+  generateDmChannelId,
+} = require("../../shared/utils/generateDmChannelId");
+// const EmailService = require("./EmailService"); // your existing email service
 
 const STREAM_API_KEY = process.env.STREAM_API_KEY;
 const STREAM_API_SECRET = process.env.STREAM_API_SECRET;
@@ -11,7 +13,7 @@ const client = StreamChat.getInstance(STREAM_API_KEY, STREAM_API_SECRET);
 
 class CallService {
   constructor() {
-    this.emailService = new EmailService();
+    // this.emailService = new EmailService();
   }
 
   /**

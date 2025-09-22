@@ -33,10 +33,6 @@ const startServer = async () => {
       logger.info("✅ Database synced (development only)");
     }
 
-    // Start reminder system
-    reminderSystem.start();
-    logger.info("✅ Reminder system started");
-
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV}]`);
       logger.info(`API Base URL: http://localhost:${PORT}/api`);
@@ -50,9 +46,6 @@ const startServer = async () => {
 const gracefulExit = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   try {
-    // Stop reminder system
-    reminderSystem.stop();
-    
     await sequelize.close();
     logger.info("Database connection closed");
   } catch (error) {

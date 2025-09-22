@@ -19,38 +19,39 @@ Leave ngrok running so the webhook can reach your local dev environment.
 exports.handleStreamWebhook = async (req, res, next) => {
   try {
     const event = req.body;
-    const { message, user: sender, type, members } = req.body;
+    // const { message, user: sender, type, members } = req.body;
 
-    if (event.type === "message.new") {
-      members
-        .filter((member) => member.user_id !== sender.id)
-        .forEach(({ user }) => {
-          if (!user.online) {
-            const { email, name: userName } = user;
-            const unreadCount = user.unread_count;
-            const senderName = message.user.name;
-            // const message = `You have a new message from ${message.user.name} - ${message.text}`;
-            // await sendUnreadMessageEmail(email, userName, unreadCount, senderName);
-            console.log(email, userName, unreadCount, senderName);
-          }
-        });
-    }
-
-    // Only act on unread message reminder events
-    // if (event.type !== "user.unread_message_reminder") {
-    //   return sendResponse(res, 200, "Event ignored");
+    // if (event.type === "message.new") {
+    //   members
+    //     .filter((member) => member.user_id !== sender.id)
+    //     .forEach(({ user }) => {
+    //       if (!user.online) {
+    //         const { email, name: userName } = user;
+    //         const unreadCount = user.unread_count;
+    //         const senderName = message.user.name;
+    //         // const message = `You have a new message from ${message.user.name} - ${message.text}`;
+    //         // await sendUnreadMessageEmail(email, userName, unreadCount, senderName);
+    //         console.log(email, userName, unreadCount, senderName);
+    //       }
+    //     });
     // }
 
-    // console.log("Received Stream webhook event:", event);
+    // Only act on unread message reminder events
+    console.log("Received Stream webhook event:", event);
+    if (event.type !== "user.unread_message_reminder") {
+      return sendResponse(res, 200, "Event ignored");
+    } else {
+      console.log("unread message reminder event received", event);
+    }
 
-    // const { email, name: userName } = event.user;
-    // const unreadCount = event.user.unread_count;
-    // const senderNames = event.channels
-    //   ? Object.values(event.channels)
-    //       .flatMap((channel) => channel.messages.map((msg) => msg.user?.name))
-    //       .filter(Boolean)
-    //       .join(", ")
-    //   : "";
+    const { email, name: userName } = event.user;
+    const unreadCount = event.user.unread_count;
+    const senderNames = event.channels
+      ? Object.values(event.channels)
+          .flatMap((channel) => channel.messages.map((msg) => msg.user?.name))
+          .filter(Boolean)
+          .join(", ")
+      : "";
 
     // if (!email) {
     //   throw new ApiError("User email not found in Stream webhook payload", 400);
