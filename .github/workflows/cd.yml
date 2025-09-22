@@ -173,11 +173,11 @@ jobs:
             sudo systemctl reload nginx
 
             # Configure SSL with certbot if not already configured
-            if ! sudo certbot certificates | grep -q "${ENV_NAME}.edupeerhub.com"; then
-              echo "Obtaining SSL certificate for ${ENV_NAME}.edupeerhub.com..."
-              sudo certbot --nginx -d "${ENV_NAME}.edupeerhub.com" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
+            if ! sudo certbot certificates | grep -q "${{ secrets.STAGING_CLIENT_URL }}"; then
+              echo "Obtaining SSL certificate for ${{ secrets.STAGING_CLIENT_URL }}..."
+              sudo certbot --nginx -d "${{ secrets.STAGING_CLIENT_URL }}" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
             else
-              echo "SSL certificate for ${ENV_NAME}.edupeerhub.com already exists"
+              echo "SSL certificate for ${{ secrets.STAGING_CLIENT_URL }} already exists"
             fi
 
 
@@ -350,11 +350,11 @@ jobs:
             sudo systemctl reload nginx
 
             # Configure SSL with certbot if not already configured
-            if ! sudo certbot certificates | grep -q "${ENV_NAME}.edupeerhub.com"; then
-              echo "Obtaining SSL certificate for ${ENV_NAME}.edupeerhub.com..."
-              sudo certbot --nginx -d "${ENV_NAME}.edupeerhub.com" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
+            if ! sudo certbot certificates | grep -q "${{ secrets.PRODUCTION_CLIENT_URL }}"; then
+              echo "Obtaining SSL certificate for ${{ secrets.PRODUCTION_CLIENT_URL }}..."
+              sudo certbot --nginx -d "${{ secrets.PRODUCTION_CLIENT_URL }}" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
             else
-              echo "SSL certificate for ${ENV_NAME}.edupeerhub.com already exists"
+              echo "SSL certificate for ${{ secrets.PRODUCTION_CLIENT_URL }} already exists"
             fi
 
 
