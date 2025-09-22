@@ -73,6 +73,7 @@ exports.loginUser = async ({ email, password }) => {
 exports.fetchProfile = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: [
+      "id",
       "firstName",
       "lastName",
       "email",
