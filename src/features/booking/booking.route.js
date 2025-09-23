@@ -12,6 +12,11 @@ const ApiError = require("@src/shared/utils/apiError");
 bookingRouter.use(authMiddleware.protectRoute);
 bookingRouter.use(authMiddleware.requireVerifiedAndOnboardedUser);
 
+
+bookingRouter.get(
+  "/upcoming",
+  bookingController.fetchUpcomingSession,  
+)
 //----------------
 //Tutor
 
@@ -21,9 +26,9 @@ bookingRouter.get(
   bookingValidator.dateMiddleware,
   bookingController.fetchTutorAvailabilities
 );
+
 bookingRouter.get(
   "/availability/:availabilityId",
-
   authMiddleware.requireTutorRole,
   idValidator("availabilityId"),
   bookingController.fetchTutorAvailability

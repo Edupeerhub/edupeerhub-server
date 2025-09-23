@@ -7,6 +7,11 @@ const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
 
+
+exports.fetchUpcomingSession = async (req, res) => {
+  const booking = await bookingService.fetchUpcomingSession(req.user);
+  sendResponse(res, 200, "Booking retrieved successfully", booking);
+}
 //--------------
 //Student
 exports.createBooking = async (req, res) => {
@@ -35,7 +40,7 @@ exports.createBooking = async (req, res) => {
 exports.fetchStudentBookings = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     studentId: req.user.id,
-    date: req.params.date,
+    date: req.params?.date,
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
@@ -44,7 +49,7 @@ exports.fetchStudentBookings = async (req, res) => {
 exports.fetchStudentTutorBookings = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     tutorId: req.params.tutorId,
-    date: req.params.date,
+    date: req.params?.date,
     statuses: ["open"],
   });
 
@@ -128,7 +133,7 @@ exports.createAvailability = async (req, res) => {
 exports.fetchTutorAvailabilities = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     tutorId: req.user.id,
-    date: req.params.date,
+    date: req.params?.date,
   });
   sendResponse(res, 200, "Availabilities retrieved successfully", bookings);
 };

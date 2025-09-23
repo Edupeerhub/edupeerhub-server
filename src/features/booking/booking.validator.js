@@ -33,9 +33,7 @@ exports.dateMiddleware = (req, res, next) => {
     if (isNaN(req.params.date.getTime())) {
       throw new ApiError("Invalid date", 400);
     }
-  } else {
-      req.params.date = new Date(new Date().setHours(0, 0, 0, 0));
-    }
+  } 
 
   next();
 };

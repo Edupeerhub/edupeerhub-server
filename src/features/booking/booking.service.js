@@ -12,10 +12,13 @@ exports.fetchBookings = async ({
     status: {
       [Op.in]: statuses,
     },
-    scheduledStart: {
-      [Op.between]: [new Date(date), new Date(date.setHours(23, 59, 59, 999))],
-    },
   };
+
+  if (date) {
+    query.scheduledStart = {
+      [Op.between]: [new Date(date), new Date(date.setHours(23, 59, 59, 999))],
+    };
+  }
   if (studentId) {
     query.studentId = studentId;
   }
@@ -24,6 +27,7 @@ exports.fetchBookings = async ({
   }
   const bookings = await Booking.scope("join").findAll({
     where: query,
+    order: [["scheduledStart", "ASC"]],
   });
   return bookings;
 };
@@ -40,8 +44,7 @@ exports.updateBooking = async (bookingId, updatedData) => {
   const booking = await Booking.update(updatedData, {
     where: {
       id: bookingId,
-    },
-    returning: true,
+    },    
     individualHooks: true,
   });
 
@@ -67,4 +70,25 @@ exports.deleteBooking = async (bookingId) => {
       id: bookingId,
     },
   });
+};
+
+exports.fetchUpcomingSession = async (user) => {
+  const date = new Date();
+  const query = {
+    status: "confirmed",
+    scheduledStart: {
+      [Op.gte]: date,
+    },
+  };
+
+  if (user.role === "tutor") {
+    query.tutorId = user.id;
+  } else {
+    query.studentId = user.id;
+  }
+  const booking = await Booking.scope("join").findOne({
+    where: query,
+    order: [["scheduledStart", "ASC"]],
+  });
+  return booking;
 };

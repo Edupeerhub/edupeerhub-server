@@ -717,6 +717,100 @@ describe("Booking API", () => {
         });
       });
     });
+
+    describe("GET /api/booking/upcoming", () => {
+      it("should allow student to fetch their upcoming booking", async () => {
+        // Login as tutor and create availability
+        await createTutorAndLogin();
+        await createStudentAndLogin();
+        const tutorId = tutorUser.id;
+        const studentId = studentUser.id;
+        const now = new Date().getTime();
+        const hour = 60 * 60 * 1000;
+
+        const bookings = await Booking.bulkCreate([
+          {
+            tutorId: tutorId,
+            studentId: studentId,
+            subjectId: subjects[0].id,
+            scheduledStart: new Date(now - 4 * hour),
+            scheduledEnd: new Date(now - 3 * hour),
+            status: "open",
+          },
+          {
+            tutorId: tutorId,
+            studentId: studentId,
+            subjectId: subjects[0].id,
+            scheduledStart: new Date(now + 1 * hour),
+            scheduledEnd: new Date(now + 2 * hour),
+            status: "confirmed",
+          },
+        ]);
+
+        // Student fetches upcoming booking
+        const studentResponse = await studentSession
+          .get(`/api/booking/upcoming`)
+          .send();
+
+        expect(studentResponse.statusCode).toBe(200);
+        expect(studentResponse.body).toEqual({
+          success: true,
+          message: "Booking retrieved successfully",
+          data: expect.objectContaining({
+            id: bookings[1].id,
+            tutor: expect.objectContaining(tutorMatcher),
+
+            scheduledStart: expect.any(String),
+            scheduledEnd: expect.any(String),
+            tutorNotes: null,
+            actualEndTime: null,
+            actualStartTime: null,
+            cancellationReason: null,
+            cancelledAt: null,
+            cancelledBy: null,
+
+            meetingLink: null,
+
+            reminderSent: false,
+            status: "confirmed",
+            student: expect.objectContaining(studentMatcher),
+            studentNotes: null,
+            subject: expect.objectContaining(subjectMatcher),
+          }),
+        });
+
+        const tutorResponse = await tutorSession
+          .get(`/api/booking/upcoming`)
+          .send();
+
+        expect(tutorResponse.statusCode).toBe(200);
+        expect(tutorResponse.body).toEqual({
+          success: true,
+          message: "Booking retrieved successfully",
+          data: expect.objectContaining({
+            id: bookings[1].id,
+            tutor: expect.objectContaining(tutorMatcher),
+
+            scheduledStart: expect.any(String),
+            scheduledEnd: expect.any(String),
+            tutorNotes: null,
+            actualEndTime: null,
+            actualStartTime: null,
+            cancellationReason: null,
+            cancelledAt: null,
+            cancelledBy: null,
+
+            meetingLink: null,
+
+            reminderSent: false,
+            status: "confirmed",
+            student: expect.objectContaining(studentMatcher),
+            studentNotes: null,
+            subject: expect.objectContaining(subjectMatcher),
+          }),
+        });
+      });
+    });
   });
 });
 describe("Date middleware", () => {
