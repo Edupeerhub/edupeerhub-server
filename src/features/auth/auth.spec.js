@@ -156,6 +156,7 @@ describe("Auth integration test", () => {
         success: true,
         message: "Profile fetch successful",
         data: {
+          id: expect.any(String),
           email: user.email,
           firstName: user.firstName,
           isOnboarded: true,

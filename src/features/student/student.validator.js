@@ -21,7 +21,7 @@ exports.updateStudent = {
     gradeLevel: Joi.string(),
     learningGoals: Joi.array().items(Joi.string()),
     subjects: Joi.array().items(Joi.number()).label("subjects"),
-    exams: Joi.array().items(uuid).label("exams"),
+    exams: Joi.array().items(Joi.number()),
     accountStatus: Joi.string().valid("active", "inactive").messages({
       "any.only": "accountStatus must be one of [active, inactive]",
     }),

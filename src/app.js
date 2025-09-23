@@ -12,6 +12,8 @@ const tutorRoutes = require("@features/tutor/tutor.route");
 const adminRoutes = require("@features/admin/admin.route");
 const subjectRoutes = require("@features/subject/subject.route");
 const examRoutes = require("@features/exams/exams.route");
+
+const chatRoutes = require("@features/chat/chat.route");
 const ApiError = require("@utils/apiError");
 const sendResponse = require("@utils/sendResponse");
 const reviewRoutes = require ("@features/reviews/review.route")
@@ -44,6 +46,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api/exam", examRoutes);
 app.use("/api/reviews", reviewRoutes)
+
+app.use("/api/chat", chatRoutes);
 
 app.get("/api/health", (req, res) => {
   sendResponse(res, 200, "Server is healthy", {
