@@ -6,8 +6,9 @@ module.exports = () => {
     "Review",
     {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
+        defaultValue: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
       },
       reviewerId: {

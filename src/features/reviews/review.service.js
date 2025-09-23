@@ -1,6 +1,8 @@
 const ApiError = require("@utils/apiError");
 const { Review, User,} = require ("@models");
 const sequelize = require("@src/shared/database");
+const trackEvent = require("../events/events.service");
+const eventTypes = require("../events/eventTypes");
 
 const createReview = async (reviewData) => {
   const { reviewerId, revieweeId, rating, comment, type, sessionId } = reviewData;
@@ -13,7 +15,7 @@ const createReview = async (reviewData) => {
     throw new ApiError('Users cannot review themselves', 400);
   }
 
-  // Validate rating range (assuming 1-5 based on model)
+  // Validate rating range
   if (rating < 1 || rating > 5) {
     throw new ApiError('Rating must be between 1 and 5', 400);
   }
@@ -31,7 +33,7 @@ const createReview = async (reviewData) => {
       reviewerId,
       revieweeId,
       rating,
-      comment: comment || null,
+      comment: comment || null,   // Reviews can be made without comments
       type,
       sessionId: sessionId || null,
     }, { transaction });
@@ -72,6 +74,14 @@ const createReview = async (reviewData) => {
 
     // 5. Format and return the response data
     const review = createdReviewRaw.toJSON();
+    
+    await trackEvent(eventTypes.FEEDBACK_RATING, {
+      sessionId: sessionId,
+      reviewerId: reviewerId,
+      revieweeId: revieweeId,
+      rating: rating,
+      comment: comment,
+    })
     return {
       stars: review.rating,
       comment: review.comment,
@@ -125,7 +135,7 @@ const getReviewsBySessionId = async (sessionId) => {
 
 /**
  * Fetches all reviews targeted *at* a specific tutor (reviews where they are the reviewee).
- * @param {string} tutorId - The UUID of the tutor (user ID).
+ * @param {string} tutorId - The ID of the tutor (user ID).
  * @returns {Promise<Array<Object>>} An array of review objects.
  * @throws {ApiError} If database operation fails.
  */
@@ -156,7 +166,11 @@ const getReviewsForTutor = async (tutorId) => {
             const raw = r.toJSON();
             return {
                 reviewId: raw.id,
-                reviewerId: raw.reviewerId,
+                reviewer: {
+                  firstName: raw.reviewer?.firstName || null,
+                  lastName: raw.reviewer?.lastName || null,
+                  profileImageUrl: raw.reviewer?.profileImageUrl || null
+                },
                 revieweeId: raw.revieweeId,
                 stars: raw.rating,
                 comment: raw.comment,
@@ -197,7 +211,11 @@ const getReviewsForStudent = async (studentId) => {
             const raw = r.toJSON();
             return {
                 reviewId: raw.id,
-                reviewerId: raw.reviewerId,
+                reviewer: {
+                  firstName: raw.reviewer?.firstName || null,
+                  lastName: raw.reviewer?.lastName || null,
+                  profileImageUrl: raw.reviewer?.profileImageUrl || null
+                },
                 revieweeId: raw.revieweeId,
                 stars: raw.rating,
                 comment: raw.comment,
@@ -226,7 +244,11 @@ const getReviewsByUser = async (userId) => {
             const raw = r.toJSON();
             return {
                 reviewId: raw.id,
-                reviewerId: raw.reviewerId,
+                reviewer: {
+                  firstName: raw.reviewer?.firstName || null,
+                  lastName: raw.reviewer?.lastName || null,
+                  profileImageUrl: raw.reviewer?.profileImageUrl || null
+                },
                 revieweeId: raw.revieweeId,
                 stars: raw.rating,
                 comment: raw.comment,
@@ -303,7 +325,11 @@ const updateReview = async (reviewId, currentUserId, payload) => {
     const raw = review.toJSON();
     return {
       reviewId: raw.id,
-      reviewerId: raw.reviewerId,
+      reviewer: {
+        firstName: raw.reviewer?.firstName || null,
+        lastName: raw.reviewer?.lastName || null,
+        profileImageUrl: raw.reviewer?.profileImageUrl || null
+      },
       revieweeId: raw.revieweeId,
       stars: raw.rating,
       comment: raw.comment,

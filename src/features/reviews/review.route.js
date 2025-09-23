@@ -57,6 +57,14 @@ router.get(
   reviewController.getReviewsByUser
 );
 
+// GET /api/reviews/aggregates/:userId
+// Fetch aggregated review stats for a user (totalReviews, averageRating)
+router.get(
+  '/aggregates/:userId',
+  validate(reviewValidator.getReviewAggregates.params, 'params'),
+  reviewController.getReviewAggregatesForUser
+);
+
 // PUT /api/reviews/:reviewId  -> update a review (only owner)
 router.put(
   '/:reviewId',

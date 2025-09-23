@@ -159,6 +159,22 @@ const deleteReview = async (req, res, next) => {
   }
 };
 
+/**
+ * Get review aggregates for a specific user (totalReviews, averageRating)
+ * GET /api/reviews/aggregates/:userId
+ */
+const getReviewAggregatesForUser = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) throw new ApiError("User ID is required", 400);
+
+    const aggregates = await reviewService.getReviewAggregatesForUser(userId);
+    sendResponse(res, 200, "Review aggregates fetched successfully", aggregates);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Export all controller functions
 module.exports = {
   createReview,
@@ -168,4 +184,5 @@ module.exports = {
   getReviewsByUser, // Export placeholder
   updateReview,
   deleteReview,
+  getReviewAggregatesForUser
 };
