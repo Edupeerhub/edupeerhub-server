@@ -9,7 +9,9 @@ const commaStringToList = require("@src/shared/utils/commaStringToList");
 
 exports.fetchUpcomingSession = async (req, res) => {
   const booking = await bookingService.fetchUpcomingSession(req.user);
-  const message = booking ? "Upcoming session retrieved successfully" : "No upcoming session";
+  const message = booking
+    ? "Upcoming session retrieved successfully"
+    : "No upcoming session";
   sendResponse(res, 200, message, booking);
 };
 //--------------
@@ -32,6 +34,7 @@ exports.createBooking = async (req, res) => {
 
   const booking = await bookingService.updateBooking(req.params.bookingId, {
     studentId: req.user.id,
+    subjectId: req.body.subjectId,
     status: "pending",
   });
   sendResponse(res, 201, "Booking created successfully", booking);
@@ -50,7 +53,8 @@ exports.fetchStudentBookings = async (req, res) => {
 
 exports.fetchStudentTutorBookings = async (req, res) => {
   const start =
-    (req.params?.start instanceof Date && req.params?.start < Date.now()) || !req.params?.start
+    (req.params?.start instanceof Date && req.params?.start < Date.now()) ||
+    !req.params?.start
       ? Date.now()
       : req.params?.start;
   const bookings = await bookingService.fetchBookings({
@@ -127,12 +131,6 @@ exports.createAvailability = async (req, res) => {
     req.user.id,
     req.body
   );
-  trackEvent(eventTypes.SESSION_SCHEDULED, {
-    sessionId: availability.id,
-    tutorId: availability.tutor.user.id,
-    subject: availability.subject,
-    scheduledAt: new Date().toISOString(),
-  });
   sendResponse(res, 201, "Availability created successfully", availability);
 };
 
@@ -195,6 +193,15 @@ exports.updateAvailabilityStatus = async (req, res) => {
     req.params.availabilityId,
     req.body
   );
+
+  if(availability.status === "confirmed") {
+      trackEvent(eventTypes.SESSION_SCHEDULED, {
+    sessionId: availability.id,
+    tutorId: availability.tutor.user.id,
+    subject: availability.subject,
+    scheduledAt: new Date().toISOString(),
+  });
+  }
 
   sendResponse(
     res,

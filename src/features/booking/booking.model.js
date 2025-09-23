@@ -38,7 +38,7 @@ module.exports = (sequelize) => {
 
       subjectId: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "subjects",
           key: "id",
@@ -226,15 +226,9 @@ module.exports = (sequelize) => {
         },
       ],
       hooks: {
-        beforeCreate: async (booking, options) => {
-          // const tutorSubject = await TutorSubject.findOne({
-          //   where: {
-          //     tutor_id: booking.tutor_id,
-          //     subject_id: booking.subject_id,
-          //   },
-          // });
-          await validateTutorSubject(booking);
-        },
+        // beforeCreate: async (booking, options) => {
+        //   await validateTutorSubject(booking);
+        // },
         beforeValidate: (booking, options) => {
           // Calculate total amount if hourly rate and duration are provided
           if (booking.hourlyRate && booking.duration) {

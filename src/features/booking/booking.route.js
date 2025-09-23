@@ -93,6 +93,7 @@ bookingRouter.post(
   "/:bookingId",
   authMiddleware.requireStudentRole,
   idValidator("bookingId"),
+  validate(bookingValidator.createBookingValidator),
   bookingController.createBooking
 );
 bookingRouter.patch(
