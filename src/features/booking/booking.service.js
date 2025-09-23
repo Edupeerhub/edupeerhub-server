@@ -1,30 +1,27 @@
 const { Tutor, Booking } = require("@models");
 const ApiError = require("@src/shared/utils/apiError");
+const { date } = require("joi");
 const { Op } = require("sequelize");
 
 exports.fetchBookings = async ({
   studentId,
   tutorId,
-  date,
-  statuses = ["open", "completed", "cancelled", "pending"],
+  start,
+  end,
+  status = ["open", "completed", "cancelled", "pending"],
 }) => {
   const query = {
-    status: {
-      [Op.in]: statuses,
-    },
+    status: { [Op.in]: status },
+    ...(studentId && { studentId }),
+    ...(tutorId && { tutorId }),
+    ...((start || end) && {
+      [Op.and]: [
+        ...(start ? [{ scheduledStart: { [Op.gte]: start } }] : []),
+        ...(end ? [{ scheduledStart: { [Op.lte]: end } }] : []),
+      ],
+    }),
   };
 
-  if (date) {
-    query.scheduledStart = {
-      [Op.between]: [new Date(date), new Date(date.setHours(23, 59, 59, 999))],
-    };
-  }
-  if (studentId) {
-    query.studentId = studentId;
-  }
-  if (tutorId) {
-    query.tutorId = tutorId;
-  }
   const bookings = await Booking.scope("join").findAll({
     where: query,
     order: [["scheduledStart", "ASC"]],
@@ -44,7 +41,7 @@ exports.updateBooking = async (bookingId, updatedData) => {
   const booking = await Booking.update(updatedData, {
     where: {
       id: bookingId,
-    },    
+    },
     individualHooks: true,
   });
 

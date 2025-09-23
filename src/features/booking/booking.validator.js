@@ -12,7 +12,7 @@ exports.updateAvailabilityValidator = Joi.object({
   subjectId: Joi.number(),
   scheduledStart: Joi.date(),
   scheduledEnd: Joi.date(),
-  tutorNotes: Joi.string(),  
+  tutorNotes: Joi.string(),
 });
 
 exports.updateAvailabilityStatusValidator = Joi.object({
@@ -28,12 +28,21 @@ exports.updateBookingValidator = Joi.object({
 });
 
 exports.dateMiddleware = (req, res, next) => {
-  if (req.query.date) {
-    req.params.date = new Date(new Date(req.query.date).setHours(0, 0, 0, 0));
-    if (isNaN(req.params.date.getTime())) {
-      throw new ApiError("Invalid date", 400);
+  ["start", "end"].forEach((key) => {
+    if (req.query[key]) {
+      const num = Number(req.query[key]);
+      const value = isNaN(num) ? req.query[key] : num;
+
+      req.params[key] = new Date(value);
+      if (isNaN(req.params[key].getTime())) {
+        throw new ApiError(`Invalid ${key} date`, 400);
+      }
     }
-  } 
+  });
+
+  if (req.params.start > req.params.end) {
+    throw new ApiError("Start date must be before end date", 400);
+  }
 
   next();
 };

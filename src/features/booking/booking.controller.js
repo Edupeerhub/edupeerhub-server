@@ -2,16 +2,16 @@ const sendResponse = require("@utils/sendResponse");
 
 const bookingService = require("./booking.service");
 
-
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
-
+const commaStringToList = require("@src/shared/utils/commaStringToList");
 
 exports.fetchUpcomingSession = async (req, res) => {
   const booking = await bookingService.fetchUpcomingSession(req.user);
-  sendResponse(res, 200, "Booking retrieved successfully", booking);
-}
+  const message = booking ? "Upcoming session retrieved successfully" : "No upcoming session";
+  sendResponse(res, 200, message, booking);
+};
 //--------------
 //Student
 exports.createBooking = async (req, res) => {
@@ -40,16 +40,23 @@ exports.createBooking = async (req, res) => {
 exports.fetchStudentBookings = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     studentId: req.user.id,
-    date: req.params?.date,
+    start: req.params?.start,
+    end: req.params?.end,
+    ...(req.params?.status && { status: commaStringToList(req.params.status) }),
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
 };
 
 exports.fetchStudentTutorBookings = async (req, res) => {
+  const start =
+    (req.params?.start instanceof Date && req.params?.start < Date.now()) || !req.params?.start
+      ? Date.now()
+      : req.params?.start;
   const bookings = await bookingService.fetchBookings({
     tutorId: req.params.tutorId,
-    date: req.params?.date,
+    start: start,
+    end: req.params?.end,
     statuses: ["open"],
   });
 
@@ -116,7 +123,6 @@ exports.cancelBooking = async (req, res) => {
 //--------------
 //Tutor
 exports.createAvailability = async (req, res) => {
-  
   const availability = await bookingService.createBooking(
     req.user.id,
     req.body
@@ -133,7 +139,9 @@ exports.createAvailability = async (req, res) => {
 exports.fetchTutorAvailabilities = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     tutorId: req.user.id,
-    date: req.params?.date,
+    start: req.params?.start,
+    end: req.params?.end,
+    ...(req.query?.status && { status: commaStringToList(req.query.status) }),
   });
   sendResponse(res, 200, "Availabilities retrieved successfully", bookings);
 };
@@ -188,7 +196,12 @@ exports.updateAvailabilityStatus = async (req, res) => {
     req.body
   );
 
-  sendResponse(res, 200, "Availability status updated successfully", availability);
+  sendResponse(
+    res,
+    200,
+    "Availability status updated successfully",
+    availability
+  );
 };
 
 exports.cancelAvailability = async (req, res) => {
@@ -201,7 +214,7 @@ exports.cancelAvailability = async (req, res) => {
   if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
-    if (!checkAvailability.student?.user) {
+  if (!checkAvailability.student?.user) {
     throw new ApiError("Cannot cancel open availability", 400);
   }
 

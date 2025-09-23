@@ -42,6 +42,7 @@ exports.createUser = async ({ verified = true, isOnboarded = true }) =>
 // Helper to create a Tutor (with user and subject association)
 exports.createTutor = async ({
   bio = "Test tutor bio",
+  email = this.tutorObject.email,
   education = "BSc Test Education",
   timezone = "UTC",
   rating = 0,
@@ -52,7 +53,7 @@ exports.createTutor = async ({
   isOnboarded = true,
 } = {}) => {
   const createdUser = await User.create({
-    email: this.tutorObject.email,
+    email: email,
     firstName: this.tutorObject.firstName,
     lastName: this.tutorObject.lastName,
     passwordHash: this.tutorObject.password,
@@ -84,9 +85,10 @@ exports.createStudent = async ({
   subjectIds = [],
   isVerified = true,
   isOnboarded = true,
+  email = this.studentObject.email,
 } = {}) => {
   const createdUser = await User.create({
-    email: this.studentObject.email,
+    email: email,
     firstName: this.studentObject.firstName,
     lastName: this.studentObject.lastName,
     passwordHash: this.studentObject.password,

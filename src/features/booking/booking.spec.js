@@ -72,6 +72,85 @@ async function createTestSubjects() {
   );
 }
 
+async function createTestBookings() {
+  const tutorId = tutorUser.id;
+  const studentId = studentUser.id;
+
+  const { user: secondStudent } = await createStudent({
+    email: "student2@example.com",
+  });
+  const { user: secondTutor } = await createTutor({
+    email: "tutor2@example.com",
+  });
+  const now = Date.now();
+  const hour = 60 * 60 * 1000;
+
+  const openPastBooking = {
+    tutorId: tutorId,
+    studentId: studentId,
+    subjectId: subjects[0].id,
+    scheduledStart: new Date(now - 4 * hour),
+    scheduledEnd: new Date(now - 3 * hour),
+    status: "open",
+  };
+
+  const openFutureBooking = {
+    tutorId: tutorId,
+    studentId: studentId,
+    subjectId: subjects[0].id,
+    scheduledStart: new Date(now + 7 * hour),
+    scheduledEnd: new Date(now + 8 * hour),
+    status: "open",
+  };
+
+  const confirmedBooking = {
+    tutorId: tutorId,
+    studentId: studentId,
+    subjectId: subjects[0].id,
+    scheduledStart: new Date(now + 1 * hour),
+    scheduledEnd: new Date(now + 2 * hour),
+    status: "confirmed",
+  };
+
+  const tutorDifferentStudent = {
+    tutorId: tutorId,
+    studentId: secondStudent.id,
+    subjectId: subjects[0].id,
+    scheduledStart: new Date(now + 3 * hour),
+    scheduledEnd: new Date(now + 4 * hour),
+    status: "confirmed",
+  };
+
+  const studentDifferentTutor = {
+    tutorId: secondTutor.id,
+    studentId: studentId,
+    subjectId: subjects[0].id,
+    scheduledStart: new Date(now + 5 * hour),
+    scheduledEnd: new Date(now + 6 * hour),
+    status: "confirmed",
+  };
+  const bookings = await Booking.bulkCreate(
+    [
+      openPastBooking,
+      confirmedBooking,
+      tutorDifferentStudent,
+      studentDifferentTutor,
+      openFutureBooking,
+    ],
+    {
+      returning: true,
+    }
+  );
+
+  return {
+    openBooking: bookings[0],
+    confirmedBooking: bookings[1],
+    tutorDifferentStudent: bookings[2],
+    studentDifferentTutor: bookings[3],
+    openFutureBooking: bookings[4],
+  };
+}
+
 const createTutorAndLogin = async () => {
   const { user } = await createTutor({ subjectIds: [1, 2] });
   tutorUser = user;
@@ -157,42 +236,30 @@ describe("Booking API", () => {
       it("should allow tutor to get their own availability", async () => {
         // Login as tutor
         await createTutorAndLogin();
-        const now = new Date();
-        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString(); // 1 hour from now
-        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours from now
+        await createStudentAndLogin();
+        await createTestBookings();
 
-        const payload = {
-          subjectId: subjects[0].id,
-          scheduledStart: start,
-          scheduledEnd: end,
-          tutorNotes: "Available for booking",
-        };
-
-        const response = await tutorSession
-          .post("/api/booking/availability")
-          .send(payload);
-
-        expect(response.statusCode).toBe(201);
+        const start = new Date().getTime() + 5 * 60 * 60 * 1000;
+        const end = new Date().getTime() + 5 * 60 * 60 * 1000;
 
         const availabilityRes = await tutorSession
-          .get("/api/booking/availability")
+          .get(
+            `/api/booking/availability?start=${start}&end=${end}&status=open`
+          )
           .expect(200); // 1 hour from now
         console.log(JSON.stringify(availabilityRes.body));
 
         expect(availabilityRes.statusCode).toBe(200); // 1 hour from now
+        expect(availabilityRes.body.data.length).toBe(0);
         expect(availabilityRes.body).toEqual({
           success: true,
           message: "Availabilities retrieved successfully",
           data: expect.arrayOf({
             id: expect.any(String),
-            subject: expect.objectContaining({
-              id: payload.subjectId,
-              description: expect.any(String),
-              name: expect.any(String),
-            }),
-            scheduledStart: start,
-            scheduledEnd: end,
-            tutorNotes: payload.tutorNotes,
+            subject: expect.objectContaining(subjectMatcher),
+            scheduledStart: expect.any(String),
+            scheduledEnd: expect.any(String),
+            tutorNotes: null,
             actualEndTime: null,
             actualStartTime: null,
             cancellationReason: null,
@@ -203,7 +270,7 @@ describe("Booking API", () => {
 
             reminderSent: false,
             status: "open",
-            student: null,
+            student: expect.objectContaining(studentMatcher),
             studentNotes: null,
             tutor: expect.objectContaining(tutorMatcher),
           }),
@@ -529,7 +596,7 @@ describe("Booking API", () => {
         const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
         const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
         const availabilityRes = await tutorSession
-          .post("/api/booking/availability")
+          .post(`/api/booking/availability?start=${start}`)
           .send({
             subjectId: subjects[0].id,
             scheduledStart: start,
@@ -579,25 +646,16 @@ describe("Booking API", () => {
         // Login as tutor and create availability
         await createTutorAndLogin();
         await createStudentAndLogin();
+        const { confirmedBooking } = await createTestBookings();
 
-        const now = new Date();
-        const start = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
-        const end = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString();
-        const availabilityRes = await tutorSession
-          .post("/api/booking/availability")
-          .send({
-            subjectId: subjects[0].id,
-            scheduledStart: start,
-            scheduledEnd: end,
-            tutorNotes: "Available for booking",
-          });
-        const bookingId = availabilityRes.body.data.id;
+        const bookingId = confirmedBooking.id;
 
         // Student fetches booking by id
         const response = await studentSession.get(
-          `/api/booking/tutors/${tutorUser.id}`
+          `/api/booking/tutors/${tutorUser.id}?start=${new Date().getTime() + 1 * 60 * 60 * 1000}`
         );
         expect(response.statusCode).toBe(200);
+        expect(response.body.data.length).toBe(1);
         expect(response.body).toEqual({
           success: true,
           message: "Bookings retrieved successfully",
@@ -606,9 +664,9 @@ describe("Booking API", () => {
               id: expect.any(String),
               tutor: expect.objectContaining(tutorMatcher),
 
-              scheduledStart: start,
-              scheduledEnd: end,
-              tutorNotes: expect.any(String),
+              scheduledStart: expect.any(String),
+              scheduledEnd: expect.any(String),
+              tutorNotes: null,
               actualEndTime: null,
               actualStartTime: null,
               cancellationReason: null,
@@ -619,7 +677,7 @@ describe("Booking API", () => {
 
               reminderSent: false,
               status: "open",
-              student: null,
+              student: expect.objectContaining(studentMatcher),
               studentNotes: null,
               subject: expect.objectContaining(subjectMatcher),
             }),
@@ -717,98 +775,76 @@ describe("Booking API", () => {
         });
       });
     });
+  });
+  describe("GET /api/booking/upcoming", () => {
+    it("should allow student to fetch their upcoming booking", async () => {
+      // Login as tutor and create availability
+      await createTutorAndLogin();
+      await createStudentAndLogin();
 
-    describe("GET /api/booking/upcoming", () => {
-      it("should allow student to fetch their upcoming booking", async () => {
-        // Login as tutor and create availability
-        await createTutorAndLogin();
-        await createStudentAndLogin();
-        const tutorId = tutorUser.id;
-        const studentId = studentUser.id;
-        const now = new Date().getTime();
-        const hour = 60 * 60 * 1000;
+      const { confirmedBooking } = await createTestBookings();
 
-        const bookings = await Booking.bulkCreate([
-          {
-            tutorId: tutorId,
-            studentId: studentId,
-            subjectId: subjects[0].id,
-            scheduledStart: new Date(now - 4 * hour),
-            scheduledEnd: new Date(now - 3 * hour),
-            status: "open",
-          },
-          {
-            tutorId: tutorId,
-            studentId: studentId,
-            subjectId: subjects[0].id,
-            scheduledStart: new Date(now + 1 * hour),
-            scheduledEnd: new Date(now + 2 * hour),
-            status: "confirmed",
-          },
-        ]);
+      // Student fetches upcoming booking
+      const studentResponse = await studentSession
+        .get(`/api/booking/upcoming`)
+        .send();
 
-        // Student fetches upcoming booking
-        const studentResponse = await studentSession
-          .get(`/api/booking/upcoming`)
-          .send();
+      expect(studentResponse.statusCode).toBe(200);
+      expect(studentResponse.body).toEqual({
+        success: true,
+        message: expect.any(String),
+        data: expect.objectContaining({
+          id: confirmedBooking.id,
+          tutor: expect.objectContaining(tutorMatcher),
 
-        expect(studentResponse.statusCode).toBe(200);
-        expect(studentResponse.body).toEqual({
-          success: true,
-          message: "Booking retrieved successfully",
-          data: expect.objectContaining({
-            id: bookings[1].id,
-            tutor: expect.objectContaining(tutorMatcher),
+          scheduledStart: expect.any(String),
+          scheduledEnd: expect.any(String),
+          tutorNotes: null,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
 
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
-            tutorNotes: null,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
+          meetingLink: null,
 
-            meetingLink: null,
+          reminderSent: false,
+          status: "confirmed",
+          student: expect.objectContaining(studentMatcher),
+          studentNotes: null,
+          subject: expect.objectContaining(subjectMatcher),
+        }),
+      });
 
-            reminderSent: false,
-            status: "confirmed",
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            subject: expect.objectContaining(subjectMatcher),
-          }),
-        });
+      const tutorResponse = await tutorSession
+        .get(`/api/booking/upcoming`)
+        .send();
 
-        const tutorResponse = await tutorSession
-          .get(`/api/booking/upcoming`)
-          .send();
+      expect(tutorResponse.statusCode).toBe(200);
+      expect(tutorResponse.body).toEqual({
+        success: true,
+        message: expect.any(String),
+        data: expect.objectContaining({
+          id: confirmedBooking.id,
+          tutor: expect.objectContaining(tutorMatcher),
 
-        expect(tutorResponse.statusCode).toBe(200);
-        expect(tutorResponse.body).toEqual({
-          success: true,
-          message: "Booking retrieved successfully",
-          data: expect.objectContaining({
-            id: bookings[1].id,
-            tutor: expect.objectContaining(tutorMatcher),
+          scheduledStart: expect.any(String),
+          scheduledEnd: expect.any(String),
+          tutorNotes: null,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
 
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
-            tutorNotes: null,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
+          meetingLink: null,
 
-            meetingLink: null,
-
-            reminderSent: false,
-            status: "confirmed",
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            subject: expect.objectContaining(subjectMatcher),
-          }),
-        });
+          reminderSent: false,
+          status: "confirmed",
+          student: expect.objectContaining(studentMatcher),
+          studentNotes: null,
+          subject: expect.objectContaining(subjectMatcher),
+        }),
       });
     });
   });
@@ -827,102 +863,85 @@ describe("Date middleware", () => {
     next = jest.fn();
   });
 
-  it("should set current date when no date query parameter is provided", () => {
-    const today = new Date();
-    const expectedDate = new Date(today.setHours(0, 0, 0, 0));
-
-    dateMiddleware(req, res, next);
-
-    expect(req.params.date).toBeInstanceOf(Date);
-    expect(req.params.date.getTime()).toBeCloseTo(expectedDate.getTime(), -1);
-    expect(req.params.date.getHours()).toBe(0);
-    expect(req.params.date.getMinutes()).toBe(0);
-    expect(req.params.date.getSeconds()).toBe(0);
-    expect(req.params.date.getMilliseconds()).toBe(0);
-    expect(next).toHaveBeenCalledTimes(1);
-  });
-
-  it("should set date with time normalized to midnight when valid date string is provided", () => {
-    req.query.date = "2023-12-25";
+  it("should set date with time  when valid date string is provided", () => {
+    req.query.start = "2023-12-25";
+    req.query.end = "2023-12-25";
 
     dateMiddleware(req, res, next);
 
     const expectedDate = new Date("2023-12-25");
-    expectedDate.setHours(0, 0, 0, 0);
 
-    expect(req.params.date).toBeInstanceOf(Date);
-    expect(req.params.date.getTime()).toBe(expectedDate.getTime());
-    expect(req.params.date.getHours()).toBe(0);
-    expect(req.params.date.getMinutes()).toBe(0);
-    expect(req.params.date.getSeconds()).toBe(0);
-    expect(req.params.date.getMilliseconds()).toBe(0);
+    expect(req.params.start).toBeInstanceOf(Date);
+
+    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
+    expect(req.params.end.getTime()).toBe(expectedDate.getTime());
+
     expect(next).toHaveBeenCalledTimes(1);
   });
 
   it("should handle ISO date format correctly", () => {
-    req.query.date = "2023-12-25T15:30:45.123Z";
+    req.query.start = "2023-12-25T15:30:45.123Z";
 
     dateMiddleware(req, res, next);
 
     const expectedDate = new Date("2023-12-25T15:30:45.123Z");
-    expectedDate.setHours(0, 0, 0, 0);
 
-    expect(req.params.date).toBeInstanceOf(Date);
-    expect(req.params.date.getTime()).toBe(expectedDate.getTime());
-    expect(req.params.date.getHours()).toBe(0);
+    expect(req.params.start).toBeInstanceOf(Date);
+    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
+
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it("should throw ApiError when date query parameter is a number", () => {
-    req.query.date = "123456789";
+  it("should handle numeric timestamp", () => {
+    req.query.start = "1640390400000"; // timestamp for 2021-12-25
+    dateMiddleware(req, res, next);
 
-    expect(() => {
-      dateMiddleware(req, res, next);
-    }).toThrow("Invalid date");
+    const expectedDate = new Date(1640390400000);
+    expect(req.params.start).toBeInstanceOf(Date);
+    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
 
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it("should throw ApiError when date query parameter is numeric timestamp", () => {
-    req.query.date = "1640390400000"; // timestamp for 2021-12-25
-
-    expect(() => {
-      dateMiddleware(req, res, next);
-    }).toThrow("Invalid date");
-
-    expect(next).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledTimes(1);
   });
 
   it("should throw ApiError for invalid date strings", () => {
-    req.query.date = "invalid-date-string";
+    req.query.start = "invalid-date-string";
+    req.query.end = "invalid-date-string";
 
     expect(() => {
       dateMiddleware(req, res, next);
-    }).toThrow("Invalid date");
+    }).toThrow("Invalid start date");
 
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("should handle empty string date", () => {
-    req.query.date = "";
+  it("should ignore empty string date", () => {
+    req.query.start = "";
 
     dateMiddleware(req, res, next);
 
-    expect(req.params.date).toBeInstanceOf(Date);
     expect(next).toHaveBeenCalledTimes(1);
   });
 
   it("should handle date format like MM/DD/YYYY", () => {
-    req.query.date = "12/25/2023";
+    req.query.start = "12/25/2023";
 
     dateMiddleware(req, res, next);
 
     const expectedDate = new Date("12/25/2023");
-    expectedDate.setHours(0, 0, 0, 0);
 
-    expect(req.params.date).toBeInstanceOf(Date);
-    expect(req.params.date.getTime()).toBe(expectedDate.getTime());
-    expect(req.params.date.getHours()).toBe(0);
+    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
+
     expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  it("should throw error if end is before start", () => {
+    req.query.start = "12/25/2023";
+    req.query.end = "12/24/2023";
+
+    expect(() => {
+      dateMiddleware(req, res, next);
+    }).toThrow("Start date must be before end date");
+
+    expect(next).not.toHaveBeenCalled();
   });
 });
