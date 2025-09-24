@@ -251,9 +251,9 @@ jobs:
             sudo systemctl reload nginx
 
             # Configure SSL with certbot if not already configured
-            echo "Obtaining SSL certificate for ${{ secrets.STAGING_CLIENT_URL }}..."
-            sudo certbot --nginx -d "${{ secrets.STAGING_CLIENT_URL }}" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
-            
+            echo "Obtaining SSL certificate for ${{ secrets.STAGING_SERVER_URL }}..."
+            sudo certbot --nginx -d "${{ secrets.STAGING_SERVER_URL }}" --non-interactive --agree-tos -m "${{ secrets.SSL_EMAIL }}" --redirect
+
             sudo nginx -t
             sudo systemctl reload nginx
 
