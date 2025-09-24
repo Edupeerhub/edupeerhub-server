@@ -5,6 +5,7 @@ const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
+const { addStreamUser } = require("../auth/auth.service");
 exports.getTutors = async (req, res) => {
   //params
   const page = req.query?.page ?? 1;
@@ -55,6 +56,14 @@ exports.createTutor = async (req, res) => {
     fullName: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
   });
 
+  await addStreamUser({
+    id: newTutor.userId,
+    email: newTutor.user.email,
+    role: newTutor.user.role,
+    firstName: newTutor.user.firstName,
+    lastName: newTutor.user.lastName,
+  });
+
   sendResponse(res, 201, "Onboarding successful", newTutor);
 };
 
@@ -63,13 +72,20 @@ exports.updateTutor = async (req, res) => {
   const tutorProfile = req.body;
 
   if (tutorId !== req.user.id) {
-    throw new ApiError("Unauthorized", 403, null);
+    throw new ApiError("You're not allowed to update this profile", 403);
   }
   const updatedTutorProfile = await tutorService.updateTutorProfile({
     id: tutorId,
     tutorProfile,
   });
 
+  await addStreamUser({
+    id: updatedTutorProfile.userId,
+    email: updatedTutorProfile.user.email,
+    role: updatedTutorProfile.user.role,
+    firstName: updatedTutorProfile.user.firstName,
+    lastName: updatedTutorProfile.user.lastName,
+  });
   sendResponse(res, 200, "success", updatedTutorProfile);
 };
 
@@ -82,6 +98,7 @@ exports.getTutorRecommendations = async (req, res) => {
     page,
     limit,
   });
+
   sendResponse(res, 200, "success", tutorRecommendations);
 };
 

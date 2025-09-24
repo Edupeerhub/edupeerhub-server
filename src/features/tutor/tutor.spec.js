@@ -365,7 +365,7 @@ describe("Tutor test", () => {
       expect(response.body).toEqual(
         expect.objectContaining({
           success: false,
-          message: "Unauthorized",
+          message: "You're not allowed to update this profile",
           error: null,
         })
       );

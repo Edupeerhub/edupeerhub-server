@@ -5,7 +5,6 @@ const request = require("supertest");
 
 const NODE_ENV = "test";
 
-
 const envFilePath = path.resolve(process.cwd(), `.env.${NODE_ENV}`);
 
 if (fs.existsSync(envFilePath)) {
@@ -72,13 +71,12 @@ const gracefulExit = async (signal) => {
 process.on("SIGTERM", () => gracefulExit("SIGTERM"));
 process.on("SIGINT", () => gracefulExit("SIGINT"));
 
-
 // // A custom matcher that checks if the received value is one of the given types.
 // expect.extend({
 //   toBeOneOfTypes(received, validTypes) {
 //     const receivedType = typeof received;
 //     const pass = validTypes.includes(receivedType);
-    
+
 //     if (pass) {
 //       return {
 //         message: () =>

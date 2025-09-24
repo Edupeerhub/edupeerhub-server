@@ -6,11 +6,6 @@ on:
       - development
       - staging
       - main
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - closed
   push:
     branches:
       - development
@@ -79,7 +74,7 @@ jobs:
           echo "Testing database connection..."
           PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "SELECT version();"
 
-      - name: Load environment and run migrations
+      - name: Load environment and run migrations tests
         run: |
           # Export variables from .env.test
           export $(grep -v '^#' .env.test | xargs)

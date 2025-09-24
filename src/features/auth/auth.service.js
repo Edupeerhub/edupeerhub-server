@@ -73,6 +73,7 @@ exports.loginUser = async ({ email, password }) => {
 exports.fetchProfile = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: [
+      "id",
       "firstName",
       "lastName",
       "email",
@@ -212,11 +213,13 @@ exports.addStreamUser = async ({
   lastName,
   profileImageUrl,
   email,
+  role,
 }) => {
   await upsertStreamUser({
     id: id.toString(),
     name: `${firstName} ${lastName}`.trim(),
     image: profileImageUrl || "",
     email: email,
+    role: role,
   });
 };
