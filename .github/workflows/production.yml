@@ -257,8 +257,8 @@ jobs:
             else
               echo "SSL certificate for ${{ secrets.PRODUCTION_CLIENT_URL }} already exists"
             fi
-	    
-	    sudo nginx -t
+            
+            sudo nginx -t
             sudo systemctl reload nginx
             
             # Health check
