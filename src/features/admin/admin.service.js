@@ -1,4 +1,5 @@
 const { User, Tutor, Student, Admin } = require("@src/shared/database/models");
+const { getSignedFileUrl } = require("@src/shared/utils/s3Upload");
 const ApiError = require("@utils/apiError");
 const { hashPassword, generateRandomAvatar } = require("@utils/authHelpers");
 
@@ -131,7 +132,7 @@ exports.getAllPendingTutors = async () => {
   return pendingTutors;
 };
 
-exports.getTutor = async (id) => {
+exports.getTutor = async (id, includeSignedUrl = true) => {
   const tutor = await Tutor.findByPk(id, {
     include: [
       {
@@ -142,7 +143,35 @@ exports.getTutor = async (id) => {
     ],
   });
 
-  return tutor;
+  const tutorJson = tutor.toJSON();
+  // if (includeSignedUrl && tutorJson.documentKey) {
+  //   tutorJson.signedDocumentUrl = await getSignedFileUrl(tutorJson.documentKey);
+  // }
+
+  if (includeSignedUrl && tutorJson.documentKey) {
+    const AWS = require("aws-sdk");
+    const s3 = new AWS.S3({
+      region: process.env.AWS_REGION,
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    });
+    const params = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: tutorJson.documentKey,
+      Expires: 5 * 60,
+    };
+    tutorJson.signedDocumentUrl = s3.getSignedUrl("getObject", params);
+  }
+
+  return tutorJson;
+};
+
+exports.getTutorDocument = async (userId) => {
+  const tutor = await Tutor.findOne({ where: { userId } });
+  if (!tutor?.documentKey) throw new ApiError("Tutor document not found", 404);
+
+  const signedUrl = await getSignedFileUrl(tutor.documentKey);
+  return { signedUrl };
 };
 
 exports.approveTutor = async (id) => {

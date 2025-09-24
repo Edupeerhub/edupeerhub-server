@@ -40,6 +40,15 @@ module.exports = () => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      // file storage fields
+      documentKey: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      documentUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       tableName: "tutor_profiles",

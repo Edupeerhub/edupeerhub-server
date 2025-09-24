@@ -3,18 +3,30 @@ const { where, Op } = require("sequelize");
 const { Subject, User, Tutor, Student } = require("@models");
 const sequelize = require("@src/shared/database");
 const { required } = require("joi");
+const { uploadFileToS3 } = require("@src/shared/utils/s3Upload");
 
-exports.createTutor = async ({ profile, userId }) => {
+exports.createTutor = async ({ profile, userId, file, documentKey }) => {
   const existing = await Tutor.findByPk(userId);
   if (existing) {
     throw new ApiError("Tutor profile already exists", 409);
   }
-  const newTutor = await Tutor.create(profile);
+
+  // let documentData = {};
+  // if (file) {
+  //   documentData = await uploadFileToS3(file); // key only
+  // }
+
+  const newTutor = await Tutor.create({
+    ...profile,
+    // documentKey: documentData.key || null,
+    documentKey: documentKey || null,
+  });
 
   await addSubjectsToProfile({
     profile: newTutor,
     subjectIds: profile.subjects,
   });
+
   await User.update(
     { role: "tutor", isOnboarded: true },
     { where: { id: userId } }

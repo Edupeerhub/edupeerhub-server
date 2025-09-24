@@ -1,5 +1,7 @@
 const express = require("express");
-
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+const AWS = require("aws-sdk");
 const validate = require("@src/shared/middlewares/validate.middleware");
 
 const {
@@ -23,7 +25,48 @@ const router = express.Router();
 router.use(protectRoute);
 router.use(requireVerifiedUser);
 
-router.post("/", validate(createProfileSchema), tutorController.createTutor);
+// Use memory storage to get buffer, then convert to stream
+// const storage = multer.memoryStorage();
+// const maxFileSize = parseInt(process.env.MAX_FILE_SIZE_BYTES || "5242880", 10);
+// const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/png"];
+
+// const upload = multer({
+//   storage,
+//   limits: { fileSize: maxFileSize },
+//   fileFilter: (req, file, cb) => {
+//     cb(null, allowedMimeTypes.includes(file.mimetype));
+//   },
+// });
+
+// direct stream
+const s3 = new AWS.S3({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/png"];
+
+const upload = multer({
+  storage: multerS3({
+    s3,
+    bucket: process.env.S3_BUCKET_NAME,
+    acl: "private",
+    key: (req, file, cb) => {
+      cb(null, `tutors/${Date.now()}_${file.originalname}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (req, file, cb) =>
+    cb(null, allowedMimeTypes.includes(file.mimetype)),
+});
+
+router.post(
+  "/",
+  validate(createProfileSchema),
+  upload.single("document"),
+  tutorController.createTutor
+);
 router.get("/", searchValidator, tutorController.getTutors);
 router.get("/recommendations", tutorController.getTutorRecommendations);
 router.get("/:id", tutorController.getTutor);

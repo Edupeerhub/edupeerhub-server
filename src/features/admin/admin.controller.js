@@ -52,10 +52,22 @@ exports.getPendingTutors = async (req, res, next) => {
 
 exports.getPendingTutorById = async (req, res, next) => {
   try {
-    const tutor = await adminService.getPendingTutor(req.params.id);
+    const includeSignedUrl = true;
+    const tutor = await adminService.getPendingTutor(req.params.id, {
+      includeSignedUrl,
+    });
     sendResponse(res, 200, "Pending tutor fetched successfully", tutor);
   } catch (error) {
     next(error);
+  }
+};
+
+exports.getTutorDocument = async (req, res, next) => {
+  try {
+    const { signedUrl } = await adminService.getTutorDocument(req.params.id);
+    res.json({ url: signedUrl });
+  } catch (err) {
+    next(err);
   }
 };
 

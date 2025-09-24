@@ -1,11 +1,12 @@
 const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
-
+const { Readable } = require("stream");
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
+
 exports.getTutors = async (req, res) => {
   //params
   const page = req.query?.page ?? 1;
@@ -44,9 +45,29 @@ exports.createTutor = async (req, res) => {
 
     userId: req.user.id,
   };
+
+  // const file = req.file;
+
+  // let fileData;
+  // if (file) {
+  //   // Convert buffer to stream
+  //   const stream = Readable.from(file.buffer);
+  //   fileData = { ...file, stream };
+  // }
+
+  // const newTutor = await tutorService.createTutor({
+  //   profile,
+  //   userId: req.user.id,
+  //   file: fileData,
+  // });
+
+  // multer-s3 adds `req.file.key` directly
+  const fileKey = req.file?.key;
+
   const newTutor = await tutorService.createTutor({
     profile,
     userId: req.user.id,
+    documentKey: fileKey,
   });
 
   await trackEvent(eventTypes.USER_ONBOARDED, {
