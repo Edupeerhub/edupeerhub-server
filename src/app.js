@@ -11,6 +11,7 @@ const userRoutes = require("@features/user/user.route");
 const tutorRoutes = require("@features/tutor/tutor.route");
 const adminRoutes = require("@features/admin/admin.route");
 const subjectRoutes = require("@features/subject/subject.route");
+const bookingRoutes = require("@features/booking/booking.route");
 const examRoutes = require("@features/exams/exams.route");
 
 const chatRoutes = require("@features/chat/chat.route");
@@ -44,6 +45,7 @@ app.use("/api/student", studentRoutes);
 app.use("/api/tutor", tutorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/subject", subjectRoutes);
+app.use("/api/booking", bookingRoutes);
 app.use("/api/exam", examRoutes);
 app.use("/api/reviews", reviewRoutes)
 
