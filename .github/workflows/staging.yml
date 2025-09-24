@@ -257,6 +257,9 @@ jobs:
             else
               echo "SSL certificate for ${{ secrets.STAGING_CLIENT_URL }} already exists"
             fi
+            
+            sudo nginx -t
+            sudo systemctl reload nginx
 
             # Health check
             sleep 2
