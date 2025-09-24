@@ -52,16 +52,14 @@ exports.fetchStudentBookings = async (req, res) => {
 };
 
 exports.fetchStudentTutorBookings = async (req, res) => {
-  const start =
-    (req.params?.start instanceof Date && req.params?.start < Date.now()) ||
-    !req.params?.start
-      ? Date.now()
-      : req.params?.start;
+  const start = req.query.start ? new Date(req.query.start) : new Date();
+  const end = req.query.end ? new Date(req.query.end) : null;
+
   const bookings = await bookingService.fetchBookings({
     tutorId: req.params.tutorId,
-    start: start,
-    end: req.params?.end,
-    statuses: ["open"],
+    start,
+    end,
+    status: ["open"],
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
@@ -194,13 +192,13 @@ exports.updateAvailabilityStatus = async (req, res) => {
     req.body
   );
 
-  if(availability.status === "confirmed") {
-      trackEvent(eventTypes.SESSION_SCHEDULED, {
-    sessionId: availability.id,
-    tutorId: availability.tutor.user.id,
-    subject: availability.subject,
-    scheduledAt: new Date().toISOString(),
-  });
+  if (availability.status === "confirmed") {
+    trackEvent(eventTypes.SESSION_SCHEDULED, {
+      sessionId: availability.id,
+      tutorId: availability.tutor.user.id,
+      subject: availability.subject,
+      scheduledAt: new Date().toISOString(),
+    });
   }
 
   sendResponse(
