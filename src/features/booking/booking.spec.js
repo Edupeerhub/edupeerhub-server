@@ -102,7 +102,7 @@ async function createTestBookings() {
     scheduledEnd: new Date(now + 8 * hour),
     status: "open",
   };
-    const pendingFutureBooking = {
+  const pendingFutureBooking = {
     tutorId: tutorId,
     studentId: studentId,
     subjectId: subjects[0].id,
@@ -144,7 +144,7 @@ async function createTestBookings() {
       tutorDifferentStudent,
       studentDifferentTutor,
       openFutureBooking,
-      pendingFutureBooking
+      pendingFutureBooking,
     ],
     {
       returning: true,
@@ -379,11 +379,8 @@ describe("Booking API", () => {
         await createTutorAndLogin();
         await createStudentAndLogin();
 
-       
-        
         const { pendingFutureBooking } = await createTestBookings();
 
-        
         const availabilityId = pendingFutureBooking.id;
         const statusPayload = {
           status: "confirmed",
@@ -400,8 +397,8 @@ describe("Booking API", () => {
           data: expect.objectContaining({
             id: expect.any(String),
             subject: expect.objectContaining(subjectMatcher),
-            scheduledStart: pendingFutureBooking.scheduledStart.toISOString() ,
-            scheduledEnd:  pendingFutureBooking.scheduledEnd.toISOString(),
+            scheduledStart: pendingFutureBooking.scheduledStart.toISOString(),
+            scheduledEnd: pendingFutureBooking.scheduledEnd.toISOString(),
             tutorNotes: pendingFutureBooking.tutorNotes,
             actualEndTime: null,
             actualStartTime: null,
@@ -426,7 +423,7 @@ describe("Booking API", () => {
         // Login as tutor
         await createTutorAndLogin();
         await createStudentAndLogin();
-          const { pendingFutureBooking } = await createTestBookings();
+        const { pendingFutureBooking } = await createTestBookings();
 
         const availabilityId = pendingFutureBooking.id;
         const cancelPayload = { cancellationReason: "No reason provided" };
@@ -472,7 +469,6 @@ describe("Booking API", () => {
 
         const { openFutureBooking } = await createTestBookings();
 
-        
         const bookingId = openFutureBooking.id;
         // Student books the slot
         const response = await studentSession
@@ -553,17 +549,18 @@ describe("Booking API", () => {
         // Login as tutor and create availability
         await createTutorAndLogin();
         await createStudentAndLogin();
-        const { confirmedBooking } = await createTestBookings();
+        const { confirmedBooking, openFutureBooking, pendingFutureBooking } =
+          await createTestBookings();
 
-        const bookingId = confirmedBooking.id;
+        // Use a valid ISO string for the start date
+        const startDate = new Date().toISOString();
 
-        // Student fetches booking by id
         const response = await studentSession.get(
-          `/api/booking/tutors/${tutorUser.id}?start=${new Date().getTime() + 1 * 60 * 60 * 1000}&status=pending`
+          `/api/booking/tutors/${tutorUser.id}?start=${encodeURIComponent(startDate)}&status=open`
         );
-        
+
         expect(response.statusCode).toBe(200);
-        expect(response.body.data.length).toBe(2);
+        expect(response.body.data.length).toBe(1);
         expect(response.body).toEqual({
           success: true,
           message: "Bookings retrieved successfully",
@@ -599,10 +596,12 @@ describe("Booking API", () => {
         // Login as tutor and create availability
         await createTutorAndLogin();
         await createStudentAndLogin();
- 
-const {confirmedBooking} = await createTestBookings();
+
+        const { confirmedBooking } = await createTestBookings();
         // Student fetches booking by id
-        const response = await studentSession.get(`/api/booking/${confirmedBooking.id}`);
+        const response = await studentSession.get(
+          `/api/booking/${confirmedBooking.id}`
+        );
         expect(response.statusCode).toBe(200);
         expect(response.body).toEqual({
           success: true,
