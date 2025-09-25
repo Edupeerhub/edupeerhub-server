@@ -362,6 +362,11 @@ module.exports = (sequelize) => {
                 "profileImageUrl",
               ],
             },
+            {
+              model: models.Exam,
+              as: "exams",
+              attributes: ["name"],
+            },
           ],
         },
         {

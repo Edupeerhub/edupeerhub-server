@@ -10,7 +10,7 @@ const router = express.Router();
 router.use(protectRoute);
 router.use(requireVerifiedAndOnboardedUser);
 
-router.get("/:id", userController.profile);
+router.get("/", userController.profile);
 router.delete("/:id", userController.deleteUser);
 
 module.exports = router;
