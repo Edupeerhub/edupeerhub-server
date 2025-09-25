@@ -153,16 +153,16 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
 
-      // parentBookingId: {
-      //   type: DataTypes.UUID,
-      //   allowNull: true,
-      //   references: {
-      //     model: "bookings",
-      //     key: "id",
-      //   },
-      //   onUpdate: "CASCADE",
-      //   onDelete: "CASCADE",
-      // },
+      parentBookingId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: {
+          model: "bookings",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
 
       reminders: {
         type: DataTypes.JSONB,
