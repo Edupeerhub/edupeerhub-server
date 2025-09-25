@@ -15,7 +15,7 @@ module.exports = {
         allowNull: false,
         references: {
           model: "tutor_profiles",
-          key: "id",
+          key: "user_id",
         },
         onUpdate: "CASCADE",
         onDelete: "RESTRICT",
@@ -25,7 +25,7 @@ module.exports = {
         allowNull: true,
         references: {
           model: "student_profiles",
-          key: "id",
+          key: "user_id",
         },
         onUpdate: "CASCADE",
         onDelete: "RESTRICT",
