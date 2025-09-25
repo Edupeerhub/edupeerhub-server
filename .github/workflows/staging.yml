@@ -198,6 +198,9 @@ jobs:
             NODE_ENV="${SERVICE_ENV}" npx sequelize-cli db:migrate || {
               echo "Migrations failed" >&2; exit 1;
             }
+            NODE_ENV="${SERVICE_ENV}" npx sequelize-cli db:seed:all || {
+              echo "Seeding failed" >&2; exit 1;
+            }
 
             # Configure systemd service (idempotent)
             SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
