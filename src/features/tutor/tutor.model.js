@@ -7,8 +7,7 @@ module.exports = () => {
     {
       userId: {
         type: DataTypes.UUID,
-        primaryKey: true,
-        field: "user_id",
+        primaryKey: true,        
       },
       bio: {
         type: DataTypes.TEXT,
@@ -69,6 +68,11 @@ module.exports = () => {
     Tutor.belongsToMany(models.Subject, {
       through: "tutor_subjects",
       as: "subjects",
+    });
+
+    Tutor.hasMany(models.Booking, {
+      foreignKey: "tutorId",
+      as: "bookings",
     });
 
     Tutor.addScope("join", {

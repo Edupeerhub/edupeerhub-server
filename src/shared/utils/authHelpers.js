@@ -21,7 +21,8 @@ function generateVerificationCode() {
 
 // Generate avatar URL
 function generateRandomAvatar(firstName, lastName) {
-  return `https://avatar.iran.liara.run/username?username=${firstName}+${lastName}`;
+  // return `https://avatar.iran.liara.run/username?username=${firstName}+${lastName}`;
+  return `https://ui-avatars.com/api/?name=${firstName}+${lastName}&background=4ca1f0&color=fff`;
 }
 
 // Generate reset token and hashed token
