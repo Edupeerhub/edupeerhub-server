@@ -192,6 +192,8 @@ module.exports = (sequelize) => {
     {
       tableName: "bookings",
       timestamps: true,
+      underscored: true,
+
       indexes: [
         {
           fields: ["tutorId"],
