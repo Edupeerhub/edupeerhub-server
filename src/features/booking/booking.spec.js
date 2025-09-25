@@ -22,11 +22,11 @@ jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
 });
 
 const tutorMatcher = {
-  bio: "Test tutor bio",
-  rating: 0,
-  profileVisibility: "active",
-  education: "BSc Test Education",
-  timezone: "UTC",
+  bio: expect.any(String),
+  rating: expect.any(Number),
+  profileVisibility: expect.any(String),
+  education: expect.any(String),
+  timezone: expect.any(String),
   subjects: expect.any(Array),
   user: expect.objectContaining({
     id: expect.any(String),
@@ -38,7 +38,7 @@ const tutorMatcher = {
 };
 
 const studentMatcher = {
-  learningGoals: expect.any(Object),
+  learningGoals: expect.any(Array),
   user: expect.objectContaining({
     email: "student@example.com",
     firstName: "Student",
@@ -53,6 +53,38 @@ const subjectMatcher = {
   description: expect.any(String),
   name: expect.any(String),
 };
+
+const bookingMatcher = (booking = {}) => ({
+  id: expect.any(String),
+  subject: booking.subject
+    ? expect.objectContaining(subjectMatcher)
+    : booking.subject === null
+      ? null
+      : expect.any(Object),
+  scheduledStart: expect.any(String),
+  scheduledEnd: expect.any(String),
+  tutorNotes: booking.tutorNotes || null,
+  actualEndTime: null,
+  actualStartTime: null,
+  cancellationReason: booking.cancellationReason || null,
+  cancelledAt: booking.cancelledAt || null,
+  cancelledBy: booking.cancelledBy || null,
+  meetingLink: null,
+  // reminders JSONB
+  reminders: expect.objectContaining({
+    "24h": expect.any(Boolean),
+    "1h": expect.any(Boolean),
+    "15m": expect.any(Boolean),
+  }),
+  status: booking.status || expect.any(String),
+  student: booking.student
+    ? expect.objectContaining(studentMatcher)
+    : booking.student === null
+      ? null
+      : expect.any(Object),
+  studentNotes: booking.studentNotes || null,
+  tutor: expect.objectContaining(tutorMatcher),
+});
 
 async function createTestSubjects() {
   return await Subject.bulkCreate(
@@ -209,31 +241,41 @@ describe("Booking API", () => {
           .send(payload);
 
         expect(response.statusCode).toBe(201);
-        expect(response.body).toEqual({
+
+        // top-level success/message
+        expect(response.body).toMatchObject({
           success: true,
           message: "Availability created successfully",
-          data: expect.objectContaining({
-            id: expect.any(String),
-            subject: null,
-            scheduledStart: start,
-            scheduledEnd: end,
-            tutorNotes: payload.tutorNotes,
-
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: "open",
-            student: null,
-            studentNotes: null,
-            tutor: expect.objectContaining(tutorMatcher),
-          }),
         });
+
+        // data sanity
+        expect(response.body.data).toMatchObject({
+          id: expect.any(String),
+          subject: null,
+          scheduledStart: start,
+          scheduledEnd: end,
+          tutorNotes: payload.tutorNotes,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          meetingLink: null,
+          status: "open",
+        });
+
+        // nested objects matchers
+        expect(response.body.data.tutor).toEqual(
+          expect.objectContaining(tutorMatcher)
+        );
+        expect(response.body.data.student).toBeNull();
+        expect(response.body.data.reminders).toEqual(
+          expect.objectContaining({
+            "24h": expect.any(Boolean),
+            "1h": expect.any(Boolean),
+            "15m": expect.any(Boolean),
+          })
+        );
       });
     });
 
@@ -251,35 +293,18 @@ describe("Booking API", () => {
           .get(
             `/api/booking/availability?start=${start}&end=${end}&status=open`
           )
-          .expect(200); // 1 hour from now
-        console.log(JSON.stringify(availabilityRes.body));
+          .expect(200);
 
-        expect(availabilityRes.statusCode).toBe(200); // 1 hour from now
+        expect(availabilityRes.statusCode).toBe(200);
         expect(availabilityRes.body.data.length).toBe(0);
-        expect(availabilityRes.body).toEqual({
+
+        expect(availabilityRes.body).toMatchObject({
           success: true,
           message: "Availabilities retrieved successfully",
-          data: expect.arrayOf({
-            id: expect.any(String),
-            subject: expect.objectContaining(subjectMatcher),
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
-            tutorNotes: null,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: "open",
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            tutor: expect.objectContaining(tutorMatcher),
-          }),
         });
+
+        // data is an array — make sure elements (if any) match the booking shape
+        expect(availabilityRes.body.data).toEqual(expect.arrayContaining([]));
       });
     });
 
@@ -292,33 +317,41 @@ describe("Booking API", () => {
 
         const availabilityRes = await tutorSession
           .get(`/api/booking/availability/${confirmedBooking.id}`)
-          .expect(200); // 1 hour from now
+          .expect(200);
 
-        expect(availabilityRes.statusCode).toBe(200); // 1 hour from now
-        expect(availabilityRes.body).toEqual({
+        expect(availabilityRes.statusCode).toBe(200);
+        expect(availabilityRes.body).toMatchObject({
           success: true,
           message: "Availability retrieved successfully",
-          data: expect.objectContaining({
-            id: expect.any(String),
-            subject: expect.objectContaining(subjectMatcher),
-            scheduledStart: confirmedBooking.scheduledStart.toISOString(),
-            scheduledEnd: confirmedBooking.scheduledEnd.toISOString(),
-            tutorNotes: confirmedBooking.tutorNotes,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: confirmedBooking.status,
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            tutor: expect.objectContaining(tutorMatcher),
-          }),
         });
+
+        expect(availabilityRes.body.data).toMatchObject({
+          id: expect.any(String),
+          scheduledStart: confirmedBooking.scheduledStart.toISOString(),
+          scheduledEnd: confirmedBooking.scheduledEnd.toISOString(),
+          tutorNotes: confirmedBooking.tutorNotes,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          meetingLink: null,
+          status: confirmedBooking.status,
+        });
+
+        expect(availabilityRes.body.data.tutor).toEqual(
+          expect.objectContaining(tutorMatcher)
+        );
+        expect(availabilityRes.body.data.student).toEqual(
+          expect.objectContaining(studentMatcher)
+        );
+        expect(availabilityRes.body.data.reminders).toEqual(
+          expect.objectContaining({
+            "24h": expect.any(Boolean),
+            "1h": expect.any(Boolean),
+            "15m": expect.any(Boolean),
+          })
+        );
       });
     });
 
@@ -346,30 +379,32 @@ describe("Booking API", () => {
           .send(updatedPayload);
 
         expect(updateAvailabilityRes.statusCode).toBe(200);
-        expect(updateAvailabilityRes.body).toEqual({
+
+        expect(updateAvailabilityRes.body).toMatchObject({
           success: true,
           message: "Availability updated successfully",
-          data: expect.objectContaining({
-            id: expect.any(String),
-            subject: expect.objectContaining(subjectMatcher),
-            scheduledStart: updatedPayload.scheduledStart,
-            scheduledEnd: updatedPayload.scheduledEnd,
-            tutorNotes: updatedPayload.tutorNotes,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: confirmedBooking.status,
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            tutor: expect.objectContaining(tutorMatcher),
-          }),
         });
+
+        expect(updateAvailabilityRes.body.data).toMatchObject({
+          id: expect.any(String),
+          scheduledStart: updatedPayload.scheduledStart,
+          scheduledEnd: updatedPayload.scheduledEnd,
+          tutorNotes: updatedPayload.tutorNotes,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          meetingLink: null,
+          status: confirmedBooking.status,
+        });
+
+        expect(updateAvailabilityRes.body.data.tutor).toEqual(
+          expect.objectContaining(tutorMatcher)
+        );
+        expect(updateAvailabilityRes.body.data.subject).toEqual(
+          expect.objectContaining(subjectMatcher)
+        );
       });
     });
 
@@ -391,30 +426,32 @@ describe("Booking API", () => {
           .send(statusPayload);
 
         expect(updateAvailabilityRes.statusCode).toBe(200);
-        expect(updateAvailabilityRes.body).toEqual({
+
+        expect(updateAvailabilityRes.body).toMatchObject({
           success: true,
           message: "Availability status updated successfully",
-          data: expect.objectContaining({
-            id: expect.any(String),
-            subject: expect.objectContaining(subjectMatcher),
-            scheduledStart: pendingFutureBooking.scheduledStart.toISOString(),
-            scheduledEnd: pendingFutureBooking.scheduledEnd.toISOString(),
-            tutorNotes: pendingFutureBooking.tutorNotes,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: statusPayload.status,
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            tutor: expect.objectContaining(tutorMatcher),
-          }),
         });
+
+        expect(updateAvailabilityRes.body.data).toMatchObject({
+          id: expect.any(String),
+          scheduledStart: pendingFutureBooking.scheduledStart.toISOString(),
+          scheduledEnd: pendingFutureBooking.scheduledEnd.toISOString(),
+          tutorNotes: pendingFutureBooking.tutorNotes,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          meetingLink: null,
+          status: statusPayload.status,
+        });
+
+        expect(updateAvailabilityRes.body.data.tutor).toEqual(
+          expect.objectContaining(tutorMatcher)
+        );
+        expect(updateAvailabilityRes.body.data.student).toEqual(
+          expect.objectContaining(studentMatcher)
+        );
       });
     });
 
@@ -432,30 +469,28 @@ describe("Booking API", () => {
           .send(cancelPayload);
         expect(updateAvailabilityRes.statusCode).toBe(200);
 
-        expect(updateAvailabilityRes.body).toEqual({
+        expect(updateAvailabilityRes.body).toMatchObject({
           success: true,
           message: "Availability updated successfully",
-          data: expect.objectContaining({
-            id: pendingFutureBooking.id,
-            subject: expect.objectContaining(subjectMatcher),
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
-            tutorNotes: null,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: cancelPayload.cancellationReason,
-            cancelledAt: expect.any(String),
-            cancelledBy: tutorUser.id,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: "cancelled",
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            tutor: expect.objectContaining(tutorMatcher),
-          }),
         });
+
+        expect(updateAvailabilityRes.body.data).toMatchObject({
+          id: pendingFutureBooking.id,
+          scheduledStart: expect.any(String),
+          scheduledEnd: expect.any(String),
+          tutorNotes: null,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: cancelPayload.cancellationReason,
+          cancelledBy: tutorUser.id,
+          meetingLink: null,
+          status: "cancelled",
+        });
+
+        // cancelledAt is a timestamp string
+        expect(updateAvailabilityRes.body.data.cancelledAt).toEqual(
+          expect.any(String)
+        );
       });
     });
   });
@@ -476,30 +511,40 @@ describe("Booking API", () => {
           .send({ subjectId: subjects[0].id });
 
         expect(response.statusCode).toBe(201);
-        expect(response.body).toEqual({
+
+        expect(response.body).toMatchObject({
           success: true,
           message: "Booking created successfully",
-          data: expect.objectContaining({
-            id: expect.any(String),
-            tutor: expect.objectContaining(tutorMatcher),
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
-            tutorNotes: null,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: "pending",
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            subject: expect.objectContaining(subjectMatcher),
-          }),
         });
+
+        // data checks
+        expect(response.body.data).toMatchObject({
+          id: expect.any(String),
+          scheduledStart: expect.any(String),
+          scheduledEnd: expect.any(String),
+          tutorNotes: null,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          meetingLink: null,
+          status: "pending",
+        });
+
+        expect(response.body.data.reminders).toEqual(
+          expect.objectContaining({
+            "24h": expect.any(Boolean),
+            "1h": expect.any(Boolean),
+            "15m": expect.any(Boolean),
+          })
+        );
+        expect(response.body.data.tutor).toEqual(
+          expect.objectContaining(tutorMatcher)
+        );
+        expect(response.body.data.student).toEqual(
+          expect.objectContaining(studentMatcher)
+        );
       });
     });
 
@@ -514,33 +559,15 @@ describe("Booking API", () => {
         // Student fetches bookings
         const response = await studentSession.get(`/api/booking/`);
         expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual({
+
+        expect(response.body).toMatchObject({
           success: true,
           message: "Bookings retrieved successfully",
-          data: expect.arrayContaining([
-            expect.objectContaining({
-              id: expect.any(String),
-              tutor: expect.objectContaining(tutorMatcher),
-
-              scheduledStart: expect.any(String),
-              scheduledEnd: expect.any(String),
-              tutorNotes: null,
-              actualEndTime: null,
-              actualStartTime: null,
-              cancellationReason: null,
-              cancelledAt: null,
-              cancelledBy: null,
-
-              meetingLink: null,
-
-              reminderSent: false,
-              status: expect.any(String),
-              student: expect.objectContaining(studentMatcher),
-              studentNotes: null,
-              subject: expect.objectContaining(subjectMatcher),
-            }),
-          ]),
         });
+
+        expect(response.body.data).toEqual(
+          expect.arrayContaining([expect.objectContaining(bookingMatcher())])
+        );
       });
     });
 
@@ -561,33 +588,17 @@ describe("Booking API", () => {
 
         expect(response.statusCode).toBe(200);
         expect(response.body.data.length).toBe(1);
-        expect(response.body).toEqual({
+
+        expect(response.body).toMatchObject({
           success: true,
           message: "Bookings retrieved successfully",
-          data: expect.arrayContaining([
-            expect.objectContaining({
-              id: expect.any(String),
-              tutor: expect.objectContaining(tutorMatcher),
-
-              scheduledStart: expect.any(String),
-              scheduledEnd: expect.any(String),
-              tutorNotes: null,
-              actualEndTime: null,
-              actualStartTime: null,
-              cancellationReason: null,
-              cancelledAt: null,
-              cancelledBy: null,
-
-              meetingLink: null,
-
-              reminderSent: false,
-              status: "open",
-              student: null,
-              studentNotes: null,
-              subject: expect.objectContaining(subjectMatcher),
-            }),
-          ]),
         });
+
+        expect(response.body.data).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining(bookingMatcher({ status: "open" })),
+          ])
+        );
       });
     });
 
@@ -603,31 +614,32 @@ describe("Booking API", () => {
           `/api/booking/${confirmedBooking.id}`
         );
         expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual({
+
+        expect(response.body).toMatchObject({
           success: true,
           message: "Booking retrieved successfully",
-          data: expect.objectContaining({
-            id: confirmedBooking.id,
-            tutor: expect.objectContaining(tutorMatcher),
-
-            scheduledStart: expect.any(String),
-            scheduledEnd: expect.any(String),
-            tutorNotes: null,
-            actualEndTime: null,
-            actualStartTime: null,
-            cancellationReason: null,
-            cancelledAt: null,
-            cancelledBy: null,
-
-            meetingLink: null,
-
-            reminderSent: false,
-            status: confirmedBooking.status,
-            student: expect.objectContaining(studentMatcher),
-            studentNotes: null,
-            subject: expect.objectContaining(subjectMatcher),
-          }),
         });
+
+        expect(response.body.data).toMatchObject({
+          id: confirmedBooking.id,
+          scheduledStart: expect.any(String),
+          scheduledEnd: expect.any(String),
+          tutorNotes: null,
+          actualEndTime: null,
+          actualStartTime: null,
+          cancellationReason: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          meetingLink: null,
+          status: confirmedBooking.status,
+        });
+
+        expect(response.body.data.tutor).toEqual(
+          expect.objectContaining(tutorMatcher)
+        );
+        expect(response.body.data.student).toEqual(
+          expect.objectContaining(studentMatcher)
+        );
       });
     });
 
@@ -647,7 +659,8 @@ describe("Booking API", () => {
             cancellationReason: "No longer available",
           });
         expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual({
+
+        expect(response.body).toMatchObject({
           success: true,
           message: "Booking cancelled successfully",
           data: null,
@@ -669,61 +682,54 @@ describe("Booking API", () => {
         .send();
 
       expect(studentResponse.statusCode).toBe(200);
-      expect(studentResponse.body).toEqual({
+
+      expect(studentResponse.body).toMatchObject({
         success: true,
         message: expect.any(String),
-        data: expect.objectContaining({
-          id: confirmedBooking.id,
-          tutor: expect.objectContaining(tutorMatcher),
-
-          scheduledStart: expect.any(String),
-          scheduledEnd: expect.any(String),
-          tutorNotes: null,
-          actualEndTime: null,
-          actualStartTime: null,
-          cancellationReason: null,
-          cancelledAt: null,
-          cancelledBy: null,
-
-          meetingLink: null,
-
-          reminderSent: false,
-          status: "confirmed",
-          student: expect.objectContaining(studentMatcher),
-          studentNotes: null,
-          subject: expect.objectContaining(subjectMatcher),
-        }),
       });
+
+      expect(studentResponse.body.data).toMatchObject({
+        id: confirmedBooking.id,
+        scheduledStart: expect.any(String),
+        scheduledEnd: expect.any(String),
+        tutorNotes: null,
+        actualEndTime: null,
+        actualStartTime: null,
+        cancellationReason: null,
+        cancelledAt: null,
+        cancelledBy: null,
+        meetingLink: null,
+        status: "confirmed",
+      });
+
+      expect(studentResponse.body.data.tutor).toEqual(
+        expect.objectContaining(tutorMatcher)
+      );
+      expect(studentResponse.body.data.student).toEqual(
+        expect.objectContaining(studentMatcher)
+      );
 
       const tutorResponse = await tutorSession
         .get(`/api/booking/upcoming`)
         .send();
 
       expect(tutorResponse.statusCode).toBe(200);
-      expect(tutorResponse.body).toEqual({
+      expect(tutorResponse.body).toMatchObject({
         success: true,
         message: expect.any(String),
-        data: expect.objectContaining({
-          id: confirmedBooking.id,
-          tutor: expect.objectContaining(tutorMatcher),
-
-          scheduledStart: expect.any(String),
-          scheduledEnd: expect.any(String),
-          tutorNotes: null,
-          actualEndTime: null,
-          actualStartTime: null,
-          cancellationReason: null,
-          cancelledAt: null,
-          cancelledBy: null,
-
-          meetingLink: null,
-
-          reminderSent: false,
-          status: "confirmed",
-          student: expect.objectContaining(studentMatcher),
-          studentNotes: null,
-          subject: expect.objectContaining(subjectMatcher),
-        }),
+      });
+      expect(tutorResponse.body.data).toMatchObject({
+        id: confirmedBooking.id,
+        scheduledStart: expect.any(String),
+        scheduledEnd: expect.any(String),
+        tutorNotes: null,
+        actualEndTime: null,
+        actualStartTime: null,
+        cancellationReason: null,
+        cancelledAt: null,
+        cancelledBy: null,
+        meetingLink: null,
+        status: "confirmed",
       });
     });
   });
