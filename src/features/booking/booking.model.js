@@ -195,38 +195,27 @@ module.exports = (sequelize) => {
       underscored: true,
 
       indexes: [
-        {
-          fields: ["tutorId"],
-        },
-        {
-          fields: ["studentId"],
-        },
-        {
-          fields: ["subjectId"],
-        },
-        {
-          fields: ["status"],
-        },
-        {
-          fields: ["scheduledStart"],
-        },
-        {
-          fields: ["scheduledEnd"],
-        },
+        { fields: ["tutor_id"] },
+        { fields: ["student_id"] },
+        { fields: ["subject_id"] },
+        { fields: ["status"] },
+        { fields: ["scheduled_start"] },
+        { fields: ["scheduled_end"] },
         // {
-        //   fields: ["paymentStatus"],
+        //   fields: ["payment_status"],
         // },
         {
           unique: false,
-          fields: ["tutorId", "scheduledStart", "scheduledEnd"],
+          fields: ["tutor_id", "scheduled_start", "scheduled_end"],
           name: "tutor_time_conflict_check",
         },
         {
           unique: false,
-          fields: ["studentId", "scheduledStart", "scheduledEnd"],
+          fields: ["student_id", "scheduled_start", "scheduled_end"],
           name: "student_time_conflict_check",
         },
       ],
+
       hooks: {
         // beforeCreate: async (booking, options) => {
         //   await validateTutorSubject(booking);
