@@ -98,6 +98,16 @@ module.exports = {
         type: Sequelize.JSONB,
         allowNull: true,
       },
+      parent_booking_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
+        references: {
+          model: "bookings",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+      },
       reminders: {
         type: Sequelize.JSONB,
         allowNull: false,
