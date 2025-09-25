@@ -153,21 +153,21 @@ module.exports = (sequelize) => {
         allowNull: true,
       },
 
-      parentBookingId: {
-        type: DataTypes.UUID,
-        allowNull: true,
-        references: {
-          model: "bookings",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
-      },
+      // parentBookingId: {
+      //   type: DataTypes.UUID,
+      //   allowNull: true,
+      //   references: {
+      //     model: "bookings",
+      //     key: "id",
+      //   },
+      //   onUpdate: "CASCADE",
+      //   onDelete: "CASCADE",
+      // },
 
-      reminderSent: {
-        type: DataTypes.BOOLEAN,
+      reminders: {
+        type: DataTypes.JSONB,
         allowNull: false,
-        defaultValue: false,
+        defaultValue: { "24h": false, "1h": false, "15m": false },
       },
 
       actualStartTime: {
