@@ -1,5 +1,5 @@
 const ApiError = require("@src/shared/utils/apiError");
-const { DataTypes } = require("sequelize");
+const { DataTypes, Op } = require("sequelize");
 const { validate } = require("uuid");
 
 module.exports = (sequelize) => {
@@ -52,7 +52,17 @@ module.exports = (sequelize) => {
         allowNull: false,
         validate: {
           isDate: true,
-          isAfter: new Date().toISOString(),
+          isFuture(value) {
+            const now = new Date();
+            const scheduled = new Date(value);
+
+            if (scheduled.getTime() <= now.getTime() + 5000) {
+              throw new ApiError(
+                "Scheduled start time must be set in the future.",
+                400
+              );
+            }
+          },
         },
       },
 
@@ -63,7 +73,10 @@ module.exports = (sequelize) => {
           isDate: true,
           isAfterStart(value) {
             if (value <= this.scheduledStart) {
-              throw new Error("Scheduled end must be after scheduled start");
+              throw ApiError(
+                "Scheduled end must be after scheduled start",
+                400
+              );
             }
           },
         },
@@ -205,21 +218,22 @@ module.exports = (sequelize) => {
         //   fields: ["payment_status"],
         // },
         {
-          unique: false,
+          unique: true,
           fields: ["tutor_id", "scheduled_start", "scheduled_end"],
           name: "tutor_time_conflict_check",
         },
         {
-          unique: false,
+          unique: true,
           fields: ["student_id", "scheduled_start", "scheduled_end"],
           name: "student_time_conflict_check",
         },
       ],
 
       hooks: {
-        // beforeCreate: async (booking, options) => {
-        //   await validateTutorSubject(booking);
-        // },
+        beforeCreate: async (booking, options) => {
+          // await validateTutorSubject(booking);
+          await checkTutorAvailabilityConflict(booking, options);
+        },
         beforeValidate: (booking, options) => {
           // Calculate total amount if hourly rate and duration are provided
           if (booking.hourlyRate && booking.duration) {
@@ -231,6 +245,8 @@ module.exports = (sequelize) => {
         },
 
         beforeUpdate: async (booking, options) => {
+          await checkTutorAvailabilityConflict(booking, options);
+
           // Ensure cancellation fields are set when status is cancelled
           if (booking.status === "cancelled" && booking.changed("status")) {
             booking.cancelledAt = new Date().toISOString();
@@ -249,6 +265,63 @@ module.exports = (sequelize) => {
     const tutorSubject = tutorSubjects.some((s) => s.id === booking.subjectId);
     if (!tutorSubject) {
       throw new ApiError("Subject not registered for this tutor", 400);
+    }
+  };
+
+  const checkTutorAvailabilityConflict = async (newBooking, options) => {
+    // We only need to check for conflicts if the new slot is not 'cancelled'
+    // 'open', 'pending', and 'confirmed' slots are all considered 'booked' or 'unavailable' time.
+    if (
+      newBooking.status === "cancelled" ||
+      newBooking.status === "completed"
+    ) {
+      return;
+    }
+
+    const Booking = newBooking.constructor; // Get the model itself
+
+    // The most robust way to check for time overlap between two intervals [A, B] and [C, D]
+    // is to check if A < D AND C < B.
+    const overlappingBooking = await Booking.findOne({
+      where: {
+        tutorId: newBooking.tutorId,
+        // The existing booking must also be in a state that conflicts with a new booking
+        // This includes 'open', 'pending', and 'confirmed'. Use Op.ne to exclude 'cancelled' and 'completed'.
+        status: {
+          [Op.notIn]: ["cancelled", "completed"],
+        },
+
+        // Overlap Check:
+        [Op.and]: [
+          // Existing Start must be BEFORE New End
+          { scheduledStart: { [Op.lt]: newBooking.scheduledEnd } },
+          // Existing End must be AFTER New Start
+          { scheduledEnd: { [Op.gt]: newBooking.scheduledStart } },
+        ],
+
+        // IMPORTANT: Exclude the record being updated if this hook is reused in beforeUpdate
+        // (Though for beforeCreate, this check is strictly to ensure no overlap)
+        ...(newBooking.isNewRecord === false && {
+          id: { [Op.ne]: newBooking.id },
+        }),
+      },
+      transaction: options.transaction, // Use the same transaction if provided
+    });
+
+    if (overlappingBooking) {
+      // Customize the error message based on the status of the overlapping slot
+      let message =
+        "You already have a scheduled availability slot that overlaps with this time.";
+
+      if (
+        overlappingBooking.status === "confirmed" ||
+        overlappingBooking.status === "pending"
+      ) {
+        message =
+          "This time slot conflicts with an existing student booking (confirmed or pending).";
+      }
+
+      throw new ApiError(message, 409); // 409 Conflict is the appropriate HTTP status
     }
   };
 

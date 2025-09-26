@@ -14,6 +14,27 @@ exports.fetchUpcomingSession = async (req, res) => {
     : "No upcoming session";
   sendResponse(res, 200, message, booking);
 };
+
+exports.fetchBookingById = async (req, res, next) => {
+  try {
+    const booking = await bookingService.fetchBookingById(req.params.bookingId);
+
+    if (!booking) {
+      throw new ApiError("Availability not found", 404);
+    }
+
+    if (
+      booking.tutor.user.id !== req.user.id &&
+      booking.student.user.id !== req.user.id
+    ) {
+      throw new ApiError("Unauthorized access to availability", 403);
+    }
+    sendResponse(res, 200, "Availability retrieved successfully", booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
 //--------------
 //Student
 exports.createBooking = async (req, res) => {
@@ -65,18 +86,18 @@ exports.fetchStudentTutorBookings = async (req, res) => {
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
 };
 
-exports.fetchStudentBookingById = async (req, res) => {
-  const booking = await bookingService.fetchBookingById(req.params.bookingId);
-  if (!booking) {
-    throw new ApiError("Booking not found", 404);
-  }
+// exports.fetchStudentBookingById = async (req, res) => {
+//   const booking = await bookingService.fetchBookingById(req.params.bookingId);
+//   if (!booking) {
+//     throw new ApiError("Booking not found", 404);
+//   }
 
-  if (booking.student.user.id !== req.user.id) {
-    throw new ApiError("Unauthorized access to booking", 403);
-  }
+//   if (booking.student.user.id !== req.user.id) {
+//     throw new ApiError("Unauthorized access to booking", 403);
+//   }
 
-  sendResponse(res, 200, "Booking retrieved successfully", booking);
-};
+//   sendResponse(res, 200, "Booking retrieved successfully", booking);
+// };
 
 exports.updateBooking = async (req, res) => {
   const checkBooking = await bookingService.fetchBookingById(
@@ -135,8 +156,8 @@ exports.createAvailability = async (req, res) => {
 exports.fetchTutorAvailabilities = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     tutorId: req.user.id,
-    start: req.params?.start,
-    end: req.params?.end,
+    start: req.query?.start,
+    end: req.query?.end,
     ...(req.query?.status && { status: commaStringToList(req.query.status) }),
   });
   sendResponse(res, 200, "Availabilities retrieved successfully", bookings);
@@ -219,9 +240,9 @@ exports.cancelAvailability = async (req, res) => {
   if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
-  // if (!checkAvailability.student?.user) {
-  //   throw new ApiError("Cannot cancel open availability", 400);
-  // }
+  if (!checkAvailability.student?.user) {
+    throw new ApiError("Cannot cancel open availability", 400);
+  }
 
   const updatedBody = {
     ...req.body,

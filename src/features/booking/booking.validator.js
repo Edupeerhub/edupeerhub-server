@@ -4,13 +4,13 @@ const Joi = require("joi");
 exports.createAvailabilityValidator = Joi.object({
   scheduledStart: Joi.date().required(),
   scheduledEnd: Joi.date().required(),
-  tutorNotes: Joi.string(),
+  tutorNotes: Joi.string().optional().allow(""),
 });
 
 exports.updateAvailabilityValidator = Joi.object({
-  scheduledStart: Joi.date(),
-  scheduledEnd: Joi.date(),
-  tutorNotes: Joi.string(),
+  scheduledStart: Joi.date().optional(),
+  scheduledEnd: Joi.date().optional(),
+  tutorNotes: Joi.string().optional().allow(""),
 });
 
 exports.updateAvailabilityStatusValidator = Joi.object({
@@ -26,7 +26,7 @@ exports.cancelBookingAvailabilityValidator = Joi.object({
 });
 
 exports.updateBookingValidator = Joi.object({
-  studentNotes: Joi.string(),
+  studentNotes: Joi.string().optional().allow(""),
 });
 
 exports.dateMiddleware = (req, res, next) => {
