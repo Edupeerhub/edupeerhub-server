@@ -1,5 +1,5 @@
 const sendResponse = require("@utils/sendResponse");
-
+const reminderService = require("@features/notification/reminderSingleton");
 const bookingService = require("./booking.service");
 
 const ApiError = require("@src/shared/utils/apiError");
@@ -133,6 +133,9 @@ exports.cancelBooking = async (req, res) => {
     status: "cancelled",
     ...req.body,
   });
+
+  reminderService.cancelSessionReminder(booking.id);
+
   trackEvent(eventTypes.SESSION_CANCELLED, {
     sessionId: booking.id,
     tutorId: booking.tutor?.user.id,
@@ -214,12 +217,16 @@ exports.updateAvailabilityStatus = async (req, res) => {
   );
 
   if (availability.status === "confirmed") {
+    reminderService.scheduleSessionReminder(availability);
+
     trackEvent(eventTypes.SESSION_SCHEDULED, {
       sessionId: availability.id,
       tutorId: availability.tutor.user.id,
       subject: availability.subject,
       scheduledAt: new Date().toISOString(),
     });
+
+    // reminderService.rescheduleSessionReminder(availability);
   }
 
   sendResponse(
@@ -253,6 +260,9 @@ exports.cancelAvailability = async (req, res) => {
     req.params.availabilityId,
     updatedBody
   );
+
+  reminderService.cancelSessionReminder(availability.id);
+
   trackEvent(eventTypes.SESSION_CANCELLED, {
     sessionId: availability.id,
     tutorId: availability.tutor?.user?.id,

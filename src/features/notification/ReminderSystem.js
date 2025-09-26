@@ -5,22 +5,35 @@ const { Op } = require("sequelize");
 const { sendCallReminderEmail } = require("@src/shared/email/email.service");
 const CallService = require("../chat/CallService");
 
+const IS_TEST_MODE = process.env.NODE_ENV !== "production";
+
 class ReminderService {
   constructor() {
     this.jobs = {};
     this.callService = new CallService();
 
+    logger.info("Env values", {
+      REMINDER_TIME_1: process.env.REMINDER_TIME_1,
+      REMINDER_TIME_2: process.env.REMINDER_TIME_2,
+      REMINDER_TIME_3: process.env.REMINDER_TIME_3,
+    });
+
+    const parseEnv = (key, fallback) => {
+      const raw = process.env[key];
+      return raw !== undefined ? parseFloat(raw) : fallback;
+    };
+
     this.reminderTimes = {
-      "24h": parseFloat(process.env.REMINDER_24_HOURS) || 24,
-      "1h": parseFloat(process.env.REMINDER_1_HOUR) || 1,
-      "15m": parseFloat(process.env.REMINDER_15_MINUTES) || 0.25,
+      reminderSlot1: parseEnv("REMINDER_TIME_1", 24), // default 24h
+      reminderSlot2: parseEnv("REMINDER_TIME_2", 1), // default 1h
+      reminderSlot3: parseEnv("REMINDER_TIME_3", 0.25), // default 15m
     };
   }
 
   // Run on server startup
   async loadUnsentReminders() {
     const now = new Date();
-    const bookings = await Booking.findAll({
+    const bookings = await Booking.scope("join").findAll({
       where: { scheduledStart: { [Op.gt]: now }, status: "confirmed" },
     });
 
@@ -33,8 +46,16 @@ class ReminderService {
     const start = new Date(booking.scheduledStart);
     const now = new Date();
 
+    if (isNaN(start.getTime())) {
+      logger.warn(`⚠️ Skipping booking ${booking.id}, invalid scheduledStart`);
+      return;
+    }
+
     Object.entries(this.reminderTimes).forEach(([key, hrs]) => {
-      const when = new Date(start - hrs * 60 * 60 * 1000);
+      const when = IS_TEST_MODE
+        ? new Date(now.getTime() + hrs * 60 * 60 * 1000) // test = relative to now
+        : new Date(start.getTime() - hrs * 60 * 60 * 1000); // prod = relative to booking start
+
       if (when <= now) return;
 
       // only schedule if not already sent
@@ -66,7 +87,12 @@ class ReminderService {
   }
 
   async sendSessionReminder(booking, type) {
-    const timeText = this.timeLabel(type);
+    logger.info(
+      `🔥 sendSessionReminder fired for booking ${booking.id} [${type}]`
+    );
+
+    const hours = this.reminderTimes[type]; // get hours value
+    const timeText = this.timeLabel(hours);
 
     const { tutorCallUrl, studentCallUrl } =
       await this.callService.getCallLinks(booking);
@@ -80,15 +106,19 @@ class ReminderService {
     });
 
     // mark flag as sent
-    await booking.update({ reminders: { ...booking.reminders, [type]: true } });
+    // await Booking.update(
+    //   { reminders: { ...booking.reminders, [type]: true } },
+    //   { where: { id: booking.id } }
+    // );
 
     logger.info(`✅ Sent ${type} reminder for booking ${booking.id}`);
   }
 
-  timeLabel(type) {
-    return (
-      { "24h": "24 hours", "1h": "1 hour", "15m": "15 minutes" }[type] || "soon"
-    );
+  timeLabel(hours) {
+    if (hours >= 1) {
+      return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+    }
+    return `${hours * 60} minutes`;
   }
 }
 

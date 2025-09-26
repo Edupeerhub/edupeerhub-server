@@ -180,7 +180,11 @@ module.exports = (sequelize) => {
       reminders: {
         type: DataTypes.JSONB,
         allowNull: false,
-        defaultValue: { "24h": false, "1h": false, "15m": false },
+        defaultValue: {
+          reminderSlot1: false,
+          reminderSlot2: false,
+          reminderSlot3: false,
+        },
       },
 
       actualStartTime: {
