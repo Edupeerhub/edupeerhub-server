@@ -114,8 +114,8 @@ exports.cancelBooking = async (req, res) => {
   });
   trackEvent(eventTypes.SESSION_CANCELLED, {
     sessionId: booking.id,
-    tutorId: booking.tutor.user.id,
-    studentId: booking.student.user.id,
+    tutorId: booking.tutor?.user.id,
+    studentId: booking.student?.user.id,
     cancelledBy: booking.cancelledBy,
     cancellationReason: booking.cancellationReason,
   });
@@ -219,9 +219,9 @@ exports.cancelAvailability = async (req, res) => {
   if (checkAvailability.tutor.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to availability", 403);
   }
-  if (!checkAvailability.student?.user) {
-    throw new ApiError("Cannot cancel open availability", 400);
-  }
+  // if (!checkAvailability.student?.user) {
+  //   throw new ApiError("Cannot cancel open availability", 400);
+  // }
 
   const updatedBody = {
     ...req.body,
@@ -234,8 +234,8 @@ exports.cancelAvailability = async (req, res) => {
   );
   trackEvent(eventTypes.SESSION_CANCELLED, {
     sessionId: availability.id,
-    tutorId: availability.tutor.user.id,
-    studentId: availability.student.user.id,
+    tutorId: availability.tutor?.user?.id,
+    studentId: availability.student?.user?.id,
     cancelledBy: availability.cancelledBy,
     cancellationReason: availability.cancellationReason,
   });
