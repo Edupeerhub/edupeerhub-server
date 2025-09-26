@@ -38,6 +38,7 @@
     "mailtrap": "^4.2.0",
     "module-alias": "^2.2.3",
     "morgan": "^1.10.1",
+    "node-schedule": "^2.1.1",
     "pg": "^8.16.3",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.7",

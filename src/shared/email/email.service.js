@@ -7,6 +7,7 @@ const {
   UNREAD_MESSAGE_TEMPLATE,
   TUTOR_APPROVAL_TEMPLATE,
   TUTOR_REJECTION_TEMPLATE,
+  CALL_REMINDER_TEMPLATE,
 } = require("./emailTemplates");
 const { sendEmail } = require("./email.utils");
 
@@ -106,22 +107,66 @@ const sendPasswordChangeSuccessEmail = async (email) => {
   }
 };
 
-const sendApprovalEmail = (email, name) => {
-  return sendEmail({
-    to: email,
-    subject: "Your Tutor Application has been Approved",
-    html: TUTOR_APPROVAL_TEMPLATE(name),
-    category: "Tutor Application",
-  });
+const sendApprovalEmail = async (email, name) => {
+  try {
+    await sendEmail({
+      to: [{ email }],
+      subject: "Your Tutor Application has been Approved",
+      html: TUTOR_APPROVAL_TEMPLATE(name),
+      category: "Tutor Application",
+    });
+  } catch (error) {
+    throw new ApiError(
+      "Error sending tutor approval email",
+      500,
+      error.message
+    );
+  }
 };
 
-const sendRejectionEmail = (email, name, reason) => {
-  return sendEmail({
-    to: email,
-    subject: "Your Tutor Application Update",
-    html: TUTOR_REJECTION_TEMPLATE(name, reason),
-    category: "Tutor Application",
-  });
+const sendRejectionEmail = async (email, name, reason) => {
+  try {
+    await sendEmail({
+      to: [{ email }],
+      subject: "Your Tutor Application Update",
+      html: TUTOR_REJECTION_TEMPLATE(name, reason),
+      category: "Tutor Application",
+    });
+  } catch (error) {
+    throw new ApiError(
+      "Error sending tutor rejection email",
+      500,
+      error.message
+    );
+  }
+};
+
+const sendCallReminderEmail = async ({
+  tutorEmail,
+  studentEmail,
+  tutorCallUrl,
+  studentCallUrl,
+  type,
+}) => {
+  try {
+    // You can personalize by sending two separate emails if tutor/student need different links
+    await Promise.all([
+      sendEmail({
+        to: [{ email: tutorEmail }],
+        subject: `${type} - Upcoming Tutoring Session`,
+        html: CALL_REMINDER_TEMPLATE("Tutor", tutorCallUrl, type),
+        category: "Call Reminder",
+      }),
+      sendEmail({
+        to: [{ email: studentEmail }],
+        subject: `${type} - Upcoming Tutoring Session`,
+        html: CALL_REMINDER_TEMPLATE("Student", studentCallUrl, type),
+        category: "Call Reminder",
+      }),
+    ]);
+  } catch (error) {
+    throw new ApiError("Error sending call reminder email", 500, error.message);
+  }
 };
 
 const sendUnreadMessageEmail = async (
@@ -159,4 +204,5 @@ module.exports = {
   sendUnreadMessageEmail,
   sendApprovalEmail,
   sendRejectionEmail,
+  sendCallReminderEmail,
 };
