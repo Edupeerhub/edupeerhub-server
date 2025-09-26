@@ -6,6 +6,11 @@ const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
 const commaStringToList = require("@src/shared/utils/commaStringToList");
+const {
+  sendBookingCreatedEmail,
+  sendBookingConfirmedEmail,
+  sendBookingCancelledEmail,
+} = require("@src/shared/email/email.service");
 
 exports.fetchUpcomingSession = async (req, res) => {
   const booking = await bookingService.fetchUpcomingSession(req.user);
@@ -58,6 +63,15 @@ exports.createBooking = async (req, res) => {
     subjectId: req.body.subjectId,
     status: "pending",
   });
+
+  // Notify tutor about new booking (pending confirmation)
+  await sendBookingCreatedEmail(
+    booking.tutor.user.email,
+    booking.tutor.user.name,
+    booking.student.user.name,
+    booking.scheduledStart
+  );
+
   sendResponse(res, 201, "Booking created successfully", booking);
 };
 
@@ -143,6 +157,14 @@ exports.cancelBooking = async (req, res) => {
     cancelledBy: booking.cancelledBy,
     cancellationReason: booking.cancellationReason,
   });
+
+  // Notify both tutor & student about cancellation
+  await sendBookingCancelledEmail({
+    tutorEmail: booking.tutor.user.email,
+    studentEmail: booking.student.user.email,
+    scheduledStart: booking.scheduledStart,
+    reason: booking.cancellationReason,
+  });
   sendResponse(res, 200, "Booking cancelled successfully");
 };
 
@@ -226,6 +248,15 @@ exports.updateAvailabilityStatus = async (req, res) => {
       scheduledAt: new Date().toISOString(),
     });
 
+    // Notify both tutor & student about confirmed booking
+    await sendBookingConfirmedEmail({
+      tutorEmail: availability.tutor.user.email,
+      studentEmail: availability.student.user.email,
+      tutorCallUrl: availability.tutorCallUrl,
+      studentCallUrl: availability.studentCallUrl,
+      scheduledStart: availability.scheduledStart,
+    });
+
     // reminderService.rescheduleSessionReminder(availability);
   }
 
@@ -270,6 +301,15 @@ exports.cancelAvailability = async (req, res) => {
     cancelledBy: availability.cancelledBy,
     cancellationReason: availability.cancellationReason,
   });
+
+  // Notify both tutor & student about cancellation
+  await sendBookingCancelledEmail({
+    tutorEmail: availability.tutor.user.email,
+    studentEmail: availability.student.user.email,
+    scheduledStart: availability.scheduledStart,
+    reason: availability.cancellationReason,
+  });
+
   sendResponse(res, 200, "Availability updated successfully", availability);
 };
 exports.deleteAvailability = async (req, res) => {

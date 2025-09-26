@@ -8,6 +8,9 @@ const {
   TUTOR_APPROVAL_TEMPLATE,
   TUTOR_REJECTION_TEMPLATE,
   CALL_REMINDER_TEMPLATE,
+  BOOKING_CREATED_TEMPLATE,
+  BOOKING_CONFIRMED_TEMPLATE,
+  BOOKING_CANCELLED_TEMPLATE,
 } = require("./emailTemplates");
 const { sendEmail } = require("./email.utils");
 
@@ -149,17 +152,16 @@ const sendCallReminderEmail = async ({
   type,
 }) => {
   try {
-    // You can personalize by sending two separate emails if tutor/student need different links
     await Promise.all([
       sendEmail({
         to: [{ email: tutorEmail }],
-        subject: `${type} - Upcoming Tutoring Session`,
+        subject: `Your session is coming up ${type}`,
         html: CALL_REMINDER_TEMPLATE("Tutor", tutorCallUrl, type),
         category: "Call Reminder",
       }),
       sendEmail({
         to: [{ email: studentEmail }],
-        subject: `${type} - Upcoming Tutoring Session`,
+        subject: `Your session is coming up ${type}`,
         html: CALL_REMINDER_TEMPLATE("Student", studentCallUrl, type),
         category: "Call Reminder",
       }),
@@ -195,6 +197,96 @@ const sendUnreadMessageEmail = async (
     );
   }
 };
+
+const sendBookingCreatedEmail = async (
+  tutorEmail,
+  tutorName,
+  studentName,
+  scheduledStart
+) => {
+  try {
+    await sendEmail({
+      to: [{ email: tutorEmail }],
+      subject: `New booking request from ${studentName}`,
+      html: BOOKING_CREATED_TEMPLATE(tutorName, studentName, scheduledStart),
+      category: "Booking Created",
+    });
+  } catch (error) {
+    throw new ApiError(
+      "Error sending booking created email",
+      500,
+      error.message
+    );
+  }
+};
+
+// booking confirmed (send to both tutor & student)
+const sendBookingConfirmedEmail = async ({
+  tutorEmail,
+  studentEmail,
+  tutorCallUrl,
+  studentCallUrl,
+  scheduledStart,
+}) => {
+  try {
+    await Promise.all([
+      sendEmail({
+        to: [{ email: tutorEmail }],
+        subject: "Your tutoring session has been confirmed",
+        html: BOOKING_CONFIRMED_TEMPLATE("Tutor", scheduledStart, tutorCallUrl),
+        category: "Booking Confirmed",
+      }),
+      sendEmail({
+        to: [{ email: studentEmail }],
+        subject: "Your tutoring session has been confirmed",
+        html: BOOKING_CONFIRMED_TEMPLATE(
+          "Student",
+          scheduledStart,
+          studentCallUrl
+        ),
+        category: "Booking Confirmed",
+      }),
+    ]);
+  } catch (error) {
+    throw new ApiError(
+      "Error sending booking confirmed email",
+      500,
+      error.message
+    );
+  }
+};
+
+// booking cancelled (send to both tutor & student)
+const sendBookingCancelledEmail = async ({
+  tutorEmail,
+  studentEmail,
+  scheduledStart,
+  reason,
+}) => {
+  try {
+    await Promise.all([
+      sendEmail({
+        to: [{ email: tutorEmail }],
+        subject: "Your tutoring session has been cancelled",
+        html: BOOKING_CANCELLED_TEMPLATE("Tutor", scheduledStart, reason),
+        category: "Booking Cancelled",
+      }),
+      sendEmail({
+        to: [{ email: studentEmail }],
+        subject: "Your tutoring session has been cancelled",
+        html: BOOKING_CANCELLED_TEMPLATE("Student", scheduledStart, reason),
+        category: "Booking Cancelled",
+      }),
+    ]);
+  } catch (error) {
+    throw new ApiError(
+      "Error sending booking cancelled email",
+      500,
+      error.message
+    );
+  }
+};
+
 module.exports = {
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -205,4 +297,7 @@ module.exports = {
   sendApprovalEmail,
   sendRejectionEmail,
   sendCallReminderEmail,
+  sendBookingCreatedEmail,
+  sendBookingConfirmedEmail,
+  sendBookingCancelledEmail,
 };

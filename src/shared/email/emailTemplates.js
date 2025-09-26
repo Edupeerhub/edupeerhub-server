@@ -163,14 +163,57 @@ exports.TUTOR_REJECTION_TEMPLATE = (name, reason) =>
     "#e53935" // red rejection header
   );
 
-// emailTemplates.js
-exports.CALL_REMINDER_TEMPLATE = (role, url, type) =>
+exports.CALL_REMINDER_TEMPLATE = (role, url, timeText) =>
   emailWrapper(
     "Session Reminder",
     `
 <p>Dear ${role},</p>
-<p>This is a ${type.toLowerCase()} reminder for your upcoming tutoring session.</p>
+<p>This is a reminder that your tutoring session is coming up ${timeText}.</p>
 <p><a href="${url}" target="_blank">Join Session</a></p>
 <p>Best regards,<br/>Edupeerhub Team</p>
 `
+  );
+
+exports.BOOKING_CREATED_TEMPLATE = (tutorName, studentName, scheduledStart) =>
+  emailWrapper(
+    "New Booking Request",
+    `
+        <p>Hi ${tutorName},</p>
+        <p>You have a new booking request from <strong>${studentName}</strong>.</p>
+        <p>The requested session is scheduled for:</p>
+        <p><strong>${new Date(scheduledStart).toLocaleString()}</strong></p>
+        <p>This booking is <strong>pending your confirmation</strong>. Please review and confirm in your dashboard.</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_CONFIRMED_TEMPLATE = (role, scheduledStart, url) =>
+  emailWrapper(
+    "Booking Confirmed",
+    `
+        <p>Dear ${role},</p>
+        <p>Your tutoring session has been <strong>confirmed</strong>!</p>
+        <p>Scheduled for: <strong>${new Date(scheduledStart).toLocaleString()}</strong></p>
+        <p><a href="${url}" target="_blank" style="background-color:#2D9A95;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">Join Session</a></p>
+        <p>We wish you a great session!</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_CANCELLED_TEMPLATE = (role, scheduledStart, reason) =>
+  emailWrapper(
+    "Booking Cancelled",
+    `
+        <p>Dear ${role},</p>
+        <p>We’re sorry to inform you that your tutoring session scheduled for <strong>${new Date(
+          scheduledStart
+        ).toLocaleString()}</strong> has been cancelled.</p>
+        ${
+          reason
+            ? `<p><strong>Reason:</strong> ${reason}</p>`
+            : "<p>No reason was provided.</p>"
+        }
+        <p>If you have any questions, please reach out via support.</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
   );

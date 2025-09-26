@@ -12,12 +12,6 @@ class ReminderService {
     this.jobs = {};
     this.callService = new CallService();
 
-    logger.info("Env values", {
-      REMINDER_TIME_1: process.env.REMINDER_TIME_1,
-      REMINDER_TIME_2: process.env.REMINDER_TIME_2,
-      REMINDER_TIME_3: process.env.REMINDER_TIME_3,
-    });
-
     const parseEnv = (key, fallback) => {
       const raw = process.env[key];
       return raw !== undefined ? parseFloat(raw) : fallback;
@@ -51,29 +45,29 @@ class ReminderService {
       return;
     }
 
-    Object.entries(this.reminderTimes).forEach(([key, hrs]) => {
+    Object.entries(this.reminderTimes).forEach(([slot, hrs]) => {
       const when = IS_TEST_MODE
         ? new Date(now.getTime() + hrs * 60 * 60 * 1000) // test = relative to now
         : new Date(start.getTime() - hrs * 60 * 60 * 1000); // prod = relative to booking start
 
       if (when <= now) return;
+      if (booking.reminders?.[slot]) return; // already sent
 
-      // only schedule if not already sent
-      if (booking.reminders?.[key]) return;
-
-      const jobId = `${booking.id}-${key}`;
+      const jobId = `${booking.id}-${slot}`;
       this.jobs[jobId] = schedule.scheduleJob(when, () => {
-        this.sendSessionReminder(booking, key);
+        this.sendSessionReminder(booking, slot);
       });
 
-      logger.info(`⏰ Scheduled ${jobId} at ${when.toISOString()}`);
+      logger.info(
+        `⏰ Scheduled ${slot} for booking ${booking.id} at ${when.toISOString()}`
+      );
     });
   }
 
   rescheduleSessionReminder(booking) {
     this.cancelSessionReminder(booking.id);
     this.scheduleSessionReminder(booking);
-    logger.info(`🔄 Rescheduled reminders for booking ${booking.id}`);
+    logger.info(`🔄 Rescheduled all reminders for booking ${booking.id}`);
   }
 
   cancelSessionReminder(bookingId) {
@@ -86,13 +80,13 @@ class ReminderService {
       });
   }
 
-  async sendSessionReminder(booking, type) {
-    logger.info(
-      `🔥 sendSessionReminder fired for booking ${booking.id} [${type}]`
-    );
-
-    const hours = this.reminderTimes[type]; // get hours value
+  async sendSessionReminder(booking, slot) {
+    const hours = this.reminderTimes[slot];
     const timeText = this.timeLabel(hours);
+
+    logger.info(
+      `📤 Sending ${slot} (${timeText}) reminder for booking ${booking.id}`
+    );
 
     const { tutorCallUrl, studentCallUrl } =
       await this.callService.getCallLinks(booking);
@@ -105,20 +99,26 @@ class ReminderService {
       type: timeText,
     });
 
-    // mark flag as sent
-    // await Booking.update(
-    //   { reminders: { ...booking.reminders, [type]: true } },
-    //   { where: { id: booking.id } }
-    // );
+    // Mark as sent
+    await Booking.update(
+      { reminders: { ...booking.reminders, [slot]: true } },
+      { where: { id: booking.id } }
+    );
 
-    logger.info(`✅ Sent ${type} reminder for booking ${booking.id}`);
+    logger.info(
+      `✅ ${slot} (${timeText}) reminder sent for booking ${booking.id}`
+    );
   }
 
   timeLabel(hours) {
-    if (hours >= 1) {
-      return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+    if (hours >= 24 && hours % 24 === 0) {
+      const days = hours / 24;
+      return `in ${days} ${days === 1 ? "day" : "days"}`;
     }
-    return `${hours * 60} minutes`;
+    if (hours >= 1) {
+      return `in ${hours} ${hours === 1 ? "hour" : "hours"}`;
+    }
+    return `in ${Math.round(hours * 60)} minutes`;
   }
 }
 
