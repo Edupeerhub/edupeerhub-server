@@ -22,7 +22,7 @@ const router = express.Router();
 
 router.use(protectRoute);
 router.use(requireVerifiedUser);
-
+//TODO: requre tutor role for appropriate routes
 router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/", searchValidator, tutorController.getTutors);
 router.get("/recommendations", tutorController.getTutorRecommendations);
