@@ -73,7 +73,7 @@ module.exports = (sequelize) => {
           isDate: true,
           isAfterStart(value) {
             if (value <= this.scheduledStart) {
-              throw ApiError(
+              throw new ApiError(
                 "Scheduled end must be after scheduled start",
                 400
               );
