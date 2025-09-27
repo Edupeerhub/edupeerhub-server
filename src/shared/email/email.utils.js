@@ -5,7 +5,7 @@ const sendEmail = async (options) => {
   const enabled = process.env.EMAIL_ENABLED === "true";
 
   if (!enabled) {
-    logger.info("Email sending disabled. Would have sent:", options);
+    logger.info("📧 Email sending disabled. Would have sent:", options);
     return;
   }
 
@@ -15,4 +15,20 @@ const sendEmail = async (options) => {
   });
 };
 
-module.exports = { sendEmail };
+// Safe wrapper for non-critical emails
+const safeSendEmail = async (options) => {
+  try {
+    await sendEmail(options);
+    return true;
+  } catch (error) {
+    logger.error("❌ Failed to send email", {
+      error: error.message,
+      category: options.category,
+      to: options.to,
+      subject: options.subject,
+    });
+    return false;
+  }
+};
+
+module.exports = { sendEmail, safeSendEmail };

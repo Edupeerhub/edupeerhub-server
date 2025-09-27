@@ -3,7 +3,6 @@ const { Review, User } = require("@models");
 const sequelize = require("@src/shared/database");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
-const { Op } = require("sequelize");
 
 const createReview = async (reviewData) => {
   const { reviewerId, revieweeId, rating, comment, type, sessionId } =

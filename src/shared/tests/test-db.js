@@ -35,7 +35,7 @@ async function connectToDB() {
 async function disconnectFromDB() {
   console.log("Disconnecting from test database");
   try {
-    gracefulExit("DISCONNECT");
+    await gracefulExit("DISCONNECT");
   } catch (err) {
     console.error("Database disconnection error:", err);
     throw err;
@@ -61,6 +61,7 @@ async function cleanupDB() {
 const gracefulExit = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   try {
+    await sequelize.connectionManager.close();
     await sequelize.close();
     logger.info("Database connection closed");
   } catch (error) {

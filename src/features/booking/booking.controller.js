@@ -1,11 +1,16 @@
 const sendResponse = require("@utils/sendResponse");
-
+const reminderService = require("@features/notification/reminderSingleton");
 const bookingService = require("./booking.service");
 
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("@features/events/events.service");
 const eventTypes = require("@features/events/eventTypes");
 const commaStringToList = require("@src/shared/utils/commaStringToList");
+const {
+  sendBookingCreatedEmail,
+  sendBookingConfirmedEmail,
+  sendBookingCancelledEmail,
+} = require("@src/shared/email/email.service");
 
 exports.fetchUpcomingSession = async (req, res) => {
   const booking = await bookingService.fetchUpcomingSession(req.user);
@@ -14,6 +19,27 @@ exports.fetchUpcomingSession = async (req, res) => {
     : "No upcoming session";
   sendResponse(res, 200, message, booking);
 };
+
+exports.fetchBookingById = async (req, res, next) => {
+  try {
+    const booking = await bookingService.fetchBookingById(req.params.bookingId);
+
+    if (!booking) {
+      throw new ApiError("Booking not found", 404);
+    }
+
+    if (
+      booking.tutor.user.id !== req.user.id &&
+      booking.student.user.id !== req.user.id
+    ) {
+      throw new ApiError("Unauthorized access to booking", 403);
+    }
+    sendResponse(res, 200, "Booking retrieved successfully", booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
 //--------------
 //Student
 exports.createBooking = async (req, res) => {
@@ -37,45 +63,38 @@ exports.createBooking = async (req, res) => {
     subjectId: req.body.subjectId,
     status: "pending",
   });
+
+  // Notify tutor about new booking (pending confirmation)
+  await sendBookingCreatedEmail(
+    booking.tutor.user.email,
+    booking.tutor.user.name,
+    booking.student.user.name,
+    booking.scheduledStart
+  );
+
   sendResponse(res, 201, "Booking created successfully", booking);
 };
 
 exports.fetchStudentBookings = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     studentId: req.user.id,
-    start: req.params?.start,
-    end: req.params?.end,
-    ...(req.params?.status && { status: commaStringToList(req.params.status) }),
+    start: req.parsedDates?.start,
+    end: req.parsedDates?.end,
+    ...(req.query?.status && { status: commaStringToList(req.query.status) }),
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
 };
 
 exports.fetchStudentTutorBookings = async (req, res) => {
-  const start = req.query.start ? new Date(req.query.start) : new Date();
-  const end = req.query.end ? new Date(req.query.end) : null;
-
   const bookings = await bookingService.fetchBookings({
     tutorId: req.params.tutorId,
-    start,
-    end,
+    start: req.parsedDates?.start,
+    end: req.parsedDates?.end,
     status: ["open"],
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
-};
-
-exports.fetchStudentBookingById = async (req, res) => {
-  const booking = await bookingService.fetchBookingById(req.params.bookingId);
-  if (!booking) {
-    throw new ApiError("Booking not found", 404);
-  }
-
-  if (booking.student.user.id !== req.user.id) {
-    throw new ApiError("Unauthorized access to booking", 403);
-  }
-
-  sendResponse(res, 200, "Booking retrieved successfully", booking);
 };
 
 exports.updateBooking = async (req, res) => {
@@ -112,12 +131,23 @@ exports.cancelBooking = async (req, res) => {
     status: "cancelled",
     ...req.body,
   });
+
+  reminderService.cancelSessionReminder(booking.id);
+
   trackEvent(eventTypes.SESSION_CANCELLED, {
     sessionId: booking.id,
-    tutorId: booking.tutor.user.id,
-    studentId: booking.student.user.id,
+    tutorId: booking.tutor?.user.id,
+    studentId: booking.student?.user.id,
     cancelledBy: booking.cancelledBy,
     cancellationReason: booking.cancellationReason,
+  });
+
+  // Notify both tutor & student about cancellation
+  await sendBookingCancelledEmail({
+    tutorEmail: booking.tutor.user.email,
+    studentEmail: booking.student.user.email,
+    scheduledStart: booking.scheduledStart,
+    reason: booking.cancellationReason,
   });
   sendResponse(res, 200, "Booking cancelled successfully");
 };
@@ -135,8 +165,8 @@ exports.createAvailability = async (req, res) => {
 exports.fetchTutorAvailabilities = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     tutorId: req.user.id,
-    start: req.params?.start,
-    end: req.params?.end,
+    start: req.parsedDates?.start,
+    end: req.parsedDates?.end,
     ...(req.query?.status && { status: commaStringToList(req.query.status) }),
   });
   sendResponse(res, 200, "Availabilities retrieved successfully", bookings);
@@ -193,12 +223,25 @@ exports.updateAvailabilityStatus = async (req, res) => {
   );
 
   if (availability.status === "confirmed") {
+    reminderService.scheduleSessionReminder(availability);
+
     trackEvent(eventTypes.SESSION_SCHEDULED, {
       sessionId: availability.id,
       tutorId: availability.tutor.user.id,
       subject: availability.subject,
       scheduledAt: new Date().toISOString(),
     });
+
+    // Notify both tutor & student about confirmed booking
+    await sendBookingConfirmedEmail({
+      tutorEmail: availability.tutor.user.email,
+      studentEmail: availability.student.user.email,
+      tutorCallUrl: availability.tutorCallUrl,
+      studentCallUrl: availability.studentCallUrl,
+      scheduledStart: availability.scheduledStart,
+    });
+
+    // reminderService.rescheduleSessionReminder(availability);
   }
 
   sendResponse(
@@ -232,13 +275,25 @@ exports.cancelAvailability = async (req, res) => {
     req.params.availabilityId,
     updatedBody
   );
+
+  reminderService.cancelSessionReminder(availability.id);
+
   trackEvent(eventTypes.SESSION_CANCELLED, {
     sessionId: availability.id,
-    tutorId: availability.tutor.user.id,
-    studentId: availability.student.user.id,
+    tutorId: availability.tutor?.user?.id,
+    studentId: availability.student?.user?.id,
     cancelledBy: availability.cancelledBy,
     cancellationReason: availability.cancellationReason,
   });
+
+  // Notify both tutor & student about cancellation
+  await sendBookingCancelledEmail({
+    tutorEmail: availability.tutor.user.email,
+    studentEmail: availability.student.user.email,
+    scheduledStart: availability.scheduledStart,
+    reason: availability.cancellationReason,
+  });
+
   sendResponse(res, 200, "Availability updated successfully", availability);
 };
 exports.deleteAvailability = async (req, res) => {

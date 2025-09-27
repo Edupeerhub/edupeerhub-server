@@ -12,11 +12,8 @@ const ApiError = require("@src/shared/utils/apiError");
 bookingRouter.use(authMiddleware.protectRoute);
 bookingRouter.use(authMiddleware.requireVerifiedAndOnboardedUser);
 
+bookingRouter.get("/upcoming", bookingController.fetchUpcomingSession);
 
-bookingRouter.get(
-  "/upcoming",
-  bookingController.fetchUpcomingSession,  
-)
 //----------------
 //Tutor
 
@@ -83,12 +80,7 @@ bookingRouter.get(
   bookingValidator.dateMiddleware,
   bookingController.fetchStudentBookings
 );
-bookingRouter.get(
-  "/:bookingId",
-  authMiddleware.requireStudentRole,
-  idValidator("bookingId"),
-  bookingController.fetchStudentBookingById
-);
+
 bookingRouter.post(
   "/:bookingId",
   authMiddleware.requireStudentRole,
@@ -109,6 +101,13 @@ bookingRouter.patch(
   idValidator("bookingId"),
   authMiddleware.requireStudentRole,
   bookingController.cancelBooking
+);
+
+// General booking request
+bookingRouter.get(
+  "/:bookingId",
+  idValidator("bookingId"),
+  bookingController.fetchBookingById
 );
 
 module.exports = bookingRouter;

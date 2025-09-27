@@ -8,7 +8,7 @@ const { getStreamToken, handleStreamWebhook } = require("./chat.controller");
 
 const router = express.Router();
 
-// router.post("/webhook", express.json(), handleStreamWebhook);
+router.post("/webhook", express.json(), handleStreamWebhook);
 
 router.get(
   "/token",
