@@ -12,7 +12,8 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "migrate": "sequelize-cli db:migrate",
-    "seed": "sequelize-cli db:seed:all"
+    "seed": "sequelize-cli db:seed:all",
+    "update-stream-settings": "node src/shared/scripts/updateStreamSettings.js"
   },
   "repository": {
     "type": "git",

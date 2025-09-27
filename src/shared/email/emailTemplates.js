@@ -117,18 +117,18 @@ exports.UNREAD_MESSAGE_TEMPLATE = (
   emailWrapper(
     "Unread Messages",
     `
-      <p>Hello ${userName},</p>
-      <p>You have <strong>{unreadCount}</strong> unread message{unreadCount > 1 ? 's' : ''} waiting for you!</p>
-      <div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p style="margin: 0;"><strong>Unread Messages:</strong> ${unreadCount}</p>
-        <p style="margin: 5px 0 0 0;"><strong>From:</strong> ${senderNames}</p>
-      </div>
-      <p>Don't miss out on important conversations. Log in to read your messages now!</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${appURL}" style="background-color: #FF9800; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Read Messages</a>
-      </div>
-      <p>Best regards,<br>Edupeerhub</p>
-  `
+        <p>Hello ${userName},</p>
+        <p>You have <strong>${unreadCount}</strong> unread message${unreadCount > 1 ? "s" : ""} waiting for you!</p>
+        <div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>Unread Messages:</strong> ${unreadCount}</p>
+          <p style="margin: 5px 0 0 0;"><strong>From:</strong> ${senderNames || "Unknown sender"}</p>
+        </div>
+        <p>Don't miss out on important conversations. Log in to read your messages now!</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appURL}" style="background-color: #FF9800; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Read Messages</a>
+        </div>
+        <p>Best regards,<br>Edupeerhub</p>
+      `
   );
 
 exports.TUTOR_APPROVAL_TEMPLATE = (name) =>
