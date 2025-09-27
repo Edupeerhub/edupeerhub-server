@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.changeColumn("Bookings", "reminders", {
+    await queryInterface.changeColumn("bookings", "reminders", {
       type: Sequelize.JSONB,
       allowNull: false,
       defaultValue: {
