@@ -25,16 +25,16 @@ exports.fetchBookingById = async (req, res, next) => {
     const booking = await bookingService.fetchBookingById(req.params.bookingId);
 
     if (!booking) {
-      throw new ApiError("Availability not found", 404);
+      throw new ApiError("Booking not found", 404);
     }
 
     if (
       booking.tutor.user.id !== req.user.id &&
       booking.student.user.id !== req.user.id
     ) {
-      throw new ApiError("Unauthorized access to availability", 403);
+      throw new ApiError("Unauthorized access to booking", 403);
     }
-    sendResponse(res, 200, "Availability retrieved successfully", booking);
+    sendResponse(res, 200, "Booking retrieved successfully", booking);
   } catch (error) {
     next(error);
   }
@@ -78,40 +78,24 @@ exports.createBooking = async (req, res) => {
 exports.fetchStudentBookings = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     studentId: req.user.id,
-    start: req.params?.start,
-    end: req.params?.end,
-    ...(req.params?.status && { status: commaStringToList(req.params.status) }),
+    start: req.parsedDates?.start,
+    end: req.parsedDates?.end,
+    ...(req.query?.status && { status: commaStringToList(req.query.status) }),
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
 };
 
 exports.fetchStudentTutorBookings = async (req, res) => {
-  const start = req.query.start ? new Date(req.query.start) : new Date();
-  const end = req.query.end ? new Date(req.query.end) : null;
-
   const bookings = await bookingService.fetchBookings({
     tutorId: req.params.tutorId,
-    start,
-    end,
+    start: req.parsedDates?.start,
+    end: req.parsedDates?.end,
     status: ["open"],
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
 };
-
-// exports.fetchStudentBookingById = async (req, res) => {
-//   const booking = await bookingService.fetchBookingById(req.params.bookingId);
-//   if (!booking) {
-//     throw new ApiError("Booking not found", 404);
-//   }
-
-//   if (booking.student.user.id !== req.user.id) {
-//     throw new ApiError("Unauthorized access to booking", 403);
-//   }
-
-//   sendResponse(res, 200, "Booking retrieved successfully", booking);
-// };
 
 exports.updateBooking = async (req, res) => {
   const checkBooking = await bookingService.fetchBookingById(
@@ -181,8 +165,8 @@ exports.createAvailability = async (req, res) => {
 exports.fetchTutorAvailabilities = async (req, res) => {
   const bookings = await bookingService.fetchBookings({
     tutorId: req.user.id,
-    start: req.query?.start,
-    end: req.query?.end,
+    start: req.parsedDates?.start,
+    end: req.parsedDates?.end,
     ...(req.query?.status && { status: commaStringToList(req.query.status) }),
   });
   sendResponse(res, 200, "Availabilities retrieved successfully", bookings);

@@ -21,6 +21,12 @@ jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
   return () => (req, res, next) => next();
 });
 
+jest.mock("@features/notification/reminderSingleton", () => ({
+  scheduleSessionReminder: jest.fn(),
+  cancelSessionReminder: jest.fn(),
+  rescheduleSessionReminder: jest.fn(),
+}));
+
 const tutorMatcher = {
   bio: expect.any(String),
   rating: expect.any(Number),
@@ -72,9 +78,9 @@ const bookingMatcher = (booking = {}) => ({
   meetingLink: null,
   // reminders JSONB
   reminders: expect.objectContaining({
-    "24h": expect.any(Boolean),
-    "1h": expect.any(Boolean),
-    "15m": expect.any(Boolean),
+    reminderSlot1: expect.any(Boolean),
+    reminderSlot2: expect.any(Boolean),
+    reminderSlot3: expect.any(Boolean),
   }),
   status: booking.status || expect.any(String),
   student: booking.student
@@ -271,9 +277,9 @@ describe("Booking API", () => {
         expect(response.body.data.student).toBeNull();
         expect(response.body.data.reminders).toEqual(
           expect.objectContaining({
-            "24h": expect.any(Boolean),
-            "1h": expect.any(Boolean),
-            "15m": expect.any(Boolean),
+            reminderSlot1: expect.any(Boolean),
+            reminderSlot2: expect.any(Boolean),
+            reminderSlot3: expect.any(Boolean),
           })
         );
       });
@@ -347,9 +353,9 @@ describe("Booking API", () => {
         );
         expect(availabilityRes.body.data.reminders).toEqual(
           expect.objectContaining({
-            "24h": expect.any(Boolean),
-            "1h": expect.any(Boolean),
-            "15m": expect.any(Boolean),
+            reminderSlot1: expect.any(Boolean),
+            reminderSlot2: expect.any(Boolean),
+            reminderSlot3: expect.any(Boolean),
           })
         );
       });
@@ -534,9 +540,9 @@ describe("Booking API", () => {
 
         expect(response.body.data.reminders).toEqual(
           expect.objectContaining({
-            "24h": expect.any(Boolean),
-            "1h": expect.any(Boolean),
-            "15m": expect.any(Boolean),
+            reminderSlot1: expect.any(Boolean),
+            reminderSlot2: expect.any(Boolean),
+            reminderSlot3: expect.any(Boolean),
           })
         );
         expect(response.body.data.tutor).toEqual(
@@ -756,10 +762,10 @@ describe("Date middleware", () => {
 
     const expectedDate = new Date("2023-12-25");
 
-    expect(req.params.start).toBeInstanceOf(Date);
+    expect(req.parsedDates.start).toBeInstanceOf(Date);
 
-    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
-    expect(req.params.end.getTime()).toBe(expectedDate.getTime());
+    expect(req.parsedDates.start.getTime()).toBe(expectedDate.getTime());
+    expect(req.parsedDates.end.getTime()).toBe(expectedDate.getTime());
 
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -771,8 +777,8 @@ describe("Date middleware", () => {
 
     const expectedDate = new Date("2023-12-25T15:30:45.123Z");
 
-    expect(req.params.start).toBeInstanceOf(Date);
-    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
+    expect(req.parsedDates.start).toBeInstanceOf(Date);
+    expect(req.parsedDates.start.getTime()).toBe(expectedDate.getTime());
 
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -782,8 +788,8 @@ describe("Date middleware", () => {
     dateMiddleware(req, res, next);
 
     const expectedDate = new Date(1640390400000);
-    expect(req.params.start).toBeInstanceOf(Date);
-    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
+    expect(req.parsedDates.start).toBeInstanceOf(Date);
+    expect(req.parsedDates.start.getTime()).toBe(expectedDate.getTime());
 
     expect(next).toHaveBeenCalledTimes(1);
   });
@@ -814,7 +820,7 @@ describe("Date middleware", () => {
 
     const expectedDate = new Date("12/25/2023");
 
-    expect(req.params.start.getTime()).toBe(expectedDate.getTime());
+    expect(req.parsedDates.start.getTime()).toBe(expectedDate.getTime());
 
     expect(next).toHaveBeenCalledTimes(1);
   });
