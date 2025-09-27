@@ -220,6 +220,6 @@ exports.addStreamUser = async ({
     name: `${firstName} ${lastName}`.trim(),
     image: profileImageUrl || "",
     email: email,
-    role: role,
+    app_role: role,
   });
 };

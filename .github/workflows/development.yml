@@ -4,13 +4,9 @@ on:
   pull_request:
     branches:
       - development
-      - staging
-      - main
   push:
     branches:
       - development
-      - staging
-      - main
 
 jobs:
   run-tests:

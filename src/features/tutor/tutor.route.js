@@ -67,6 +67,8 @@ router.post(
   upload.single("document"),
   tutorController.createTutor
 );
+//TODO: requre tutor role for appropriate routes
+router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/", searchValidator, tutorController.getTutors);
 router.get("/recommendations", tutorController.getTutorRecommendations);
 router.get("/:id", tutorController.getTutor);
