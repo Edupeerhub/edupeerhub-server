@@ -2,11 +2,11 @@ const express = require("express");
 const router = express.Router();
 const trackEvent = require("./events.service");
 const { SESSION_STARTED, SESSION_COMPLETED } = require("./eventTypes");
+const { Booking } = require("@models");
 
 router.post("/session/started", async (req, res, next) => {
   const { sessionId, studentId, tutorId } = req.body;
   try {
-    console.log("Body of req ", req.body);
     await trackEvent(SESSION_STARTED, {
       sessionId,
       studentId,
@@ -22,14 +22,14 @@ router.post("/session/started", async (req, res, next) => {
 router.post("/session/completed", async (req, res, next) => {
   const { sessionId, studentId, tutorId, startedAt } = req.body;
   try {
-    console.log("Body of req ", req.body);
-
     const endedAt = new Date();
     const durationSecs = startedAt
       ? Math.round((endedAt - new Date(startedAt)) / 1000)
       : null;
 
-    console.log("Duration secs: ", durationSecs);
+    const booking = await Booking.findOne({ where: { id: sessionId } });
+    booking.status = "completed";
+    await booking.save();
 
     await trackEvent(SESSION_COMPLETED, {
       sessionId,
