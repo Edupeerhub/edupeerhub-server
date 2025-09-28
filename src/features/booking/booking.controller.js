@@ -10,7 +10,10 @@ const {
   sendBookingCreatedEmail,
   sendBookingConfirmedEmail,
   sendBookingCancelledEmail,
+  sendBookingDeclinedEmail,
+  sendBookingRescheduledEmail,
 } = require("@src/shared/email/email.service");
+const CallService = require("../chat/CallService");
 
 exports.fetchUpcomingSession = async (req, res) => {
   const booking = await bookingService.fetchUpcomingSession(req.user);
@@ -67,8 +70,8 @@ exports.createBooking = async (req, res) => {
   // Notify tutor about new booking (pending confirmation)
   await sendBookingCreatedEmail(
     booking.tutor.user.email,
-    booking.tutor.user.name,
-    booking.student.user.name,
+    booking.tutor.user.firstName,
+    booking.student.user.firstName,
     booking.scheduledStart
   );
 
@@ -76,11 +79,19 @@ exports.createBooking = async (req, res) => {
 };
 
 exports.fetchStudentBookings = async (req, res) => {
+  let status;
+
+  if (req.query.status) {
+    status = Array.isArray(req.query.status)
+      ? req.query.status
+      : [req.query.status];
+  }
+
   const bookings = await bookingService.fetchBookings({
     studentId: req.user.id,
     start: req.parsedDates?.start,
     end: req.parsedDates?.end,
-    ...(req.query?.status && { status: commaStringToList(req.query.status) }),
+    ...(req.query?.status && { status }),
   });
 
   sendResponse(res, 200, "Bookings retrieved successfully", bookings);
@@ -105,7 +116,7 @@ exports.updateBooking = async (req, res) => {
   if (!checkBooking) {
     throw new ApiError("Booking not found", 404);
   }
-  if (checkBooking.tutor.user.id !== req.user.id) {
+  if (checkBooking.student.user.id !== req.user.id) {
     throw new ApiError("Unauthorized access to booking", 403);
   }
   const booking = await bookingService.updateBooking(
@@ -163,11 +174,18 @@ exports.createAvailability = async (req, res) => {
 };
 
 exports.fetchTutorAvailabilities = async (req, res) => {
+  let status;
+
+  if (req.query.status) {
+    status = Array.isArray(req.query.status)
+      ? req.query.status
+      : [req.query.status];
+  }
   const bookings = await bookingService.fetchBookings({
     tutorId: req.user.id,
     start: req.parsedDates?.start,
     end: req.parsedDates?.end,
-    ...(req.query?.status && { status: commaStringToList(req.query.status) }),
+    ...(req.query?.status && { status }),
   });
   sendResponse(res, 200, "Availabilities retrieved successfully", bookings);
 };
@@ -206,6 +224,51 @@ exports.updateAvailability = async (req, res) => {
   sendResponse(res, 200, "Availability updated successfully", availability);
 };
 
+exports.rescheduleBooking = async (req, res, next) => {
+  try {
+    const checkBooking = await bookingService.fetchBookingById(
+      req.params.bookingId
+    );
+    if (!checkBooking) {
+      throw new ApiError("Booking not found", 404);
+    }
+    if (checkBooking.tutor.user.id !== req.user.id) {
+      throw new ApiError("Unauthorized access to booking", 403);
+    }
+
+    const booking = await bookingService.updateBooking(req.params.bookingId, {
+      scheduledStart: req.body.scheduledStart,
+      scheduledEnd: req.body.scheduledEnd,
+    });
+
+    // Update reminders & notify student
+    reminderService.cancelSessionReminder(booking.id);
+    reminderService.scheduleSessionReminder(booking);
+
+    trackEvent(eventTypes.SESSION_RESCHEDULED, {
+      sessionId: booking.id,
+      tutorId: booking.tutor?.user.id,
+      studentId: booking.student?.user.id,
+      scheduledStart: booking.scheduledStart,
+    });
+
+    const { tutorCallUrl: newTutorCallUrl, studentCallUrl: newStudentCallUrl } =
+      await new CallService().getCallLinks(booking);
+
+    await sendBookingRescheduledEmail({
+      tutorEmail: booking.tutor.user.email,
+      studentEmail: booking.student.user.email,
+      tutorCallUrl: newTutorCallUrl,
+      studentCallUrl: newStudentCallUrl,
+      newStart: booking.scheduledStart,
+    });
+
+    sendResponse(res, 200, "Booking rescheduled successfully", booking);
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateAvailabilityStatus = async (req, res) => {
   const checkAvailability = await bookingService.fetchBookingById(
     req.params.availabilityId
@@ -217,12 +280,20 @@ exports.updateAvailabilityStatus = async (req, res) => {
     throw new ApiError("Unauthorized access to availability", 403);
   }
 
+  const studentEmail = checkAvailability.student?.user?.email;
+  const studentId = checkAvailability.student?.user?.id;
+  const scheduledStart = checkAvailability.scheduledStart;
+
   const availability = await bookingService.updateBooking(
     req.params.availabilityId,
     req.body
   );
 
   if (availability.status === "confirmed") {
+    const callService = new CallService();
+    const { tutorCallUrl: newTutorCallUrl, studentCallUrl: newStudentCallUrl } =
+      await callService.getCallLinks(availability);
+
     reminderService.scheduleSessionReminder(availability);
 
     trackEvent(eventTypes.SESSION_SCHEDULED, {
@@ -232,16 +303,28 @@ exports.updateAvailabilityStatus = async (req, res) => {
       scheduledAt: new Date().toISOString(),
     });
 
-    // Notify both tutor & student about confirmed booking
     await sendBookingConfirmedEmail({
       tutorEmail: availability.tutor.user.email,
       studentEmail: availability.student.user.email,
-      tutorCallUrl: availability.tutorCallUrl,
-      studentCallUrl: availability.studentCallUrl,
+      tutorCallUrl: newTutorCallUrl,
+      studentCallUrl: newStudentCallUrl,
       scheduledStart: availability.scheduledStart,
     });
+  }
 
-    // reminderService.rescheduleSessionReminder(availability);
+  if (availability.status === "open" && studentEmail) {
+    trackEvent(eventTypes.SESSION_DECLINED, {
+      sessionId: availability.id,
+      tutorId: availability.tutor.user.id,
+      studentId: studentId,
+      scheduledAt: new Date().toISOString(),
+    });
+
+    // send declined email only to student
+    await sendBookingDeclinedEmail({
+      studentEmail,
+      scheduledStart,
+    });
   }
 
   sendResponse(
