@@ -1,60 +1,36 @@
+const {
+  sendUnreadMessageEmail,
+} = require("@src/shared/email/email.service.js");
 const { generateStreamToken } = require("../../shared/config/stream.config.js");
 const ApiError = require("../../shared/utils/apiError");
 const sendResponse = require("../../shared/utils/sendResponse");
-const {
-  sendUnreadMessageEmail,
-} = require("../../shared/email/emailTemplates.js");
+const logger = require("@src/shared/utils/logger.js");
 
-/**
-expose your local server to the internet:
-
-npx ngrok http 3000
-This will give you something like:
-https://abc123.ngrok-free.app
-Then in the Stream dashboard, set the webhook URL to:
-
-https://abc123.ngrok-free.app/api/chat/webhook
-Leave ngrok running so the webhook can reach your local dev environment.
- */
 exports.handleStreamWebhook = async (req, res, next) => {
   try {
     const event = req.body;
-    const { message, user: sender, type, members } = req.body;
-
-    if (event.type === "message.new") {
-      members
-        .filter((member) => member.user_id !== sender.id)
-        .forEach(({ user }) => {
-          if (!user.online) {
-            const { email, name: userName } = user;
-            const unreadCount = user.unread_count;
-            const senderName = message.user.name;
-            // const message = `You have a new message from ${message.user.name} - ${message.text}`;
-            // await sendUnreadMessageEmail(email, userName, unreadCount, senderName);
-            console.log(email, userName, unreadCount, senderName);
-          }
-        });
+    if (event.type !== "user.unread_message_reminder") {
+      return sendResponse(res, 200, "Event ignored");
     }
 
-    // Only act on unread message reminder events
-    // if (event.type !== "user.unread_message_reminder") {
-    //   return sendResponse(res, 200, "Event ignored");
-    // }
+    logger.info("unread message reminder event received", event.type);
 
-    // console.log("Received Stream webhook event:", event);
+    const { email, name: userName } = event.user;
 
-    // const { email, name: userName } = event.user;
-    // const unreadCount = event.user.unread_count;
-    // const senderNames = event.channels
-    //   ? Object.values(event.channels)
-    //       .flatMap((channel) => channel.messages.map((msg) => msg.user?.name))
-    //       .filter(Boolean)
-    //       .join(", ")
-    //   : "";
+    const channel = Object.values(event.channels)[0];
 
-    // if (!email) {
-    //   throw new ApiError("User email not found in Stream webhook payload", 400);
-    // }
+    const unreadCount = channel?.messages?.length || 0;
+
+    const senderName =
+      channel?.messages
+        .map((msg) => msg.user?.name)
+        .find((name) => name !== userName) || "";
+
+    if (!email) {
+      throw new ApiError("User email not found in Stream webhook payload", 400);
+    }
+
+    await sendUnreadMessageEmail(email, userName, unreadCount, senderName);
 
     sendResponse(res, 200, "Unread message email sent");
   } catch (error) {

@@ -117,18 +117,18 @@ exports.UNREAD_MESSAGE_TEMPLATE = (
   emailWrapper(
     "Unread Messages",
     `
-      <p>Hello {userName},</p>
-      <p>You have <strong>{unreadCount}</strong> unread message{unreadCount > 1 ? 's' : ''} waiting for you!</p>
-      <div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p style="margin: 0;"><strong>Unread Messages:</strong> {unreadCount}</p>
-        <p style="margin: 5px 0 0 0;"><strong>From:</strong> {senderNames}</p>
-      </div>
-      <p>Don't miss out on important conversations. Log in to read your messages now!</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="{appURL}" style="background-color: #FF9800; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Read Messages</a>
-      </div>
-      <p>Best regards,<br>Edupeerhub</p>
-  `
+        <p>Hello ${userName},</p>
+        <p>You have <strong>${unreadCount}</strong> unread message${unreadCount > 1 ? "s" : ""} waiting for you!</p>
+        <div style="background-color: #fff3e0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>Unread Messages:</strong> ${unreadCount}</p>
+          <p style="margin: 5px 0 0 0;"><strong>From:</strong> ${senderNames || "Unknown sender"}</p>
+        </div>
+        <p>Don't miss out on important conversations. Log in to read your messages now!</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appURL}" style="background-color: #FF9800; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Read Messages</a>
+        </div>
+        <p>Best regards,<br>Edupeerhub</p>
+      `
   );
 
 exports.TUTOR_APPROVAL_TEMPLATE = (name) =>
@@ -161,4 +161,90 @@ exports.TUTOR_REJECTION_TEMPLATE = (name, reason) =>
           <p>Best regards,<br>Edupeerhub Team</p>
         `,
     "#e53935" // red rejection header
+  );
+
+exports.CALL_REMINDER_TEMPLATE = (role, url, timeText) =>
+  emailWrapper(
+    "Session Reminder",
+    `
+<p>Dear ${role},</p>
+<p>This is a reminder that your tutoring session is coming up ${timeText}.</p>
+<p><a href="${url}" target="_blank">Join Session</a></p>
+<p>Best regards,<br/>Edupeerhub Team</p>
+`
+  );
+
+exports.BOOKING_CREATED_TEMPLATE = (tutorName, studentName, scheduledStart) =>
+  emailWrapper(
+    "New Booking Request",
+    `
+        <p>Hi ${tutorName},</p>
+        <p>You have a new booking request from <strong>${studentName}</strong>.</p>
+        <p>The requested session is scheduled for:</p>
+        <p><strong>${new Date(scheduledStart).toLocaleString()}</strong></p>
+        <p>This booking is <strong>pending your confirmation</strong>. Please review and confirm in your dashboard.</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_CONFIRMED_TEMPLATE = (role, scheduledStart, url) =>
+  emailWrapper(
+    "Booking Confirmed",
+    `
+        <p>Dear ${role},</p>
+        <p>Your tutoring session has been <strong>confirmed</strong>!</p>
+        <p>Scheduled for: <strong>${new Date(scheduledStart).toLocaleString()}</strong></p>
+        <p><a href="${url}" target="_blank" style="background-color:#2D9A95;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">Join Session</a></p>
+        <p>We wish you a great session!</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_RESCHEDULED_TEMPLATE = (role, newStart, url) =>
+  emailWrapper(
+    "Booking Rescheduled",
+    `
+        <p>Dear ${role},</p>
+        <p>Your tutoring session has been <strong>rescheduled</strong>.</p>
+        <p>New schedule: <strong>${new Date(newStart).toLocaleString()}</strong></p>
+        <p>
+          <a href="${url}" target="_blank" 
+             style="background-color:#2D9A95;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">
+            Join Session
+          </a>
+        </p>
+        <p>We look forward to seeing you at the new time!</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_CANCELLED_TEMPLATE = (role, scheduledStart, reason) =>
+  emailWrapper(
+    "Booking Cancelled",
+    `
+        <p>Dear ${role},</p>
+        <p>We’re sorry to inform you that your tutoring session scheduled for <strong>${new Date(
+          scheduledStart
+        ).toLocaleString()}</strong> has been cancelled.</p>
+        ${
+          reason
+            ? `<p><strong>Reason:</strong> ${reason}</p>`
+            : "<p>No reason was provided.</p>"
+        }
+        <p>If you have any questions, please reach out via support.</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_DECLINED_TEMPLATE = (scheduledStart) =>
+  emailWrapper(
+    "Booking Declined",
+    `
+        <p>Dear Student,</p>
+        <p>We’re sorry to inform you that your booking request for 
+        <strong>${new Date(scheduledStart).toLocaleString()}</strong> 
+        was declined by the tutor.</p>
+        <p>You can explore other tutors and available slots to continue your learning journey.</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
   );
