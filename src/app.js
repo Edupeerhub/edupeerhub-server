@@ -13,11 +13,11 @@ const adminRoutes = require("@features/admin/admin.route");
 const subjectRoutes = require("@features/subject/subject.route");
 const bookingRoutes = require("@features/booking/booking.route");
 const examRoutes = require("@features/exams/exams.route");
-
+const eventsRoutes = require("@features/events/events.route");
 const chatRoutes = require("@features/chat/chat.route");
 const ApiError = require("@utils/apiError");
 const sendResponse = require("@utils/sendResponse");
-const reviewRoutes = require ("@features/reviews/review.route")
+const reviewRoutes = require("@features/reviews/review.route");
 
 const app = express();
 
@@ -47,7 +47,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/exam", examRoutes);
-app.use("/api/reviews", reviewRoutes)
+app.use("/api/events", eventsRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.use("/api/chat", chatRoutes);
 

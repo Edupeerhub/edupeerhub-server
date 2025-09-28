@@ -7,7 +7,6 @@ module.exports = () => {
     {
       id: {
         type: DataTypes.INTEGER,
-        defaultValue: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
       },
