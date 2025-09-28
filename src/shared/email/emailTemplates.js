@@ -200,6 +200,24 @@ exports.BOOKING_CONFIRMED_TEMPLATE = (role, scheduledStart, url) =>
       `
   );
 
+exports.BOOKING_RESCHEDULED_TEMPLATE = (role, newStart, url) =>
+  emailWrapper(
+    "Booking Rescheduled",
+    `
+        <p>Dear ${role},</p>
+        <p>Your tutoring session has been <strong>rescheduled</strong>.</p>
+        <p>New schedule: <strong>${new Date(newStart).toLocaleString()}</strong></p>
+        <p>
+          <a href="${url}" target="_blank" 
+             style="background-color:#2D9A95;color:white;padding:10px 15px;text-decoration:none;border-radius:5px;">
+            Join Session
+          </a>
+        </p>
+        <p>We look forward to seeing you at the new time!</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
 exports.BOOKING_CANCELLED_TEMPLATE = (role, scheduledStart, reason) =>
   emailWrapper(
     "Booking Cancelled",
@@ -214,6 +232,19 @@ exports.BOOKING_CANCELLED_TEMPLATE = (role, scheduledStart, reason) =>
             : "<p>No reason was provided.</p>"
         }
         <p>If you have any questions, please reach out via support.</p>
+        <p>Best regards,<br/>Edupeerhub Team</p>
+      `
+  );
+
+exports.BOOKING_DECLINED_TEMPLATE = (scheduledStart) =>
+  emailWrapper(
+    "Booking Declined",
+    `
+        <p>Dear Student,</p>
+        <p>We’re sorry to inform you that your booking request for 
+        <strong>${new Date(scheduledStart).toLocaleString()}</strong> 
+        was declined by the tutor.</p>
+        <p>You can explore other tutors and available slots to continue your learning journey.</p>
         <p>Best regards,<br/>Edupeerhub Team</p>
       `
   );

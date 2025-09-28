@@ -13,7 +13,9 @@ const {
   CALL_REMINDER_TEMPLATE,
   BOOKING_CREATED_TEMPLATE,
   BOOKING_CONFIRMED_TEMPLATE,
+  BOOKING_DECLINED_TEMPLATE,
   BOOKING_CANCELLED_TEMPLATE,
+  BOOKING_RESCHEDULED_TEMPLATE,
 } = require("./emailTemplates");
 
 // --------------------
@@ -217,6 +219,38 @@ const sendBookingConfirmedEmail = async ({
   ]);
 };
 
+const sendBookingRescheduledEmail = async ({
+  tutorEmail,
+  studentEmail,
+  tutorCallUrl,
+  studentCallUrl,
+  newStart,
+}) => {
+  await Promise.all([
+    safeSendEmail({
+      to: [{ email: tutorEmail }],
+      subject: "Your tutoring session has been rescheduled",
+      html: BOOKING_RESCHEDULED_TEMPLATE("Tutor", newStart, tutorCallUrl),
+      category: "Booking Rescheduled",
+    }),
+    safeSendEmail({
+      to: [{ email: studentEmail }],
+      subject: "Your tutoring session has been rescheduled",
+      html: BOOKING_RESCHEDULED_TEMPLATE("Student", newStart, studentCallUrl),
+      category: "Booking Rescheduled",
+    }),
+  ]);
+};
+
+const sendBookingDeclinedEmail = async ({ studentEmail, scheduledStart }) => {
+  await safeSendEmail({
+    to: [{ email: studentEmail }],
+    subject: "Your tutoring booking request was declined",
+    html: BOOKING_DECLINED_TEMPLATE(scheduledStart),
+    category: "Booking Declined",
+  });
+};
+
 const sendBookingCancelledEmail = async ({
   tutorEmail,
   studentEmail,
@@ -254,5 +288,7 @@ module.exports = {
   sendUnreadMessageEmail,
   sendBookingCreatedEmail,
   sendBookingConfirmedEmail,
+  sendBookingDeclinedEmail,
+  sendBookingRescheduledEmail,
   sendBookingCancelledEmail,
 };

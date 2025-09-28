@@ -50,6 +50,15 @@ bookingRouter.patch(
   idValidator("availabilityId"),
   bookingController.updateAvailabilityStatus
 );
+
+bookingRouter.patch(
+  "/:bookingId/reschedule",
+  authMiddleware.requireTutorRole,
+  idValidator("bookingId"),
+  validate(bookingValidator.updateAvailabilityValidator),
+  bookingController.rescheduleBooking
+);
+
 bookingRouter.patch(
   "/availability/:availabilityId/cancel",
   authMiddleware.requireTutorRole,

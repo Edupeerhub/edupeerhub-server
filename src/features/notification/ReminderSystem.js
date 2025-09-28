@@ -18,9 +18,9 @@ class ReminderService {
     };
 
     this.reminderTimes = {
-      reminderSlot1: parseEnv("REMINDER_TIME_1", 24), // default 24h
+      reminderSlot1: parseEnv("REMINDER_TIME_1", 0.25), // default 15m
       reminderSlot2: parseEnv("REMINDER_TIME_2", 1), // default 1h
-      reminderSlot3: parseEnv("REMINDER_TIME_3", 0.25), // default 15m
+      reminderSlot3: parseEnv("REMINDER_TIME_3", 24), // default 24h
     };
   }
 
@@ -50,7 +50,7 @@ class ReminderService {
         ? new Date(now.getTime() + hrs * 60 * 60 * 1000) // test = relative to now
         : new Date(start.getTime() - hrs * 60 * 60 * 1000); // prod = relative to booking start
 
-      if (when <= now) return;
+      if (!IS_TEST_MODE && when <= now) return;
       if (booking.reminders?.[slot]) return; // already sent
 
       const jobId = `${booking.id}-${slot}`;

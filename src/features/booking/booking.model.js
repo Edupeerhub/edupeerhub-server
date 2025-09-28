@@ -1,6 +1,5 @@
 const ApiError = require("@src/shared/utils/apiError");
 const { DataTypes, Op } = require("sequelize");
-const { validate } = require("uuid");
 
 module.exports = (sequelize) => {
   const Booking = sequelize.define(
@@ -317,15 +316,13 @@ module.exports = (sequelize) => {
       let message =
         "You already have a scheduled availability slot that overlaps with this time.";
 
-      if (
-        overlappingBooking.status === "confirmed" ||
-        overlappingBooking.status === "pending"
-      ) {
-        message =
-          "This time slot conflicts with an existing student booking (confirmed or pending).";
+      if (overlappingBooking.status === "confirmed") {
+        message = "This time slot is already booked by a student.";
+      } else if (overlappingBooking.status === "pending") {
+        message = "This time slot is reserved for a pending student booking.";
       }
 
-      throw new ApiError(message, 409); // 409 Conflict is the appropriate HTTP status
+      throw new ApiError(message, 409);
     }
   };
 
