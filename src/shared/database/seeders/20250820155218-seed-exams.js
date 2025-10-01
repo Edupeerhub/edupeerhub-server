@@ -6,7 +6,7 @@ module.exports = {
 
     await queryInterface.bulkInsert("exams", [
       {
-        id: uuid4(),
+        id: 0,
         name: "JAMB",
         description: "For university entrance",
         isActive: true,
@@ -14,7 +14,7 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        id: uuid4(),
+        id: 1,
         name: "WAEC",
         description: "For Senior Secondary School Certificates",
         isActive: true,
@@ -22,7 +22,7 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        id: uuid4(),
+        id: 2,
         name: "NABTEB",
         description: "For technical and business exams",
         isActive: true,
@@ -30,7 +30,7 @@ module.exports = {
         updated_at: new Date(),
       },
       {
-        id: uuid4(),
+        id: 3,
         name: "BECE",
         description: "For Junior Secondary School completion",
         isActive: true,
