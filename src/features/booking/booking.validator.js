@@ -44,7 +44,7 @@ exports.dateMiddleware = (req, res, next) => {
     }
 
     if (isNaN(date.getTime())) {
-      throw new ApiError(`Invalid ${key} date`, 400);
+      return next(new ApiError(`Invalid ${key} date`, 400));
     }
 
     req.parsedDates[key] = date;
@@ -55,7 +55,7 @@ exports.dateMiddleware = (req, res, next) => {
     req.parsedDates.end &&
     req.parsedDates.start > req.parsedDates.end
   ) {
-    throw new ApiError("Start date must be before end date", 400);
+    return next(new ApiError("Start date must be before end date", 400));
   }
 
   next();

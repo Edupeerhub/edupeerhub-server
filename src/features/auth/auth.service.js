@@ -12,6 +12,7 @@ const {
 const {
   MIN_RESEND_INTERVAL_MS,
   VERIFICATION_CODE_EXPIRY,
+  RESET_LINK_EXPIRY,
 } = require("@src/shared/constants/authConstants");
 
 exports.createUser = async ({ firstName, lastName, email, password }) => {
@@ -158,7 +159,7 @@ exports.forgotUserPassword = async (email) => {
 
   const { token, hashedToken } = generateResetToken();
   user.resetPasswordToken = hashedToken;
-  user.resetPasswordExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY);
+  user.resetPasswordExpiresAt = new Date(Date.now() + RESET_LINK_EXPIRY);
 
   await user.save();
   return { userEmail: user.email, resetToken: token };

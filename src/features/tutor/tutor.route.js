@@ -35,25 +35,4 @@ router.put(
   tutorController.updateTutor
 );
 
-router.get(
-  "/:id/schedule",
-  scheduleSearchValidator,
-  tutorController.getTutorSchedule
-);
-
-// POST /api/tutors/availability      // Set weekly availability
-router.post(
-  "/availability",
-  availabilityValidator,
-  tutorController.getTutorAvailability
-);
-// PUT /api/tutors//availability   // Update weekly availability
-router.put(
-  "/availability",
-  availabilityValidator,
-  tutorController.updateAvailability
-);
-
-router.delete("/:id/availabilty", tutorController.updateAvailability);
-
 module.exports = router;

@@ -52,7 +52,7 @@ exports.updateBooking = async (bookingId, updatedData) => {
   });
 
   if (booking[0] === 0) {
-    throw new ApiError("Booking not updated", 500);
+    throw new ApiError("Booking was not updated", 500);
   }
   return await this.fetchBookingById(bookingId);
 };
