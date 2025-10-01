@@ -161,6 +161,13 @@ const tutorValidator = {
     profileImageUrl: expect.any(String),
   }),
 };
+
+const metaMatcher = {
+  count: expect.any(Number),
+  page: expect.any(Number),
+  limit: expect.any(Number),
+  total: expect.any(Number),
+};
 describe("Tutor test", () => {
   beforeEach(async () => {
     console.log("Top level before each");
@@ -211,7 +218,7 @@ describe("Tutor test", () => {
       // await createTestTutors();
 
       const response = await authenticatedSession.get(
-        `/api/tutor/?page=1&ratings=5,0&subjects=2,3,4&name=Tutor1&limit=10 `
+        `/api/tutor/?page=1&name=Tutor0%20Test0&limit=10 `
       );
       const approvedTutors = 3;
       expect(response.statusCode).toBe(200);
@@ -219,8 +226,10 @@ describe("Tutor test", () => {
         success: true,
         message: "Tutors retrieved successfully",
         data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
+          data: expect.arrayOf(
+            tutorValidator,
+          ),
+          meta: expect.objectContaining(metaMatcher),
         },
       });
 

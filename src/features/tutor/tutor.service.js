@@ -41,7 +41,7 @@ exports.getTutors = async ({
 
   //Subject
   const subjectInclude = {
-    model: Subject,
+    model: Subject.scope('join'),
     as: "subjects",
   };
   if (subjects && subjects.length > 0) {
@@ -52,25 +52,24 @@ exports.getTutors = async ({
 
   includes.push(subjectInclude);
 
-  // //Name
-  // if (name) {
-  //   const searchWords = name.split(" ");
+  //Name
+  if (name) {
+    const searchWords = name.split(" ");
 
-  //   const conditions =
-  //   searchWords.map((word) => ({
-  //     [Op.or]: [
-  //       { firstName: { [Op.iLike]: `%${word}%` } },
-  //       { lastName: { [Op.iLike]: `%${word}%` } },
-  //     ],
-  //   }));
+    const conditions = searchWords.map((word) => ({
+      [Op.or]: [
+        { first_name: { [Op.iLike]: `%${word}%` } },
+        { last_name: { [Op.iLike]: `%${word}%` } },
+      ],
+    }));
 
-  //   const nameInclude = {
-  //     model: User,
-  //     as: "user",
-  //     where: conditions,
-  //   };
-  //   includes.push(nameInclude);
-  // }
+    const nameInclude = {
+      model: User.scope("join"),
+      as: "user",
+      where: conditions,
+    };
+    includes.push(nameInclude);
+  }
 
   //Ratings
   if (ratings && ratings.length > 0) {
@@ -79,7 +78,7 @@ exports.getTutors = async ({
     };
   }
 
-  const data = await Tutor.scope("join").findAndCountAll({
+  const data = await Tutor.scope('join').findAndCountAll({
     where: where,
     include: includes,
     limit: limit,
