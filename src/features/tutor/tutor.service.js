@@ -46,43 +46,42 @@ exports.getTutors = async ({
   };
   if (subjects && subjects.length > 0) {
     subjectInclude.where = {
-      [Op.in]: subjects,
+      id: { [Op.in]: subjects.map(Number) },
     };
   }
 
   includes.push(subjectInclude);
 
-  //Name
-  if (name) {
-    const searchWords = name.split(" ");
+  // //Name
+  // if (name) {
+  //   const searchWords = name.split(" ");
 
-    const conditions = 
-    searchWords.map((word) => ({
-      [Op.or]: [
-        { firstName: { [Op.iLike]: `%${word}%` } },
-        { lastName: { [Op.iLike]: `%${word}%` } },
-      ],
-    }));
+  //   const conditions =
+  //   searchWords.map((word) => ({
+  //     [Op.or]: [
+  //       { firstName: { [Op.iLike]: `%${word}%` } },
+  //       { lastName: { [Op.iLike]: `%${word}%` } },
+  //     ],
+  //   }));
 
-    const nameInclude = {
-      model: User,
-      as: "user",
-      where: conditions,
-    };
-    includes.push(nameInclude);
-  }
+  //   const nameInclude = {
+  //     model: User,
+  //     as: "user",
+  //     where: conditions,
+  //   };
+  //   includes.push(nameInclude);
+  // }
 
   //Ratings
   if (ratings && ratings.length > 0) {
-    const f  = ratings.map
     where.rating = {
-      [Op.in]: ratings,
+      [Op.in]: ratings.map(Number),
     };
   }
 
   const data = await Tutor.scope("join").findAndCountAll({
     where: where,
-    // include: includes,
+    include: includes,
     limit: limit,
     offset: (page - 1) * limit,
   });
