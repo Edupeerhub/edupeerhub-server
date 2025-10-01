@@ -101,11 +101,3 @@ exports.getTutorRecommendations = async (req, res) => {
 
   sendResponse(res, 200, "success", tutorRecommendations);
 };
-
-exports.getTutorSchedule = async (req, res) => {};
-
-exports.getTutorAvailability = async (req, res) => {};
-
-exports.updateAvailability = async (req, res) => {};
-
-exports.deleteAvailability = async (req, res) => {};

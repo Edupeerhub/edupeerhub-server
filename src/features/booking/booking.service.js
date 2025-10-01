@@ -10,8 +10,10 @@ exports.fetchBookings = async ({
   end,
   status = ["open", "completed", "cancelled", "pending"],
 }) => {
+  const statusList = Array.isArray(status) ? status : [status];
+
   const query = {
-    status: { [Op.in]: status },
+    status: { [Op.in]: statusList },
     ...(studentId && { studentId }),
     ...(tutorId && { tutorId }),
     ...((start || end) && {
@@ -38,6 +40,10 @@ exports.fetchBookingById = async (bookingId) => {
 };
 
 exports.updateBooking = async (bookingId, updatedData) => {
+  if (updatedData.status === "open") {
+    updatedData.studentId = null;
+  }
+
   const booking = await Booking.update(updatedData, {
     where: {
       id: bookingId,
@@ -46,7 +52,7 @@ exports.updateBooking = async (bookingId, updatedData) => {
   });
 
   if (booking[0] === 0) {
-    throw new ApiError("Booking not updated", 500);
+    throw new ApiError("Booking was not updated", 500);
   }
   return await this.fetchBookingById(bookingId);
 };
@@ -58,7 +64,6 @@ exports.createBooking = async (userId, availabilityData) => {
   });
 
   return this.fetchBookingById(availability.id);
-  // return availability;
 };
 
 exports.deleteBooking = async (bookingId) => {

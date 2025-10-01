@@ -15,6 +15,7 @@ if (fs.existsSync(envFilePath)) {
 
 const app = require("./app");
 const sequelize = require("@src/shared/database/index");
+const reminderService = require("@features/notification/reminderSingleton");
 
 const PORT = process.env.PORT || 3000;
 
@@ -29,6 +30,9 @@ const startServer = async () => {
       await sequelize.sync({ alter: true });
       logger.info("✅ Database synced (development only)");
     }
+
+    // Load unsent reminders (for all confirmed future bookings)
+    await reminderService.loadUnsentReminders();
 
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV}]`);
