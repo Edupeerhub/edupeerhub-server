@@ -5,19 +5,19 @@ const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 exports.getTutors = async (req, res) => {
   //params
-  const page = req.query?.page ?? 1;
-  const limit = req.query?.limit ?? 10;
+  const page = req.query.page ?? 1;
+  const limit = req.query.limit ?? 10;
 
   //filters
-  const subjects = queryStringToList(req.query?.subjects);
-  const availability = queryStringToList(req.query?.availability);
-  const ratings = queryStringToList(req.query?.rating);
+  const subjects = queryStringToList(req.query?.subjects);  
+  const ratings = queryStringToList(req.query?.ratings);
+  const name = req.query?.name;
 
   const tutors = await tutorService.getTutors({
     page: page,
     limit: limit,
     subjects,
-    availability,
+    name,
     ratings,
   });
   sendResponse(res, 200, "Tutors retrieved successfully", tutors);

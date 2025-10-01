@@ -23,7 +23,7 @@ router.use(protectRoute);
 router.use(requireVerifiedUser);
 
 // GET /api/tutors              // Browse tutors with filters
-router.get("/", searchValidator, tutorController.getTutors);
+router.get("/", validate(searchValidator, "params"), tutorController.getTutors);
 
 //GET tutor recommendations
 router.get("/recommendations", tutorController.getTutorRecommendations);

@@ -210,7 +210,9 @@ describe("Tutor test", () => {
     it("should return all approved tutors", async () => {
       // await createTestTutors();
 
-      const response = await authenticatedSession.get(`/api/tutor/`);
+      const response = await authenticatedSession.get(
+        `/api/tutor/?page=1&ratings=5,0&subjects=1,2&name=Tutor1&limit=10 `
+      );
       const approvedTutors = 3;
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
@@ -368,7 +370,7 @@ describe("Tutor test", () => {
         `/api/tutor/recommendations/`
       );
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeLessThan(5)
+      expect(response.body.data.count).toBeLessThan(5);
       expect(response.body).toEqual({
         success: true,
         message: "success",

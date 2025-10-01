@@ -3,6 +3,7 @@ const { where, Op } = require("sequelize");
 const { Subject, User, Tutor, Student } = require("@models");
 const sequelize = require("@src/shared/database");
 const { required } = require("joi");
+const parseDataWithMeta = require("@src/shared/utils/meta");
 
 exports.createTutor = async ({ profile, userId }) => {
   const newTutor = await Tutor.create(profile);
@@ -27,28 +28,66 @@ exports.getTutors = async ({
   approvalStatus = "approved",
   profileVisibility = "active",
   subjects,
-  availability,
+  name,
+  ratings,
   limit = 10,
   page = 1,
 }) => {
+  const includes = [];
+  const where = {
+    approvalStatus,
+    profileVisibility,
+  };
+
+  //Subject
   const subjectInclude = {
     model: Subject,
     as: "subjects",
   };
   if (subjects && subjects.length > 0) {
-    subjectInclude.query = {
+    subjectInclude.where = {
       [Op.in]: subjects,
     };
   }
-  return await Tutor.scope("join").findAndCountAll({
-    where: {
-      approvalStatus,
-      profileVisibility,
-    },
-    include: [subjectInclude],
+
+  includes.push(subjectInclude);
+
+  //Name
+  if (name) {
+    const searchWords = name.split(" ");
+
+    const conditions = 
+    searchWords.map((word) => ({
+      [Op.or]: [
+        { firstName: { [Op.iLike]: `%${word}%` } },
+        { lastName: { [Op.iLike]: `%${word}%` } },
+      ],
+    }));
+
+    const nameInclude = {
+      model: User,
+      as: "user",
+      where: conditions,
+    };
+    includes.push(nameInclude);
+  }
+
+  //Ratings
+  if (ratings && ratings.length > 0) {
+    const f  = ratings.map
+    where.rating = {
+      [Op.in]: ratings,
+    };
+  }
+
+  const data = await Tutor.scope("join").findAndCountAll({
+    where: where,
+    // include: includes,
     limit: limit,
     offset: (page - 1) * limit,
   });
+
+  return parseDataWithMeta(data.rows, page, limit, data.count);
 };
 
 exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
