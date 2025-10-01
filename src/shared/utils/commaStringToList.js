@@ -2,6 +2,9 @@ module.exports = function commaStringToList(str) {
   if (str === null || str === undefined) {
     return null;
   }
-  const list = str?.split(",");
-  return list.length === 1 && list[0].trim() === "" ? null : list;
+  const rawList = String(str).split(",");
+  const trimmedList = rawList.map((item) => item.trim());
+  const filteredList = trimmedList.filter((item) => item.length > 0);
+
+  return filteredList.length === 0 ? null : filteredList;
 };

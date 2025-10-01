@@ -7,5 +7,7 @@ module.exports = {
   SESSION_STARTED: "session_started",
   SESSION_CANCELLED: "session_cancelled",
   SESSION_COMPLETED: "session_completed",
-  FEEDBACK_RATING: "feedback_submitted"
+  SESSION_DECLINED: "session_declined",
+  SESSION_RESCHEDULED: "session_rescheduled",
+  FEEDBACK_RATING: "feedback_submitted",
 };
