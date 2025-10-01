@@ -2,7 +2,7 @@
 const emailHeader = (title, color = "#E7F6FB") => `
   <div style="background: ${color}; padding: 20px; text-align: center;">
     <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-      <img src="https://www.edupeerhub.com/images/edupeerhub-logo.svg" 
+      <img src="https://edupeerhub.com/images/edupeerhub-logo.svg" 
            alt="Edupeerhub Logo" 
            style="height: 40px;" />
       <span style="font-size: 24px; font-weight: bold; 

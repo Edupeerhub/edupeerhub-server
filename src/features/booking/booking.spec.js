@@ -794,15 +794,17 @@ describe("Date middleware", () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it("should throw ApiError for invalid date strings", () => {
+  it("should return next with ApiError for invalid date strings", () => {
     req.query.start = "invalid-date-string";
     req.query.end = "invalid-date-string";
 
-    expect(() => {
-      dateMiddleware(req, res, next);
-    }).toThrow("Invalid start date");
+    dateMiddleware(req, res, next);
 
-    expect(next).not.toHaveBeenCalled();
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Invalid start date",
+      })
+    );
   });
 
   it("should ignore empty string date", () => {
@@ -825,14 +827,15 @@ describe("Date middleware", () => {
     expect(next).toHaveBeenCalledTimes(1);
   });
 
-  it("should throw error if end is before start", () => {
+  it("should return next with Apierror if end is before start", () => {
     req.query.start = "12/25/2023";
     req.query.end = "12/24/2023";
 
-    expect(() => {
-      dateMiddleware(req, res, next);
-    }).toThrow("Start date must be before end date");
-
-    expect(next).not.toHaveBeenCalled();
+    dateMiddleware(req, res, next);
+    expect(next).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Start date must be before end date",
+      })
+    );
   });
 });
