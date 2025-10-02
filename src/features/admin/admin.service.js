@@ -199,7 +199,7 @@ exports.getTutorDocument = async (userId) => {
 };
 
 exports.approveTutor = async (id) => {
-  const tutor = await exports.getTutor(id);
+  const tutor = await Tutor.findByPk(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "approved";
@@ -208,7 +208,7 @@ exports.approveTutor = async (id) => {
 };
 
 exports.rejectTutor = async (id, rejectionReason) => {
-  const tutor = await exports.getTutor(id);
+  const tutor = await Tutor.findByPk(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "rejected";
