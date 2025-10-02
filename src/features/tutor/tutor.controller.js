@@ -1,11 +1,11 @@
 const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
-const { Readable } = require("stream");
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
+const { uploadFileToS3 } = require("@src/shared/utils/s3");
 
 exports.getTutors = async (req, res) => {
   //params
@@ -42,32 +42,19 @@ exports.createTutor = async (req, res) => {
     rating: 0.0,
     approvalStatus: "pending",
     profileVisibility: "hidden",
-
     userId: req.user.id,
   };
 
-  // const file = req.file;
-
-  // let fileData;
-  // if (file) {
-  //   // Convert buffer to stream
-  //   const stream = Readable.from(file.buffer);
-  //   fileData = { ...file, stream };
-  // }
-
-  // const newTutor = await tutorService.createTutor({
-  //   profile,
-  //   userId: req.user.id,
-  //   file: fileData,
-  // });
-
-  // multer-s3 adds `req.file.key` directly
-  const fileKey = req.file?.key;
+  let documentKey = null;
+  if (req.file) {
+    const { key } = await uploadFileToS3(req.file, "tutor-documents");
+    documentKey = key;
+  }
 
   const newTutor = await tutorService.createTutor({
     profile,
     userId: req.user.id,
-    documentKey: fileKey,
+    documentKey,
   });
 
   await trackEvent(eventTypes.USER_ONBOARDED, {
@@ -122,11 +109,3 @@ exports.getTutorRecommendations = async (req, res) => {
 
   sendResponse(res, 200, "success", tutorRecommendations);
 };
-
-exports.getTutorSchedule = async (req, res) => {};
-
-exports.getTutorAvailability = async (req, res) => {};
-
-exports.updateAvailability = async (req, res) => {};
-
-exports.deleteAvailability = async (req, res) => {};

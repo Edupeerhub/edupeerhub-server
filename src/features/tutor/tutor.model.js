@@ -7,7 +7,7 @@ module.exports = () => {
     {
       userId: {
         type: DataTypes.UUID,
-        primaryKey: true,        
+        primaryKey: true,
       },
       bio: {
         type: DataTypes.TEXT,
@@ -44,15 +44,14 @@ module.exports = () => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      documentUrl: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
     },
     {
       tableName: "tutor_profiles",
       underscored: true,
       defaultScope: {
+        attributes: {
+          exclude: ["documentKey", "createdAt", "updatedAt"],
+        },
         include: [
           {
             model: sequelize.models.Subject,

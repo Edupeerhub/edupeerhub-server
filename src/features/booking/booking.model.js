@@ -369,7 +369,6 @@ module.exports = (sequelize) => {
       attributes: {
         exclude: [
           "createdAt",
-          "updatedAt",
           "isRecurring",
           "recurringPattern",
           "parentBookingId",

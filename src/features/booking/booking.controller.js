@@ -54,11 +54,17 @@ exports.createBooking = async (req, res) => {
   }
 
   if (availability.student !== null) {
-    throw new ApiError("Booking is not available", 400);
+    throw new ApiError(
+      "This time slot has already been booked by another student. Please select a different time.",
+      400
+    );
   }
 
-  if (availability.scheduledStart < new Date() + 2 * 60 * 60 * 1000) {
-    throw new ApiError("Booking is not available", 400);
+  if (availability.scheduledStart.getTime() < Date.now() + 1 * 60 * 1000) {
+    throw new ApiError(
+      "Bookings must be made at least 1 hour in advance. Please select a later time slot.",
+      400
+    );
   }
 
   const booking = await bookingService.updateBooking(req.params.bookingId, {

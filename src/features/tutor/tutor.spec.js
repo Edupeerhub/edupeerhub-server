@@ -339,12 +339,16 @@ describe("Tutor test", () => {
       });
     });
     it("should return 400 if tutor profile not complete", async () => {
-      const tutors = await createTestTutors(1);
-      const tutor = tutors[0];
+      const postRes = await authenticatedSession
+        .post(`/api/tutor/`)
+        .send(tutor);
+
+      const createdTutor = postRes.body.data;
 
       const response = await authenticatedSession
-        .put(`/api/tutor/${tutor.userId}`)
+        .put(`/api/tutor/${loggedInUser.id}`)
         .send({ bio: "Should not update" });
+
       expect(response.statusCode).toBe(400);
       expect(response.body).toEqual(
         expect.objectContaining({
@@ -354,6 +358,7 @@ describe("Tutor test", () => {
         })
       );
     });
+
     it("should return 403 if user is not owner", async () => {
       const tutors = await createTestTutors(1);
       const tutor = tutors[0];
@@ -365,7 +370,7 @@ describe("Tutor test", () => {
       expect(response.body).toEqual(
         expect.objectContaining({
           success: false,
-          message: "You're not allowed to update this profile",
+          message: "Access denied - Tutor only",
           error: null,
         })
       );
