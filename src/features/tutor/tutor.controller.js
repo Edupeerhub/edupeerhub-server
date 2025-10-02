@@ -1,5 +1,6 @@
 const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
+const parseDataWithMeta = require("@src/shared/utils/meta");
 
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
@@ -9,7 +10,7 @@ exports.getTutors = async (req, res) => {
   const limit = req.query.limit ?? 10;
 
   //filters
-  const subjects = queryStringToList(req.query?.subjects);  
+  const subjects = queryStringToList(req.query?.subjects);
   const ratings = queryStringToList(req.query?.ratings);
   const name = req.query?.name;
 
@@ -20,7 +21,8 @@ exports.getTutors = async (req, res) => {
     name,
     ratings,
   });
-  sendResponse(res, 200, "Tutors retrieved successfully", tutors);
+  const json = parseDataWithMeta(tutors.rows, page, limit, tutors.count);
+  sendResponse(res, 200, "Tutors retrieved successfully", json);
 };
 
 exports.getTutor = async (req, res) => {
@@ -85,13 +87,21 @@ exports.deleteTutor = async (req, res) => {
 exports.getTutorRecommendations = async (req, res) => {
   const userId = req.user.id;
 
-  const { page, limit } = req.query;
+  const page= req.query.page ?? 1;
+  const limit = req.query.limit ?? 10;
   const tutorRecommendations = await tutorService.getTutorRecommendations({
     userId,
     page,
     limit,
   });
-  sendResponse(res, 200, "success", tutorRecommendations);
+  const json = parseDataWithMeta(
+    tutorRecommendations.rows,
+    page,
+    limit,
+    tutorRecommendations.count
+  );
+
+  sendResponse(res, 200, "success", json);
 };
 
 exports.getTutorSchedule = async (req, res) => {};

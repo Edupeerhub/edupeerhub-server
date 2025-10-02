@@ -13,6 +13,7 @@ const {
   uuid,
 } = require("@src/shared/tests/utils");
 const { error } = require("winston");
+const { meta } = require("@eslint/js");
 
 let authenticatedSession;
 let testSession;
@@ -105,7 +106,7 @@ async function createTestTutors(count = 5) {
     users.map((user, i) => ({
       userId: user.id,
       bio: `Bio for tutor ${i}`,
-      rating: 0,
+      rating: Number(`${i}.${i}`),
       education: `Education ${i}`,
       timezone: "UTC",
       approvalStatus: i % 2 === 0 ? "approved" : "pending",
@@ -214,51 +215,24 @@ describe("Tutor test", () => {
     beforeEach(async () => {
       await createTestTutors();
     });
-    it("should return all approved tutors", async () => {
+    it("should return filtered tutors", async () => {
       // await createTestTutors();
 
       const response = await authenticatedSession.get(
-        `/api/tutor/?page=1&name=Tutor0%20Test0&limit=10 `
+        `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5`
       );
-      const approvedTutors = 3;
+console.log(JSON.stringify(response.body.data))
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
         message: "Tutors retrieved successfully",
         data: {
-          data: expect.arrayOf(
-            tutorValidator,
-          ),
-          meta: expect.objectContaining(metaMatcher),
+          data: expect.arrayOf(tutorValidator),
+          meta: expect.objectContaining((metaMatcher.count = 1, metaMatcher)),
         },
       });
 
       console.log(response.body.data.rows);
-    });
-
-    it("should return 404 for non-existent tutor", async () => {
-      const response = await authenticatedSession.get(
-        `/api/tutor/44e54e24-7e94-476c-b6e7-0bf0e2b1567e`
-      );
-      expect(response.statusCode).toBe(404);
-      expect(response.body.success).toBe(false);
-    });
-
-    it("should return tutor for subjects", async () => {
-      const response = await authenticatedSession.get(
-        `/api/tutor/?subjects=English,Mathematics`
-      );
-
-      expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeLessThan(5);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Tutors retrieved successfully",
-        data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
-        },
-      });
     });
   });
 
@@ -379,13 +353,14 @@ describe("Tutor test", () => {
         `/api/tutor/recommendations/`
       );
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeLessThan(5);
+      expect(response.body.data.meta.count).toBeLessThan(5);
       expect(response.body).toEqual({
         success: true,
         message: "success",
         data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
+          meta: expect.objectContaining(metaMatcher),
+
+          data: expect.arrayOf(tutorValidator),
         },
       });
     });

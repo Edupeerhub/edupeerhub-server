@@ -1,5 +1,5 @@
 const ApiError = require("@utils/apiError");
-const { where, Op } = require("sequelize");
+const { where, Op, literal } = require("sequelize");
 const { Subject, User, Tutor, Student } = require("@models");
 const sequelize = require("@src/shared/database");
 const { required } = require("joi");
@@ -34,14 +34,14 @@ exports.getTutors = async ({
   page = 1,
 }) => {
   const includes = [];
-  const where = {
+  let where = {
     approvalStatus,
     profileVisibility,
   };
 
   //Subject
   const subjectInclude = {
-    model: Subject.scope('join'),
+    model: Subject.scope("join"),
     as: "subjects",
   };
   if (subjects && subjects.length > 0) {
@@ -72,20 +72,29 @@ exports.getTutors = async ({
   }
 
   //Ratings
+  //   const where = {
+  //   status: 'active',
+  //   funding: 'funded',
+  // };
+
+  // await sequelize.query(sql`SELECT * FROM projects WHERE ${sql.where(where)}`);
   if (ratings && ratings.length > 0) {
-    where.rating = {
-      [Op.in]: ratings.map(Number),
-    };
+    const ratingWhere = sequelize.where(
+      sequelize.fn("ROUND", sequelize.col("rating")),
+      {
+        [Op.in]: ratings,
+      }
+    );
+    where = { [Op.and]: [{profileVisibility}, {approvalStatus}, ratingWhere] };
+    console.log(ratingWhere);
   }
 
-  const data = await Tutor.scope('join').findAndCountAll({
+  return await Tutor.scope("join").findAndCountAll({
     where: where,
     include: includes,
     limit: limit,
     offset: (page - 1) * limit,
   });
-
-  return parseDataWithMeta(data.rows, page, limit, data.count);
 };
 
 exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
