@@ -37,6 +37,15 @@ exports.restoreUser = async (req, res, next) => {
   }
 };
 
+exports.getUserSummaryCounts = async (req, res, next) => {
+  try {
+    const counts = await adminService.getUserCounts();
+    sendResponse(res, 200, "User summary counts fetched successfully", counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // =====================
 // Pending Tutor Operations
 // =====================
@@ -53,7 +62,7 @@ exports.getPendingTutors = async (req, res, next) => {
 exports.getPendingTutorById = async (req, res, next) => {
   try {
     const includeSignedUrl = true;
-    const tutor = await adminService.getPendingTutor(req.params.id, {
+    const tutor = await adminService.getTutor(req.params.id, {
       includeSignedUrl,
     });
     sendResponse(res, 200, "Pending tutor fetched successfully", tutor);
@@ -65,7 +74,9 @@ exports.getPendingTutorById = async (req, res, next) => {
 exports.getTutorDocument = async (req, res, next) => {
   try {
     const { signedUrl } = await adminService.getTutorDocument(req.params.id);
-    res.json({ url: signedUrl });
+    sendResponse(res, 200, "Tutor document fetched successfully", {
+      documentUrl: signedUrl,
+    });
   } catch (err) {
     next(err);
   }
