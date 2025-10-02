@@ -73,10 +73,6 @@ module.exports = () => {
       resetPasswordExpiresAt: {
         type: DataTypes.DATE,
       },
-      isDeleted: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
       deletedAt: {
         type: DataTypes.DATE,
       },
@@ -85,6 +81,8 @@ module.exports = () => {
       tableName: "users",
       underscored: true,
       timestamps: true,
+      paranoid: true,
+
       defaultScope: {
         attributes: {
           exclude: [
@@ -94,9 +92,6 @@ module.exports = () => {
             "verificationTokenExpiresAt",
             "resetPasswordExpiresAt",
           ],
-        },
-        where: {
-          isDeleted: false,
         },
       },
       scopes: {
@@ -110,22 +105,27 @@ module.exports = () => {
               "resetPasswordExpiresAt",
             ],
           },
-          where: {},
+          paranoid: false,
         },
         active: {
           where: {
             accountStatus: "active",
-            isDeleted: false,
           },
         },
         verified: {
           where: {
             isVerified: true,
-            isDeleted: false,
           },
         },
         join: {
-          attributes: ["firstName", "lastName", "email", "profileImageUrl"],
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+            "profileImageUrl",
+            "role",
+          ],
         },
       },
       hooks: {
@@ -145,7 +145,6 @@ module.exports = () => {
         { fields: ["role"] },
         { fields: ["account_status"] },
         { fields: ["is_verified"] },
-        { fields: ["is_deleted"] },
         { fields: ["verification_token"] },
         { fields: ["reset_password_token"] },
         { fields: ["created_at"] },
@@ -159,7 +158,7 @@ module.exports = () => {
     User.hasOne(models.Student, {
       foreignKey: "userId",
       as: "student",
-      scope: "join",
+      // scope: "join",
     });
     User.hasOne(models.Tutor, { foreignKey: "userId", as: "tutor" });
     User.hasOne(models.Admin, { foreignKey: "userId", as: "admin" });

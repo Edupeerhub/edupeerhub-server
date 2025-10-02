@@ -6,6 +6,10 @@ const { required } = require("joi");
 const parseDataWithMeta = require("@src/shared/utils/meta");
 
 exports.createTutor = async ({ profile, userId }) => {
+  const existing = await Tutor.findByPk(userId);
+  if (existing) {
+    throw new ApiError("Tutor profile already exists", 409);
+  }
   const newTutor = await Tutor.create(profile);
 
   await addSubjectsToProfile({
@@ -99,29 +103,40 @@ exports.getTutors = async ({
 
 exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
   const student = await Student.findOne({ where: { userId } });
+
   const subjects = await student.getSubjects();
+  const subjectIds = subjects.map((subject) => subject.id);
 
-  const subjectInclude = {
-    model: Subject,
-    as: "subjects",
-  };
-
-  if (subjects && subjects.length > 0) {
-    subjectInclude.query = {
-      [Op.in]: subjects,
-    };
-  }
-  return await Tutor.scope("join").findAndCountAll({
+  const recommendedTutors = await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus: "approved",
       profileVisibility: "active",
     },
-    include: [subjectInclude],
+    include: [
+      {
+        model: Subject,
+        as: "subjects",
+        where: { id: { [Op.in]: subjectIds } },
+      },
+    ],
     limit: limit,
     offset: (page - 1) * limit,
   });
-};
 
+  if (recommendedTutors.count === 0) {
+    return await Tutor.scope("join").findAndCountAll({
+      where: {
+        approvalStatus: "approved",
+        profileVisibility: "active",
+      },
+      include: [{ model: Subject, as: "subjects" }],
+      limit: limit,
+      offset: (page - 1) * limit,
+    });
+  }
+
+  return recommendedTutors;
+};
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   const [count, [newTutorProfile]] = await Tutor.update(tutorProfile, {
     where: { user_id: id },
@@ -141,16 +156,6 @@ exports.updateTutorProfile = async ({ id, tutorProfile }) => {
     subjectIds: tutorProfile.subjects,
   });
   return await this.getTutor(id);
-};
-
-exports.deleteTutorProfile = async (id) => {
-  // const tutor = await Tutor.findByPk(id);
-  // return await tutor.destroy()
-  return await Tutor.destroy({
-    where: {
-      userId: id,
-    },
-  });
 };
 
 exports.getTutorAvailability = async ({ id, startTime, endTime }) => {};

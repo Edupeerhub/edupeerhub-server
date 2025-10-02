@@ -12,6 +12,7 @@ const {
 const {
   MIN_RESEND_INTERVAL_MS,
   VERIFICATION_CODE_EXPIRY,
+  RESET_LINK_EXPIRY,
 } = require("@src/shared/constants/authConstants");
 
 exports.createUser = async ({ firstName, lastName, email, password }) => {
@@ -52,7 +53,7 @@ exports.loginUser = async ({ email, password }) => {
       "lastName",
       "role",
       "accountStatus",
-      "isDeleted",
+      "deletedAt",
       "passwordHash",
     ],
   });
@@ -60,7 +61,7 @@ exports.loginUser = async ({ email, password }) => {
   if (!user) throw new ApiError("Invalid email or password", 401);
   if (user.accountStatus === "suspended")
     throw new ApiError("Your account is suspended", 403);
-  if (user.isDeleted) throw new ApiError("Account no longer exists", 403);
+  if (user.deletedAt) throw new ApiError("Account no longer exists", 403);
 
   const isMatch = await user.isValidPassword(password);
   if (!isMatch) throw new ApiError("Invalid email or password", 401);
@@ -73,6 +74,7 @@ exports.loginUser = async ({ email, password }) => {
 exports.fetchProfile = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: [
+      "id",
       "firstName",
       "lastName",
       "email",
@@ -96,6 +98,8 @@ exports.verifyUserEmail = async (code) => {
     },
     attributes: [
       "id",
+      "email",
+      "firstName",
       "isVerified",
       "verificationToken",
       "verificationTokenExpiresAt",
@@ -124,7 +128,7 @@ exports.resendVerificationEmail = async (userId) => {
   });
 
   if (!user) throw new ApiError("User not found", 404);
-  if (user.isVerified) throw new ApiError("User is already verified", 403);
+  if (user?.isVerified) throw new ApiError("User is already verified", 400);
 
   const nextAllowedTime =
     new Date(user.verificationTokenExpiresAt).getTime() -
@@ -155,7 +159,7 @@ exports.forgotUserPassword = async (email) => {
 
   const { token, hashedToken } = generateResetToken();
   user.resetPasswordToken = hashedToken;
-  user.resetPasswordExpiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY);
+  user.resetPasswordExpiresAt = new Date(Date.now() + RESET_LINK_EXPIRY);
 
   await user.save();
   return { userEmail: user.email, resetToken: token };
@@ -171,6 +175,7 @@ exports.resetUserPassword = async (token, password) => {
     },
     attributes: [
       "id",
+      "email",
       "passwordHash",
       "resetPasswordToken",
       "resetPasswordExpiresAt",
@@ -209,11 +214,13 @@ exports.addStreamUser = async ({
   lastName,
   profileImageUrl,
   email,
+  role,
 }) => {
   await upsertStreamUser({
     id: id.toString(),
     name: `${firstName} ${lastName}`.trim(),
     image: profileImageUrl || "",
     email: email,
+    app_role: role,
   });
 };

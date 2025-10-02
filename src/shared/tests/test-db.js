@@ -5,7 +5,6 @@ const request = require("supertest");
 
 const NODE_ENV = "test";
 
-
 const envFilePath = path.resolve(process.cwd(), `.env.${NODE_ENV}`);
 
 if (fs.existsSync(envFilePath)) {
@@ -36,7 +35,7 @@ async function connectToDB() {
 async function disconnectFromDB() {
   console.log("Disconnecting from test database");
   try {
-    gracefulExit("DISCONNECT");
+    await gracefulExit("DISCONNECT");
   } catch (err) {
     console.error("Database disconnection error:", err);
     throw err;
@@ -62,6 +61,7 @@ async function cleanupDB() {
 const gracefulExit = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   try {
+    await sequelize.connectionManager.close();
     await sequelize.close();
     logger.info("Database connection closed");
   } catch (error) {
@@ -72,13 +72,12 @@ const gracefulExit = async (signal) => {
 process.on("SIGTERM", () => gracefulExit("SIGTERM"));
 process.on("SIGINT", () => gracefulExit("SIGINT"));
 
-
 // // A custom matcher that checks if the received value is one of the given types.
 // expect.extend({
 //   toBeOneOfTypes(received, validTypes) {
 //     const receivedType = typeof received;
 //     const pass = validTypes.includes(receivedType);
-    
+
 //     if (pass) {
 //       return {
 //         message: () =>

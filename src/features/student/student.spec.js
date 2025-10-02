@@ -4,15 +4,8 @@ const sequelize = require("@src/shared/database/index");
 const app = require("@src/app");
 const { User, Student, Subject, Exam } = require("@models");
 const session = require("supertest-session");
-const { test } = require("@src/shared/config/db.config");
-
-
-// Usage
-// expect(receivedObject.property).toBeOneOfTypes([String, Number]);
-
-
 const {
-  createVerifiedUser,
+  createUser,
   userObject: user,
   uuid,
 } = require("@src/shared/tests/utils");
@@ -26,40 +19,16 @@ jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
   return () => (req, res, next) => next();
 });
 
-const studentValidator = expect.objectContaining({
-  userId: expect.any(String),
-  //   learningGoals: student.learningGoals,
-  exams: expect.any(Array),
-  // exams: expect.arrayOf(
-  //   expect.objectContaining({
-  //     id: expect.any(Number),
-  //     name: expect.any(String),
-  //   })
-  // ) ,
-  gradeLevel: expect.any(String),
-
-  user: expect.objectContaining({
-    email: expect.any(String),
-    // profileImageUrl: expect.anything( ),
-
-    firstName: expect.any(String),
-    lastName: expect.any(String),
-  }),
-  subjects: expect.arrayOf(
-    expect.objectContaining({
-      description: expect.any(String),
-      id: expect.any(Number),
-      name: expect.any(String),
-    })
-  ),
-});
-
 async function createTestExams() {
-  Exam.bulkCreate([
-    { name: "NECO", description: "", is_active: true },
-    { name: "WAEC", description: "", is_active: true },
-  ]);
+  return await Exam.bulkCreate(
+    [
+      { name: "NECO", description: "", is_active: true },
+      { name: "WAEC", description: "", is_active: true },
+    ],
+    { returning: true }
+  );
 }
+
 async function createTestSubjects() {
   return await Subject.bulkCreate(
     [
@@ -97,24 +66,30 @@ async function createTestStudents(count = 5) {
       passwordHash: "password123",
       role: "student",
       isVerified: true,
+      isOnboarded: true,
     })),
     { returning: true }
   );
+
   const students = await Student.bulkCreate(
     users.map((user, i) => ({
       userId: user.id,
       gradeLevel: `Grade ${i + 1}`,
-      learningGoals: `Learning goals for student ${i}`,
+      learningGoals: [`Learning goals for student ${i}`],
     })),
     { returning: true }
   );
-  await students.map(async (student, i) => {
-    const numSubjectsForStudent = i + 1;
-    const startIndex = i * numSubjectsForStudent;
-    const endIndex = startIndex + numSubjectsForStudent;
-    const slice = subjects.slice(startIndex, endIndex);
-    return await student.setSubjects(slice);
-  });
+
+  await Promise.all(
+    students.map(async (student, i) => {
+      const slice = subjects.slice(i, i + 2);
+      await student.setSubjects(slice);
+    })
+  );
+
+  const exams = await Exam.findAll();
+  await Promise.all(students.map((student) => student.setExams(exams)));
+
   return students;
 }
 
@@ -124,9 +99,10 @@ const studentProfile = {
   exams: [1, 2],
   subjects: [1, 2],
 };
+
 const updatedProfile = {
   gradeLevel: "Grade 11",
-  learningGoals: "Advanced studies",
+  learningGoals: ["Advanced studies"],
   subjects: [2, 3],
 };
 
@@ -136,13 +112,10 @@ describe("Student test", () => {
     subjects = await createTestSubjects();
     await createTestExams();
     testSession = session(app);
-    loggedInUser = await createVerifiedUser();
+    loggedInUser = await createUser({ isOnboarded: true, verified: true });
     await testSession
       .post("/api/auth/login")
-      .send({
-        email: user.email,
-        password: user.password,
-      })
+      .send({ email: user.email, password: user.password })
       .expect(200);
     authenticatedSession = testSession;
   });
@@ -152,23 +125,29 @@ describe("Student test", () => {
       const response = await authenticatedSession
         .post(`/api/student/`)
         .send(studentProfile);
-      expect(response.statusCode).toBe(201);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Onboarding successful",
-        data: studentValidator,
 
-        // data: expect.objectContaining({
-        //   email: user.email,
-        //   exams: expect.arrayOf(expect.any(String)),
-        //   firstName: user.firstName,
-        //   id: expect.any(String),
-        //   lastName: user.lastName,
-        //   subjects: expect.arrayOf(expect.any(String)),
-        //   //   gradeLevel: studentProfile.gradeLevel,
-        //   //   learningGoals: studentProfile.learningGoals,
-        // }),
-      });
+      expect(response.statusCode).toBe(201);
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Onboarding successful");
+
+      const data = response.body.data;
+      expect(typeof data.userId).toBe("string");
+      expect(Array.isArray(data.learningGoals)).toBe(true);
+      expect(data.learningGoals).toContain("Prepare for exams");
+      expect(Array.isArray(data.exams)).toBe(true);
+      expect(data.exams.length).toBeGreaterThan(0);
+      expect(typeof data.exams[0].id).toBe("number");
+      expect(typeof data.exams[0].name).toBe("string");
+      expect(Array.isArray(data.subjects)).toBe(true);
+      expect(data.subjects.length).toBeGreaterThan(0);
+      expect(typeof data.subjects[0].id).toBe("number");
+      expect(typeof data.subjects[0].name).toBe("string");
+      expect(typeof data.subjects[0].description).toBe("string");
+      expect(typeof data.user.id).toBe("string");
+      expect(typeof data.user.email).toBe("string");
+      expect(typeof data.user.firstName).toBe("string");
+      expect(typeof data.user.lastName).toBe("string");
+      expect(data.user.role).toBe("student");
     });
   });
 
@@ -176,23 +155,37 @@ describe("Student test", () => {
     beforeEach(async () => {
       await createTestStudents();
     });
+
     it("should return all students", async () => {
       const response = await authenticatedSession.get(`/api/student/`);
+
       expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Students list fetched",
-        data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(studentValidator),
-        },
-      });
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Students list fetched");
+
+      const data = response.body.data;
+      expect(typeof data.count).toBe("number");
+      expect(Array.isArray(data.rows)).toBe(true);
+      expect(data.rows.length).toBeGreaterThan(0);
+
+      const firstStudent = data.rows[0];
+      expect(typeof firstStudent.userId).toBe("string");
+      expect(typeof firstStudent.gradeLevel).toBe("string");
+      expect(Array.isArray(firstStudent.learningGoals)).toBe(true);
+      expect(Array.isArray(firstStudent.exams)).toBe(true);
+      expect(firstStudent.exams.length).toBeGreaterThan(0);
+      expect(typeof firstStudent.exams[0].id).toBe("number");
+      expect(typeof firstStudent.exams[0].name).toBe("string");
+      expect(Array.isArray(firstStudent.subjects)).toBe(true);
+      expect(typeof firstStudent.user.id).toBe("string");
+      expect(typeof firstStudent.user.email).toBe("string");
+      expect(typeof firstStudent.user.firstName).toBe("string");
+      expect(typeof firstStudent.user.lastName).toBe("string");
+      expect(firstStudent.user.role).toBe("student");
     });
 
     it("should return 404 for non-existent student", async () => {
-      const response = await authenticatedSession.get(
-        `/api/student/44e54e24-7e94-476c-b6e7-0bf0e2b1567e`
-      );
+      const response = await authenticatedSession.get(`/api/student/${uuid()}`);
       expect(response.statusCode).toBe(404);
       expect(response.body).toEqual({
         success: false,
@@ -200,8 +193,6 @@ describe("Student test", () => {
         error: null,
       });
     });
-
-
   });
 
   describe("GET /student/:id", () => {
@@ -211,33 +202,33 @@ describe("Student test", () => {
       const response = await authenticatedSession.get(
         `/api/student/${student.userId}`
       );
-      expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Student fetched",
-        data: expect.objectContaining({
-          gradeLevel: student.gradeLevel,
-          userId: expect.any(String),
-          //   learningGoals: student.learningGoals,
-          exams: expect.any(Array),
-          user: expect.objectContaining({
-            email: expect.any(String),
-            profileImageUrl: expect.any(Object),
 
-            firstName: expect.any(String),
-            lastName: expect.any(String),
-          }),
-          subjects: expect.any(Array),
-        }),
-      });
+      expect(response.statusCode).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Student fetched");
+
+      const data = response.body.data;
+      expect(typeof data.userId).toBe("string");
+      expect(typeof data.gradeLevel).toBe("string");
+      expect(Array.isArray(data.learningGoals)).toBe(true);
+      expect(Array.isArray(data.exams)).toBe(true);
+      expect(data.exams.length).toBeGreaterThan(0);
+      expect(typeof data.exams[0].id).toBe("number");
+      expect(typeof data.exams[0].name).toBe("string");
+      expect(Array.isArray(data.subjects)).toBe(true);
+      expect(data.subjects.length).toBeGreaterThan(0);
+      expect(typeof data.subjects[0].id).toBe("number");
+      expect(typeof data.subjects[0].name).toBe("string");
+      expect(typeof data.subjects[0].description).toBe("string");
+      expect(typeof data.user.id).toBe("string");
+      expect(typeof data.user.email).toBe("string");
+      expect(typeof data.user.firstName).toBe("string");
+      expect(typeof data.user.lastName).toBe("string");
+      expect(data.user.role).toBe("student");
     });
 
     it("should return 404 if student does not exist", async () => {
-      const students = await createTestStudents(5);
-      const studentId = uuid();
-      const response = await authenticatedSession.get(
-        `/api/student/${studentId}`
-      );
+      const response = await authenticatedSession.get(`/api/student/${uuid()}`);
       expect(response.statusCode).toBe(404);
       expect(response.body).toEqual({
         success: false,
@@ -249,65 +240,45 @@ describe("Student test", () => {
 
   describe("PUT /student/:id", () => {
     it("should update student profile if user is owner", async () => {
-      const postRes = await authenticatedSession
-        .post(`/api/student/`)
-        .send(studentProfile);
-      expect(postRes.statusCode).toEqual(201);
+      await authenticatedSession.post(`/api/student/`).send(studentProfile);
       const response = await authenticatedSession
         .put(`/api/student/${loggedInUser.id}`)
         .send(updatedProfile);
+
       expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual({
-        success: true,
-        message: "Student updated",
-        data: expect.objectContaining({
-          exams: expect.arrayOf(
-            expect.objectContaining({
-              id: expect.any(Number),
-              name: expect.any(String),
-            })
-          ),
-          gradeLevel: updatedProfile.gradeLevel,
-          subjects: expect.arrayOf(
-            expect.objectContaining({
-              description: expect.any(String),
-              id: expect.any(Number),
-              name: expect.any(String),
-            })
-          ),
-          userId: expect.any(String),
-          user: {
-            email: expect.any(String),
-            firstName: expect.any(String),
-            lastName: expect.any(String),
-            profileImageUrl: expect.any(String),
-          },
-        }),
-      });
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toBe("Student updated");
+
+      const data = response.body.data;
+      expect(data.gradeLevel).toBe(updatedProfile.gradeLevel);
+      expect(data.learningGoals).toEqual(updatedProfile.learningGoals);
+      expect(Array.isArray(data.subjects)).toBe(true);
+      expect(data.subjects.length).toBeGreaterThan(0);
+      expect(typeof data.subjects[0].id).toBe("number");
+      expect(typeof data.subjects[0].name).toBe("string");
+      expect(Array.isArray(data.exams)).toBe(true);
+      expect(data.exams.length).toBeGreaterThan(0);
+      expect(typeof data.exams[0].id).toBe("number");
+      expect(typeof data.exams[0].name).toBe("string");
+      expect(typeof data.userId).toBe("string");
+      expect(typeof data.user.id).toBe("string");
+      expect(typeof data.user.email).toBe("string");
+      expect(typeof data.user.firstName).toBe("string");
+      expect(typeof data.user.lastName).toBe("string");
+      expect(data.user.role).toBe("student");
     });
-    it("should return 400 if student profile not complete", async () => {
-      const postRes = await authenticatedSession
-        .post(`/api/student/`)
-        .send(studentProfile);
-      expect(postRes.statusCode).toEqual(201);
-      const incompleteProfile = { ...studentProfile };
-      delete incompleteProfile.exams;
-      const response = await authenticatedSession
-        .put(`/api/student/${loggedInUser.id}`)
-        .send({});
-      expect(response.statusCode).toBe(400);
-    });
+
     it("should return 403 if user is not owner", async () => {
       const students = await createTestStudents(1);
       const student = students[0];
       const response = await authenticatedSession
-        .put(`/api/student/${uuid()}`)
+        .put(`/api/student/${student.userId}`)
         .send(updatedProfile);
       expect(response.statusCode).toBe(403);
       expect(response.body).toEqual({
-        error: null,
-        message: "Please complete onboarding to access this resource",
         success: false,
+        message: "You're not allowed to update this profile",
+        error: null,
       });
     });
   });

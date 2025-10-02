@@ -15,17 +15,16 @@ module.exports = () => {
         allowNull: true,
       },
       learningGoals: {
-        type: DataTypes.TEXT,
+        type: DataTypes.ARRAY(DataTypes.TEXT),
         allowNull: false,
       },
     },
     {
       tableName: "student_profiles",
       underscored: true,
-      paranoid: true,
       defaultScope: {
         attributes: {
-          exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+          exclude: ["createdAt", "updatedAt"],
         },
       },
     }
@@ -54,9 +53,14 @@ module.exports = () => {
         },
       ],
       attributes: {
-        exclude: ["learningGoals", "createdAt", "deletedAt", "updatedAt"],
+        exclude: ["createdAt", "updatedAt"],
       },
     });
+    Student.belongsToMany(models.Subject, {
+      through: "student_subjects",
+      as: "subjects",
+    });
+
     Student.belongsToMany(models.Exam, {
       through: "student_exams",
       // foreignKey: "studentId",

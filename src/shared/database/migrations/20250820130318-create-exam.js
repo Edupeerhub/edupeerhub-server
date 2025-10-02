@@ -1,8 +1,5 @@
 "use strict";
 
-const { toDefaultValue } = require("sequelize/lib/utils");
-const sequelize = require("..");
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -20,7 +17,7 @@ module.exports = {
       description: {
         type: Sequelize.TEXT,
       },
-      isActive: {
+      is_active: {
         type: Sequelize.BOOLEAN,
         defaultValue: true,
         allowNull: false,

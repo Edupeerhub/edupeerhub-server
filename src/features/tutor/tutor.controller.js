@@ -4,6 +4,9 @@ const parseDataWithMeta = require("@src/shared/utils/meta");
 
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
+const trackEvent = require("../events/events.service");
+const eventTypes = require("../events/eventTypes");
+const { addStreamUser } = require("../auth/auth.service");
 exports.getTutors = async (req, res) => {
   //params
   const page = req.query.page ?? 1;
@@ -48,7 +51,22 @@ exports.createTutor = async (req, res) => {
     userId: req.user.id,
   });
 
-  sendResponse(res, 201, "created successfully", newTutor);
+  await trackEvent(eventTypes.USER_ONBOARDED, {
+    userId: newTutor.userId,
+    email: newTutor.user.email,
+    role: newTutor.user.role,
+    fullName: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
+  });
+
+  await addStreamUser({
+    id: newTutor.userId,
+    email: newTutor.user.email,
+    role: newTutor.user.role,
+    firstName: newTutor.user.firstName,
+    lastName: newTutor.user.lastName,
+  });
+
+  sendResponse(res, 201, "Onboarding successful", newTutor);
 };
 
 exports.updateTutor = async (req, res) => {
@@ -56,38 +74,27 @@ exports.updateTutor = async (req, res) => {
   const tutorProfile = req.body;
 
   if (tutorId !== req.user.id) {
-    throw new ApiError("Unauthorized", 403, null);
+    throw new ApiError("You're not allowed to update this profile", 403);
   }
   const updatedTutorProfile = await tutorService.updateTutorProfile({
     id: tutorId,
     tutorProfile,
   });
 
+  await addStreamUser({
+    id: updatedTutorProfile.userId,
+    email: updatedTutorProfile.user.email,
+    role: updatedTutorProfile.user.role,
+    firstName: updatedTutorProfile.user.firstName,
+    lastName: updatedTutorProfile.user.lastName,
+  });
   sendResponse(res, 200, "success", updatedTutorProfile);
-};
-
-exports.deleteTutor = async (req, res) => {
-  const tutorId = req.params.id;
-
-  if (
-    tutorId !== req.user.id ||
-    req.user.role === "admin" ||
-    req.user.role === "superAdmin"
-  ) {
-    throw new ApiError("Unauthorized", 403, null);
-  }
-  const deleteCount = await tutorService.deleteTutorProfile(tutorId);
-
-  if (deleteCount === 0) {
-    throw new ApiError("Profile not found", 404);
-  }
-  sendResponse(res, 200, "success", deleteCount);
 };
 
 exports.getTutorRecommendations = async (req, res) => {
   const userId = req.user.id;
 
-  const page= req.query.page ?? 1;
+  const page = req.query.page ?? 1;
   const limit = req.query.limit ?? 10;
   const tutorRecommendations = await tutorService.getTutorRecommendations({
     userId,
@@ -103,11 +110,3 @@ exports.getTutorRecommendations = async (req, res) => {
 
   sendResponse(res, 200, "success", json);
 };
-
-exports.getTutorSchedule = async (req, res) => {};
-
-exports.getTutorAvailability = async (req, res) => {};
-
-exports.updateAvailability = async (req, res) => {};
-
-exports.deleteAvailability = async (req, res) => {};

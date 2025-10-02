@@ -8,7 +8,7 @@ const { User, Tutor, Subject, Student } = require("@models");
 const session = require("supertest-session");
 const { test } = require("@src/shared/config/db.config");
 const {
-  createVerifiedUser,
+  createUser,
   userObject: user,
   uuid,
 } = require("@src/shared/tests/utils");
@@ -50,50 +50,55 @@ async function createTestSubjects() {
     { returning: true }
   );
 }
+
 async function createTestStudents(count = 5) {
   console.log("Creating test students");
+
   // Create users
   const users = await User.bulkCreate(
     Array.from({ length: count }).map((_, i) => ({
       email: `student${i}@test.com`,
       firstName: `Student${i}`,
       lastName: `Test${i}`,
-      passwordHash: "password123", // Will be hashed by hook
+      passwordHash: "password123", // hashed via hooks
       role: "student",
       profileImageUrl: "randomAvatar",
       isVerified: true,
     })),
     { returning: true }
   );
-  // Create tutors linked to users
+
+  // Create student profiles
   const students = await Student.bulkCreate(
     users.map((user, i) => ({
       userId: user.id,
       gradeLevel: `Grade ${i + 1}`,
-      learningGoals: `Learning goals for student ${i}`,
+      learningGoals: [`Learning goals for student ${i}`], // ✅ array
     })),
     { returning: true }
   );
 
-  await students.map(async (student, i) => {
-    const numSubjectsForTutor = i + 1;
-    const startIndex = i * numSubjectsForTutor;
-    const endIndex = startIndex + numSubjectsForTutor;
-    const slice = subjects.slice(startIndex, endIndex);
-    return await student.setSubjects(slice);
-  });
+  // Link subjects properly
+  await Promise.all(
+    students.map(async (student, i) => {
+      const numSubjects = Math.min(subjects.length, i + 1);
+      const assignedSubjects = subjects.slice(0, numSubjects);
+      await student.setSubjects(assignedSubjects);
+    })
+  );
 
   return students;
 }
+
 async function createTestTutors(count = 5) {
   console.log("Creating test tutors");
-  // Create users
+
   const users = await User.bulkCreate(
     Array.from({ length: count }).map((_, i) => ({
       email: `tutor${i}@test.com`,
       firstName: `Tutor${i}`,
       lastName: `Test${i}`,
-      passwordHash: "password123", // Will be hashed by hook
+      passwordHash: "password123",
       role: "tutor",
       profileImageUrl: "randomAvatar",
       isVerified: true,
@@ -101,27 +106,26 @@ async function createTestTutors(count = 5) {
     { returning: true }
   );
 
-  // Create tutors linked to users
   const tutors = await Tutor.bulkCreate(
     users.map((user, i) => ({
       userId: user.id,
       bio: `Bio for tutor ${i}`,
       rating: Number(`${i}.${i}`),
       education: `Education ${i}`,
-      timezone: "UTC",
+      timezone: "UTC+0",
       approvalStatus: i % 2 === 0 ? "approved" : "pending",
       profileVisibility: i % 2 === 0 ? "active" : "hidden",
     })),
     { returning: true }
   );
 
-  await tutors.map(async (tutor, i) => {
-    const numSubjectsForTutor = i + 1;
-    const startIndex = i * numSubjectsForTutor;
-    const endIndex = startIndex + numSubjectsForTutor;
-    const slice = subjects.slice(startIndex, endIndex);
-    return await tutor.setSubjects(slice);
-  });
+  await Promise.all(
+    tutors.map(async (tutor, i) => {
+      const numSubjects = Math.min(subjects.length, i + 1);
+      const assignedSubjects = subjects.slice(0, numSubjects);
+      await tutor.setSubjects(assignedSubjects);
+    })
+  );
 
   return tutors;
 }
@@ -130,7 +134,7 @@ const tutor = {
   bio: "I am a tutor",
   education: "BSc Early Child Education",
   timezone: "UTC",
-  subjects: [],
+  subjects: [1],
 };
 const updatedProfile = {
   bio: "I am the best tutor",
@@ -138,12 +142,13 @@ const updatedProfile = {
   approvalStatus: "approved",
   profileVisibility: "active",
   education: "BSc Early Child Education",
-  timezone: "UTC",
-  subjects: [],
+  timezone: "UTC+2",
+  subjects: [1, 2, 3],
 };
 
 const tutorValidator = {
   // profileVisibility: "hidden",
+  userId: expect.any(String),
   bio: expect.any(String),
   education: expect.any(String),
   timezone: expect.any(String),
@@ -176,7 +181,7 @@ describe("Tutor test", () => {
     subjects = await createTestSubjects();
 
     testSession = session(app);
-    loggedInUser = await createVerifiedUser();
+    loggedInUser = await createUser({});
     await testSession
       .post("/api/auth/login")
       .send({
@@ -205,7 +210,7 @@ describe("Tutor test", () => {
       expect(response.body.data.subjects.length).toBe(tutor.subjects.length);
       expect(response.body).toEqual({
         success: true,
-        message: "created successfully",
+        message: "Onboarding successful",
         data: tutorValidator,
       });
     });
@@ -233,6 +238,34 @@ describe("Tutor test", () => {
       });
 
       console.log(response.body.data.rows);
+    });
+
+    it("should return 404 for non-existent tutor", async () => {
+      const response = await authenticatedSession.get(
+        `/api/tutor/44e54e24-7e94-476c-b6e7-0bf0e2b1567e`
+      );
+      expect(response.statusCode).toBe(404);
+      expect(response.body.success).toBe(false);
+    });
+
+    it("should return tutor for subjects", async () => {
+      const response = await authenticatedSession.get(
+        `/api/tutor/?subjects=English,Mathematics`
+      );
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.data.count).toBeGreaterThan(0);
+      expect(response.body.data.rows).toEqual(
+        expect.arrayContaining([expect.objectContaining(tutorValidator)])
+      );
+      expect(response.body).toEqual({
+        success: true,
+        message: "Tutors retrieved successfully",
+        data: {
+          count: expect.any(Number),
+          rows: expect.arrayOf(tutorValidator),
+        },
+      });
     });
   });
 
@@ -282,6 +315,9 @@ describe("Tutor test", () => {
         .put(`/api/tutor/${loggedInUser.id}`)
         .send(updatedProfile);
       expect(response.statusCode).toBe(200);
+      expect(response.body.data.subjects.length).toBe(
+        updatedProfile.subjects.length
+      );
       expect(response.body).toEqual({
         success: true,
         message: "success",
@@ -291,9 +327,15 @@ describe("Tutor test", () => {
           // createdAt: expect.any(String),
           education: updatedProfile.education,
           // profileVisibility: updatedProfile.profileVisibility,
-          rating: updatedProfile.rating,
+          rating: 0, // shouldn't be able to update rating
           // rejectionReason: null,
-          subjects: [],
+          subjects: expect.arrayOf(
+            expect.objectContaining({
+              description: expect.any(String),
+              id: expect.any(Number),
+              name: expect.any(String),
+            })
+          ),
           timezone: updatedProfile.timezone,
           // updatedAt: expect.any(String),
           // userId: loggedInUser.id,
@@ -333,7 +375,7 @@ describe("Tutor test", () => {
       expect(response.body).toEqual(
         expect.objectContaining({
           success: false,
-          message: "Unauthorized",
+          message: "You're not allowed to update this profile",
           error: null,
         })
       );
@@ -346,14 +388,18 @@ describe("Tutor test", () => {
       const student = await Student.create({
         userId: loggedInUser.id,
         gradeLevel: `Grade ${1}`,
-        learningGoals: `Learning goals for student ${1}`,
+        learningGoals: [`Learning goals for student ${1}`],
       });
       await student.addSubjects(subjects);
       const response = await authenticatedSession.get(
-        `/api/tutor/recommendations/`
+        `/api/tutor/recommendations`
       );
       expect(response.statusCode).toBe(200);
       expect(response.body.data.meta.count).toBeLessThan(5);
+      expect(response.body.data.count).toBeGreaterThan(0);
+      expect(response.body.data.rows).toEqual(
+        expect.arrayContaining([expect.objectContaining(tutorValidator)])
+      );
       expect(response.body).toEqual({
         success: true,
         message: "success",

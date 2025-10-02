@@ -7,8 +7,7 @@ module.exports = () => {
     {
       userId: {
         type: DataTypes.UUID,
-        primaryKey: true,
-        field: "user_id",
+        primaryKey: true,        
       },
       bio: {
         type: DataTypes.TEXT,
@@ -44,8 +43,6 @@ module.exports = () => {
     {
       tableName: "tutor_profiles",
       underscored: true,
-      paranoid: true,
-
       defaultScope: {
         include: [
           {
@@ -73,6 +70,11 @@ module.exports = () => {
       as: "subjects",
     });
 
+    Tutor.hasMany(models.Booking, {
+      foreignKey: "tutorId",
+      as: "bookings",
+    });
+
     Tutor.addScope("join", {
       include: [
         {
@@ -85,7 +87,7 @@ module.exports = () => {
           through: { attributes: [] },
         },
       ],
-      attributes: ["bio", "rating", "education", "timezone"],
+      attributes: ["userId", "bio", "rating", "education", "timezone"],
     });
   };
 
