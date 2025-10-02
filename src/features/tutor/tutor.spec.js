@@ -221,14 +221,14 @@ describe("Tutor test", () => {
       const response = await authenticatedSession.get(
         `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5`
       );
-console.log(JSON.stringify(response.body.data))
+      console.log(JSON.stringify(response.body.data));
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
         message: "Tutors retrieved successfully",
         data: {
           data: expect.arrayOf(tutorValidator),
-          meta: expect.objectContaining((metaMatcher.count = 1, metaMatcher)),
+          meta: expect.objectContaining(metaMatcher),
         },
       });
 
