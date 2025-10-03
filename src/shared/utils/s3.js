@@ -10,10 +10,11 @@ const ApiError = require("./apiError");
 const isTests = process.env.NODE_ENV === "test";
 
 if (
-  (!isTests && !process.env.AWS_ACCESS_KEY_ID) ||
-  !process.env.AWS_SECRET_ACCESS_KEY ||
-  !process.env.S3_BUCKET_NAME ||
-  !process.env.AWS_REGION
+  !isTests &&
+  (!process.env.AWS_ACCESS_KEY_ID ||
+    !process.env.AWS_SECRET_ACCESS_KEY ||
+    !process.env.S3_BUCKET_NAME ||
+    !process.env.AWS_REGION)
 ) {
   throw new ApiError("Missing S3 environment variables");
 }
