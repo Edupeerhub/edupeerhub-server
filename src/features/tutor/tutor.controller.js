@@ -1,12 +1,13 @@
 const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
 const parseDataWithMeta = require("@src/shared/utils/meta");
-
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
+const { uploadFileToS3 } = require("@src/shared/utils/s3");
+
 exports.getTutors = async (req, res) => {
   //params
   const page = req.query.page ?? 1;
@@ -43,12 +44,24 @@ exports.createTutor = async (req, res) => {
     rating: 0.0,
     approvalStatus: "pending",
     profileVisibility: "hidden",
-
     userId: req.user.id,
   };
+
+  const folder =
+    process.env.NODE_ENV === "development"
+      ? "tutor-documents-test"
+      : "tutor-documents";
+
+  let documentKey = null;
+  if (req.file) {
+    const { key } = await uploadFileToS3(req.file, folder);
+    documentKey = key;
+  }
+
   const newTutor = await tutorService.createTutor({
     profile,
     userId: req.user.id,
+    documentKey,
   });
 
   await trackEvent(eventTypes.USER_ONBOARDED, {

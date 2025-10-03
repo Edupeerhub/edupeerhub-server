@@ -1,21 +1,22 @@
 // Common header (brand-aligned)
-const emailHeader = (title, color = "#E7F6FB") => `
-  <div style="background: ${color}; padding: 20px; text-align: center;">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-      <img src="https://edupeerhub.com/images/edupeerhub-logo.svg" 
-           alt="Edupeerhub Logo" 
-           style="height: 40px;" />
-      <span style="font-size: 24px; font-weight: bold; 
-                   font-family: Poppins, Arial, sans-serif; 
-                   color: #1B8FF1;">
-        edupeerhub
-      </span>
-    </div>
-    <h1 style="color: #2C3A47; margin: 10px 0 0; 
-               font-size: 20px; font-family: Poppins, Arial, sans-serif;">
-      ${title}
-    </h1>
-  </div>
+const emailHeader = (color = "#E7F6FB") => `
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="${color}" style="border-radius: 5px 5px 0 0;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table border="0" cellspacing="0" cellpadding="0" align="center">
+          <tr>
+            <td align="center" valign="middle" style="padding-right: 10px;">
+              <!-- Replace with actual logo image -->
+              <img src="https://staging.edupeerhub.com/images/logo.png" alt="Logo" width="40" height="40" style="display:block;" />
+            </td>
+            <td align="center" valign="middle" style="font-family: Poppins, Arial, sans-serif; font-size: 30px; font-weight: bold; color: #1B8FF1; text-decoration: none;">
+              edupeerhub
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 `;
 
 // Common footer
@@ -37,9 +38,13 @@ const emailWrapper = (title, content, headerColor) => `
   <title>${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body style="font-family: Roboto, Arial, sans-serif; line-height: 1.6; color: #2C3A47; max-width: 600px; margin: 0 auto; padding: 20px; background: #E9EEF3;">
-  ${emailHeader(title, headerColor)}
+<body style="font-family: Roboto, Arial, sans-serif; line-height: 1.6; color: #2C3A47; max-width: 600px; margin: 0 auto; padding: 10px; background: #E9EEF3;">
+  ${emailHeader(headerColor)}
   <div style="background-color: white; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <h1 style="color: #2C3A47;
+               font-size: 24px; font-family: Poppins, Arial, sans-serif; text-align: center;">
+      ${title}
+    </h1>
     ${content}
   </div>
   ${emailFooter}
@@ -154,7 +159,7 @@ exports.TUTOR_APPROVAL_TEMPLATE = (name) =>
         <p style="font-family: Roboto, Arial, sans-serif;">Congratulations! 🎉 Your tutor application has been reviewed and <strong>approved</strong>.</p>
         <p style="font-family: Roboto, Arial, sans-serif;">You can now log in to your account and start connecting with students.</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://edupeerhub.com/dashboard" style="background-color: #4CA1F0; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: Poppins, Arial, sans-serif; display: inline-block;">Go to Dashboard</a>
+          <a href="https://edupeerhub.com/tutor" style="background-color: #4CA1F0; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: Poppins, Arial, sans-serif; display: inline-block;">Go to Dashboard</a>
         </div>
         <p style="font-family: Roboto, Arial, sans-serif;">We're excited to have you on board and can't wait to see the impact you'll make!</p>
         <p style="font-family: Roboto, Arial, sans-serif;">Best regards,<br>Edupeerhub Team</p>
@@ -174,8 +179,7 @@ exports.TUTOR_REJECTION_TEMPLATE = (name, reason) =>
           <p style="font-family: Roboto, Arial, sans-serif;">You're welcome to update your application and reapply in the future.</p>
           <p style="font-family: Roboto, Arial, sans-serif;">Thank you for your interest and understanding.</p>
           <p style="font-family: Roboto, Arial, sans-serif;">Best regards,<br>Edupeerhub Team</p>
-        `,
-    "#e53935" // red rejection header
+        `
   );
 
 exports.CALL_REMINDER_TEMPLATE = (role, url, timeText) =>
@@ -189,7 +193,12 @@ exports.CALL_REMINDER_TEMPLATE = (role, url, timeText) =>
 `
   );
 
-exports.BOOKING_CREATED_TEMPLATE = (tutorName, studentName, scheduledStart) =>
+exports.BOOKING_CREATED_TEMPLATE = (
+  tutorName,
+  studentName,
+  scheduledStart,
+  bookingURL
+) =>
   emailWrapper(
     "New Booking Request",
     `
@@ -198,6 +207,11 @@ exports.BOOKING_CREATED_TEMPLATE = (tutorName, studentName, scheduledStart) =>
         <p style="font-family: Roboto, Arial, sans-serif;">The requested session is scheduled for:</p>
         <p style="font-family: Roboto, Arial, sans-serif;"><strong>${new Date(scheduledStart).toLocaleString()}</strong></p>
         <p style="font-family: Roboto, Arial, sans-serif;">This booking is <strong>pending your confirmation</strong>. Please review and confirm in your dashboard.</p>
+                <div style="text-align: center; margin: 30px 0;">
+            <a href="${bookingURL}" style="background-color: #4CA1F0; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: Poppins, Arial, sans-serif; display: inline-block;">
+                Review & Confirm Booking
+            </a>
+        </div>
         <p style="font-family: Roboto, Arial, sans-serif;">Best regards,<br/>Edupeerhub Team</p>
       `
   );
