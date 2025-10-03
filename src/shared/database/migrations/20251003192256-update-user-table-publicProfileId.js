@@ -3,14 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.addColumn("tutor_profiles", "documentKey", {
+    await queryInterface.addColumn("users", "profile_image_public_id", {
       type: Sequelize.STRING,
       allowNull: true,
-      comment: "S3 object key for uploaded document",
+      comment: "Cloudinary public_id for tutor profile picture",
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeColumn("tutor_profiles", "documentKey");
+    await queryInterface.removeColumn("users", "profile_image_public_id");
   },
 };

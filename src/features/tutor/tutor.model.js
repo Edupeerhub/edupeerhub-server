@@ -28,7 +28,7 @@ module.exports = () => {
       },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
-        defaultValue: "hidden",
+        defaultValue: "active",
         allowNull: false,
       },
       education: {

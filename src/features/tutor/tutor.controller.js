@@ -45,9 +45,14 @@ exports.createTutor = async (req, res) => {
     userId: req.user.id,
   };
 
+  const folder =
+    process.env.NODE_ENV === "development"
+      ? "tutor-documents-test"
+      : "tutor-documents";
+
   let documentKey = null;
   if (req.file) {
-    const { key } = await uploadFileToS3(req.file, "tutor-documents");
+    const { key } = await uploadFileToS3(req.file, folder);
     documentKey = key;
   }
 

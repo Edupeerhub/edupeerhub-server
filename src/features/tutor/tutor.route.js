@@ -12,7 +12,7 @@ const {
   updateProfileSchema,
   createProfileSchema,
 } = require("./tutor.middleware");
-const { uploadSingle } = require("@src/shared/middlewares/upload.middleware");
+const { uploadSingleS3 } = require("@src/shared/middlewares/upload.middleware");
 const normalizeMultipartFields = require("@src/shared/middlewares/normalizeMultipartFields");
 
 const router = express.Router();
@@ -25,7 +25,7 @@ router.get("/", searchValidator, tutorController.getTutors);
 router.get("/:id", tutorController.getTutor);
 router.post(
   "/",
-  uploadSingle,
+  uploadSingleS3,
   normalizeMultipartFields,
   validate(createProfileSchema),
   tutorController.createTutor
