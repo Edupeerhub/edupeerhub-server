@@ -1,20 +1,23 @@
 const ApiError = require("@utils/apiError");
-const { where, Op } = require("sequelize");
+const { Op } = require("sequelize");
 const { Subject, User, Tutor, Student } = require("@models");
-const sequelize = require("@src/shared/database");
-const { required } = require("joi");
 
-exports.createTutor = async ({ profile, userId }) => {
+exports.createTutor = async ({ profile, userId, documentKey }) => {
   const existing = await Tutor.findByPk(userId);
   if (existing) {
     throw new ApiError("Tutor profile already exists", 409);
   }
-  const newTutor = await Tutor.create(profile);
+
+  const newTutor = await Tutor.create({
+    ...profile,
+    documentKey: documentKey || null,
+  });
 
   await addSubjectsToProfile({
     profile: newTutor,
     subjectIds: profile.subjects,
   });
+
   await User.update(
     { role: "tutor", isOnboarded: true },
     { where: { id: userId } }
@@ -91,6 +94,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
 
   return recommendedTutors;
 };
+
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   const [count, [newTutorProfile]] = await Tutor.update(tutorProfile, {
     where: { user_id: id },
@@ -111,10 +115,6 @@ exports.updateTutorProfile = async ({ id, tutorProfile }) => {
   });
   return await this.getTutor(id);
 };
-
-exports.getTutorAvailability = async ({ id, startTime, endTime }) => {};
-
-exports.updateTutorAvailability = async ({ id, availability }) => {};
 
 async function addSubjectsToProfile({ profile, subjectIds }) {
   if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
