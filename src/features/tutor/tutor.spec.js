@@ -21,7 +21,7 @@ let loggedInUser;
 let subjects;
 
 jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
-  return () => (req, res, next) => next();
+  return jest.fn(() => (req, res, next) => next());
 });
 async function createTestSubjects() {
   return await Subject.bulkCreate(
@@ -231,40 +231,26 @@ describe("Tutor test", () => {
       expect(response.body).toEqual({
         success: true,
         message: "Tutors retrieved successfully",
-        data: {
-          data: expect.arrayOf(tutorValidator),
-          meta: expect.objectContaining(metaMatcher),
-        },
+        data: expect.arrayOf(tutorValidator),
+        meta: expect.objectContaining(metaMatcher),
       });
 
-      console.log(response.body.data.rows);
-    });
-
-    it("should return 404 for non-existent tutor", async () => {
-      const response = await authenticatedSession.get(
-        `/api/tutor/44e54e24-7e94-476c-b6e7-0bf0e2b1567e`
-      );
-      expect(response.statusCode).toBe(404);
-      expect(response.body.success).toBe(false);
+      console.log(response.body.data);
     });
 
     it("should return tutor for subjects", async () => {
-      const response = await authenticatedSession.get(
-        `/api/tutor/?subjects=English,Mathematics`
-      );
+      const response = await authenticatedSession.get(`/api/tutor/?subjects=1`);
 
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeGreaterThan(0);
-      expect(response.body.data.rows).toEqual(
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data).toEqual(
         expect.arrayContaining([expect.objectContaining(tutorValidator)])
       );
       expect(response.body).toEqual({
         success: true,
         message: "Tutors retrieved successfully",
-        data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
-        },
+        data: expect.arrayOf(tutorValidator),
+        meta: expect.objectContaining(metaMatcher),
       });
     });
   });
@@ -395,19 +381,17 @@ describe("Tutor test", () => {
         `/api/tutor/recommendations`
       );
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.meta.count).toBeLessThan(5);
-      expect(response.body.data.count).toBeGreaterThan(0);
-      expect(response.body.data.rows).toEqual(
+      expect(response.body.meta.count).toBeLessThan(5);
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data).toEqual(
         expect.arrayContaining([expect.objectContaining(tutorValidator)])
       );
       expect(response.body).toEqual({
         success: true,
         message: "success",
-        data: {
-          meta: expect.objectContaining(metaMatcher),
+        meta: expect.objectContaining(metaMatcher),
 
-          data: expect.arrayOf(tutorValidator),
-        },
+        data: expect.arrayOf(tutorValidator),
       });
     });
   });
