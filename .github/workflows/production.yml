@@ -266,4 +266,3 @@ jobs:
               curl -fsS "http://localhost:${PORT_VALUE}/api/health" || true
             fi
             echo "Deployment completed: ${SERVICE_NAME} running on port ${PORT_VALUE}"
-
