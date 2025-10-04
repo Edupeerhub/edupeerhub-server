@@ -7,7 +7,7 @@ module.exports = () => {
     {
       userId: {
         type: DataTypes.UUID,
-        primaryKey: true,        
+        primaryKey: true,
       },
       bio: {
         type: DataTypes.TEXT,
@@ -28,7 +28,7 @@ module.exports = () => {
       },
       profileVisibility: {
         type: DataTypes.ENUM("active", "hidden"),
-        defaultValue: "hidden",
+        defaultValue: "active",
         allowNull: false,
       },
       education: {
@@ -39,11 +39,19 @@ module.exports = () => {
         type: DataTypes.STRING,
         allowNull: true,
       },
+      // file storage fields
+      documentKey: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       tableName: "tutor_profiles",
       underscored: true,
       defaultScope: {
+        attributes: {
+          exclude: ["documentKey", "createdAt", "updatedAt"],
+        },
         include: [
           {
             model: sequelize.models.Subject,

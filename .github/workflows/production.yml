@@ -178,6 +178,17 @@ jobs:
             STREAM_API_KEY=${{ secrets.PROD_STREAM_API_KEY }}
             STREAM_API_SECRET=${{ secrets.PROD_STREAM_API_SECRET }}
 
+             # AWS S3
+            AWS_REGION=${{ secrets.AWS_REGION }}
+            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+            # Cloudinary
+            CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
+            CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
+            CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
+
             # Mailtrap
             MAILTRAP_TOKEN=${{ secrets.MAILTRAP_TOKEN }}
             MAILTRAP_ENDPOINT=${{ secrets.MAILTRAP_ENDPOINT }}

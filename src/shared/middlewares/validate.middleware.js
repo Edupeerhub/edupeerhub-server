@@ -23,10 +23,13 @@ const validate =
 
     if (error) {
       const formatted = error.details.map((d) => ({
-        field: d.context.label,
+        field: d.context?.label || d.path?.[0], // fallback to key name
         issue: d.message.replace(/"/g, ""),
-        ...(shouldIncludeValue(d.context.label) && { value: d.context?.value }),
+        ...(shouldIncludeValue(d.context?.label || d.path?.[0]) && {
+          value: d.context?.value,
+        }),
       }));
+
       return next(new ApiError("Validation error.", 400, formatted));
     }
 

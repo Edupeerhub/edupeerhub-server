@@ -10,6 +10,15 @@ const sendResponse = (
   message = "Success",
   data = null
 ) => {
+  if (data?.meta) {
+    // Special case for paginated responses
+    return res.status(statusCode).json({
+      success: true,
+      message,
+      ...data,
+    });
+  }
+
   return res.status(statusCode).json({
     success: true,
     message,

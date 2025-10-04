@@ -100,6 +100,7 @@ exports.verifyUserEmail = async (code) => {
       "id",
       "email",
       "firstName",
+      "lastName",
       "isVerified",
       "verificationToken",
       "verificationTokenExpiresAt",

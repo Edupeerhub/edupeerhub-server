@@ -1,29 +1,32 @@
 const sendResponse = require("@utils/sendResponse");
 const tutorService = require("./tutor.service");
-
+const parseDataWithMeta = require("@src/shared/utils/meta");
 const queryStringToList = require("@src/shared/utils/commaStringToList");
 const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
+const { uploadFileToS3 } = require("@src/shared/utils/s3");
+
 exports.getTutors = async (req, res) => {
   //params
-  const page = req.query?.page ?? 1;
-  const limit = req.query?.limit ?? 10;
+  const page = req.query.page ?? 1;
+  const limit = req.query.limit ?? 10;
 
   //filters
   const subjects = queryStringToList(req.query?.subjects);
-  const availability = queryStringToList(req.query?.availability);
-  const ratings = queryStringToList(req.query?.rating);
+  const ratings = queryStringToList(req.query?.ratings);
+  const name = req.query?.name;
 
   const tutors = await tutorService.getTutors({
     page: page,
     limit: limit,
     subjects,
-    availability,
+    name,
     ratings,
   });
-  sendResponse(res, 200, "Tutors retrieved successfully", tutors);
+  const json = parseDataWithMeta(tutors.rows, page, limit, tutors.count);
+  sendResponse(res, 200, "Tutors retrieved successfully", json);
 };
 
 exports.getTutor = async (req, res) => {
@@ -41,12 +44,24 @@ exports.createTutor = async (req, res) => {
     rating: 0.0,
     approvalStatus: "pending",
     profileVisibility: "hidden",
-
     userId: req.user.id,
   };
+
+  const folder =
+    process.env.NODE_ENV === "development"
+      ? "tutor-documents-test"
+      : "tutor-documents";
+
+  let documentKey = null;
+  if (req.file) {
+    const { key } = await uploadFileToS3(req.file, folder);
+    documentKey = key;
+  }
+
   const newTutor = await tutorService.createTutor({
     profile,
     userId: req.user.id,
+    documentKey,
   });
 
   await trackEvent(eventTypes.USER_ONBOARDED, {
@@ -92,12 +107,19 @@ exports.updateTutor = async (req, res) => {
 exports.getTutorRecommendations = async (req, res) => {
   const userId = req.user.id;
 
-  const { page, limit } = req.query;
+  const page = req.query.page ?? 1;
+  const limit = req.query.limit ?? 10;
   const tutorRecommendations = await tutorService.getTutorRecommendations({
     userId,
     page,
     limit,
   });
+  const json = parseDataWithMeta(
+    tutorRecommendations.rows,
+    page,
+    limit,
+    tutorRecommendations.count
+  );
 
-  sendResponse(res, 200, "success", tutorRecommendations);
+  sendResponse(res, 200, "success", json);
 };
