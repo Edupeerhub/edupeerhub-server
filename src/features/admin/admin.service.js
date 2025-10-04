@@ -1,4 +1,5 @@
 const { User, Tutor, Student, Admin } = require("@src/shared/database/models");
+const { getSignedFileUrl } = require("@src/shared/utils/s3");
 const ApiError = require("@utils/apiError");
 const { hashPassword, generateRandomAvatar } = require("@utils/authHelpers");
 
@@ -30,23 +31,29 @@ const STUDENT_INCLUDES = [
 // =====================
 
 exports.getUsers = async (query) => {
-  const { page = 1, limit = 10, sort_by = "createdAt", order = "desc" } = query;
+  const {
+    page = 1,
+    limit = 10,
+    sort_by = "createdAt",
+    order = "desc",
+    role,
+  } = query;
 
-  const tutorFlag = query.tutor === "true" || query.tutor === "";
-  const studentFlag = query.student === "true" || query.student === "";
+  const roleValue = role ? String(role).toLowerCase() : null;
+  const isTutor = roleValue === "tutor";
+  const isStudent = roleValue === "student";
 
   const filter = {};
   const offset = (Number(page) - 1) * Number(limit);
 
   // Role filtering
-  if (tutorFlag && !studentFlag) filter.role = "tutor";
-  if (studentFlag && !tutorFlag) filter.role = "student";
-
   const includes = [];
-  if (tutorFlag) {
+  if (isTutor) {
+    filter.role = "tutor";
     includes.push(...TUTOR_INCLUDES);
   }
-  if (studentFlag) {
+  if (isStudent) {
+    filter.role = "student";
     includes.push(...STUDENT_INCLUDES);
   }
 
@@ -65,11 +72,11 @@ exports.getUsers = async (query) => {
 
   return {
     users,
-    pagination: {
-      totalItems: totalUsers,
-      currentPage: page,
-      itemsPerPage: limit,
-      totalPages: totalPages,
+    meta: {
+      page: page,
+      count: totalUsers,
+      limit: limit,
+      total: totalPages,
     },
   };
 };
@@ -104,6 +111,26 @@ exports.getUser = async (id) => {
   return userData;
 };
 
+exports.getUserCounts = async () => {
+  const totalTutors = await User.count({
+    where: { role: "tutor" },
+  });
+
+  const totalStudents = await User.count({
+    where: { role: "student" },
+  });
+
+  const totalPendingTutors = await Tutor.count({
+    where: { approvalStatus: "pending" },
+  });
+
+  return {
+    totalTutors,
+    totalStudents,
+    totalPendingTutors,
+  };
+};
+
 exports.restoreUser = async (id) => {
   const user = await User.findByPk(id, { paranoid: false });
   if (user && user.deletedAt) {
@@ -131,8 +158,9 @@ exports.getAllPendingTutors = async () => {
   return pendingTutors;
 };
 
-exports.getTutor = async (id) => {
+exports.getTutor = async (id, includeSignedUrl = false) => {
   const tutor = await Tutor.findByPk(id, {
+    attributes: { include: ["documentKey"] },
     include: [
       {
         model: User,
@@ -142,11 +170,33 @@ exports.getTutor = async (id) => {
     ],
   });
 
-  return tutor;
+  if (!tutor) throw new ApiError("Tutor not found", 404);
+
+  const tutorJson = tutor.toJSON();
+
+  const { documentKey, ...safeTutorJson } = tutorJson;
+
+  if (includeSignedUrl && documentKey) {
+    safeTutorJson.documentUrl = await getSignedFileUrl(documentKey);
+  }
+
+  return safeTutorJson;
+};
+
+exports.getTutorDocument = async (userId) => {
+  const tutor = await Tutor.findOne({
+    where: { userId },
+    attributes: { include: ["documentKey"] },
+  });
+  if (!tutor?.documentKey)
+    throw new ApiError("Tutor document key not found", 404);
+
+  const signedUrl = await getSignedFileUrl(tutor.documentKey);
+  return { signedUrl };
 };
 
 exports.approveTutor = async (id) => {
-  const tutor = await exports.getTutor(id);
+  const tutor = await Tutor.findByPk(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "approved";
@@ -155,7 +205,7 @@ exports.approveTutor = async (id) => {
 };
 
 exports.rejectTutor = async (id, rejectionReason) => {
-  const tutor = await exports.getTutor(id);
+  const tutor = await Tutor.findByPk(id);
   if (!tutor) throw new ApiError("Tutor not found", 404);
 
   tutor.approvalStatus = "rejected";

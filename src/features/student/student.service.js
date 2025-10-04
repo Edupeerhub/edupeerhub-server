@@ -62,9 +62,6 @@ module.exports = {
     if (payload.learningGoals) {
       student.learningGoals = payload.learningGoals;
     }
-    if (typeof payload.isOnboarded === "boolean") {
-      student.isOnboarded = payload.isOnboarded;
-    }
 
     await student.save();
 

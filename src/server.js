@@ -27,7 +27,7 @@ const startServer = async () => {
     }
 
     if (NODE_ENV === "development") {
-      await sequelize.sync({ alter: true });
+      await sequelize.sync();
       logger.info("✅ Database synced (development only)");
     }
 

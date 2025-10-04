@@ -13,7 +13,7 @@ exports.getAllUsers = async (req, res, next) => {
   try {
     // use query params to get by tutor or students, just deleted, suspended, onboarded or all users
     const users = await adminService.getUsers(req.query);
-    sendResponse(res, 200, "All users fetched successfully", users);
+    sendResponse(res, 200, "Users fetched successfully", users);
   } catch (error) {
     next(error);
   }
@@ -37,6 +37,15 @@ exports.restoreUser = async (req, res, next) => {
   }
 };
 
+exports.getUserSummaryCounts = async (req, res, next) => {
+  try {
+    const counts = await adminService.getUserCounts();
+    sendResponse(res, 200, "User summary counts fetched successfully", counts);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // =====================
 // Pending Tutor Operations
 // =====================
@@ -52,10 +61,24 @@ exports.getPendingTutors = async (req, res, next) => {
 
 exports.getPendingTutorById = async (req, res, next) => {
   try {
-    const tutor = await adminService.getPendingTutor(req.params.id);
+    const includeSignedUrl = true;
+    const tutor = await adminService.getTutor(req.params.id, {
+      includeSignedUrl,
+    });
     sendResponse(res, 200, "Pending tutor fetched successfully", tutor);
   } catch (error) {
     next(error);
+  }
+};
+
+exports.getTutorDocument = async (req, res, next) => {
+  try {
+    const { signedUrl } = await adminService.getTutorDocument(req.params.id);
+    sendResponse(res, 200, "Tutor document fetched successfully", {
+      documentUrl: signedUrl,
+    });
+  } catch (err) {
+    next(err);
   }
 };
 

@@ -18,12 +18,9 @@ exports.createStudent = {
 exports.updateStudent = {
   params: Joi.object({ id: uuid.required().label("id") }),
   body: Joi.object({
-    gradeLevel: Joi.string(),
+    gradeLevel: Joi.string().optional().allow(""),
     learningGoals: Joi.array().items(Joi.string()),
     subjects: Joi.array().items(Joi.number()).label("subjects"),
     exams: Joi.array().items(Joi.number()),
-    accountStatus: Joi.string().valid("active", "inactive").messages({
-      "any.only": "accountStatus must be one of [active, inactive]",
-    }),
   }),
 };
