@@ -44,10 +44,14 @@ exports.canEditProfileValidator = async (req, res, next) => {
 
   sendResponse(res, 403, "Access denied - cannot modify resource");
 };
-//tutor search validator
-exports.searchValidator = async (req, res, next) => {
-  next();
-};
+
+exports.searchValidator = Joi.object({
+  page: Joi.number().default(1),
+  limit: Joi.number().default(10),
+  name: Joi.string(),
+  subjects: Joi.string().pattern(/^[0-9,]+$/),
+  ratings: Joi.string().pattern(/^[0-5,]+$/),
+});
 
 //tutor schedule search validator
 exports.scheduleSearchValidator = async (req, res, next) => {

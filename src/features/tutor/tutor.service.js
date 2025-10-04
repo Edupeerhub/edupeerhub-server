@@ -1,6 +1,9 @@
 const ApiError = require("@utils/apiError");
-const { Op } = require("sequelize");
+const { where, Op, literal } = require("sequelize");
 const { Subject, User, Tutor, Student } = require("@models");
+const sequelize = require("@src/shared/database");
+const { required } = require("joi");
+const parseDataWithMeta = require("@src/shared/utils/meta");
 
 exports.createTutor = async ({ profile, userId, documentKey }) => {
   const existing = await Tutor.findByPk(userId);
@@ -34,27 +37,81 @@ exports.getTutors = async ({
   approvalStatus = "approved",
   profileVisibility = "active",
   subjects,
-  availability,
+  name,
+  ratings,
   limit = 10,
   page = 1,
 }) => {
-  const subjectInclude = {
-    model: Subject,
-    as: "subjects",
+  const includes = [];
+  let where = {
+    approvalStatus,
+    profileVisibility,
   };
+
+  // Subjects
+  includes.push({
+    model: Subject.scope("join"),
+    as: "subjects",
+    through: { attributes: [] },
+  });
+
   if (subjects && subjects.length > 0) {
-    subjectInclude.query = {
-      [Op.in]: subjects,
+    where.userId = {
+      [Op.in]: sequelize.literal(`(
+        SELECT tutor_user_id
+        FROM tutor_subjects
+        WHERE subject_id IN (${subjects.map(Number).join(",")})
+      )`),
     };
   }
+
+  //Name
+  if (name) {
+    const searchWords = name.split(" ");
+
+    const conditions = searchWords.map((word) => ({
+      [Op.or]: [
+        { first_name: { [Op.iLike]: `%${word}%` } },
+        { last_name: { [Op.iLike]: `%${word}%` } },
+      ],
+    }));
+
+    const nameInclude = {
+      model: User.scope("join"),
+      as: "user",
+      where: conditions,
+    };
+    includes.push(nameInclude);
+  }
+
+  //Ratings
+  //   const where = {
+  //   status: 'active',
+  //   funding: 'funded',
+  // };
+
+  // await sequelize.query(sql`SELECT * FROM projects WHERE ${sql.where(where)}`);
+  if (ratings && ratings.length > 0) {
+    const ratingWhere = sequelize.where(
+      sequelize.fn("ROUND", sequelize.col("rating")),
+      {
+        [Op.in]: ratings,
+      }
+    );
+    where = {
+      [Op.and]: [
+        ...Object.entries(where).map(([key, value]) => ({ [key]: value })),
+        ratingWhere,
+      ],
+    };
+  }
+
   return await Tutor.scope("join").findAndCountAll({
-    where: {
-      approvalStatus,
-      profileVisibility,
-    },
-    include: [subjectInclude],
+    where: where,
+    include: includes,
     limit: limit,
     offset: (page - 1) * limit,
+    distinct: true,
   });
 };
 
@@ -78,6 +135,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
     ],
     limit: limit,
     offset: (page - 1) * limit,
+    distinct: true,
   });
 
   if (recommendedTutors.count === 0) {
@@ -89,6 +147,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
       include: [{ model: Subject, as: "subjects" }],
       limit: limit,
       offset: (page - 1) * limit,
+      distinct: true,
     });
   }
 

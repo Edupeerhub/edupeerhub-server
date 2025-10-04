@@ -20,8 +20,13 @@ const router = express.Router();
 router.use(protectRoute);
 router.use(requireVerifiedUser);
 
+// GET /api/tutors              // Browse tutors with filters
+router.get("/", validate(searchValidator, "query"), tutorController.getTutors);
+
+//GET tutor recommendations
+//TODO: requre tutor role for appropriate routes
+router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/recommendations", tutorController.getTutorRecommendations);
-router.get("/", searchValidator, tutorController.getTutors);
 router.get("/:id", tutorController.getTutor);
 router.post(
   "/",
