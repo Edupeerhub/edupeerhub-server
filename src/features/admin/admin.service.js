@@ -47,17 +47,13 @@ exports.getUsers = async (query) => {
   const offset = (Number(page) - 1) * Number(limit);
 
   // Role filtering
-  if (isTutor) {
-    filter.role = "tutor";
-  } else if (isStudent) {
-    filter.role = "student";
-  }
-
   const includes = [];
   if (isTutor) {
+    filter.role = "tutor";
     includes.push(...TUTOR_INCLUDES);
   }
   if (isStudent) {
+    filter.role = "student";
     includes.push(...STUDENT_INCLUDES);
   }
 
@@ -76,11 +72,11 @@ exports.getUsers = async (query) => {
 
   return {
     users,
-    pagination: {
-      totalItems: totalUsers,
-      currentPage: page,
-      itemsPerPage: limit,
-      totalPages: totalPages,
+    meta: {
+      page: page,
+      count: totalUsers,
+      limit: limit,
+      total: totalPages,
     },
   };
 };
@@ -192,7 +188,8 @@ exports.getTutorDocument = async (userId) => {
     where: { userId },
     attributes: { include: ["documentKey"] },
   });
-  if (!tutor?.documentKey) throw new ApiError("Tutor document not found", 404);
+  if (!tutor?.documentKey)
+    throw new ApiError("Tutor document key not found", 404);
 
   const signedUrl = await getSignedFileUrl(tutor.documentKey);
   return { signedUrl };
