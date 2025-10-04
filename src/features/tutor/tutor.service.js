@@ -5,7 +5,6 @@ const sequelize = require("@src/shared/database");
 const { required } = require("joi");
 const parseDataWithMeta = require("@src/shared/utils/meta");
 
-
 exports.createTutor = async ({ profile, userId, documentKey }) => {
   const existing = await Tutor.findByPk(userId);
   if (existing) {
@@ -49,18 +48,22 @@ exports.getTutors = async ({
     profileVisibility,
   };
 
-  //Subject
-  const subjectInclude = {
+  // Subjects
+  includes.push({
     model: Subject.scope("join"),
     as: "subjects",
-  };
+    through: { attributes: [] },
+  });
+
   if (subjects && subjects.length > 0) {
-    subjectInclude.where = {
-      id: { [Op.in]: subjects.map(Number) },
+    where.userId = {
+      [Op.in]: sequelize.literal(`(
+        SELECT tutor_user_id
+        FROM tutor_subjects
+        WHERE subject_id IN (${subjects.map(Number).join(",")})
+      )`),
     };
   }
-
-  includes.push(subjectInclude);
 
   //Name
   if (name) {
@@ -132,6 +135,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
     ],
     limit: limit,
     offset: (page - 1) * limit,
+    distinct: true,
   });
 
   if (recommendedTutors.count === 0) {
@@ -143,6 +147,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
       include: [{ model: Subject, as: "subjects" }],
       limit: limit,
       offset: (page - 1) * limit,
+      distinct: true,
     });
   }
 
