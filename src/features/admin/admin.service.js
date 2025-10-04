@@ -1,4 +1,5 @@
 const { User, Tutor, Student, Admin } = require("@src/shared/database/models");
+const { Op } = require("sequelize");
 const { getSignedFileUrl } = require("@src/shared/utils/s3");
 const ApiError = require("@utils/apiError");
 const { hashPassword, generateRandomAvatar } = require("@utils/authHelpers");
@@ -71,7 +72,7 @@ exports.getUsers = async (query) => {
   const totalPages = Math.ceil(totalUsers / Number(limit));
 
   return {
-    users,
+    data: users,
     meta: {
       page: page,
       count: totalUsers,
@@ -111,23 +112,145 @@ exports.getUser = async (id) => {
   return userData;
 };
 
-exports.getUserCounts = async () => {
-  const totalTutors = await User.count({
-    where: { role: "tutor" },
-  });
+// exports.getUserCounts = async () => {
+//   const totalTutors = await User.count({
+//     where: { role: "tutor" },
+//   });
 
-  const totalStudents = await User.count({
-    where: { role: "student" },
-  });
+//   const totalStudents = await User.count({
+//     where: { role: "student" },
+//   });
 
-  const totalPendingTutors = await Tutor.count({
-    where: { approvalStatus: "pending" },
-  });
+//   const totalPendingTutors = await Tutor.count({
+//     where: { approvalStatus: "pending" },
+//   });
 
+//   return {
+//     totalTutors,
+//     totalStudents,
+//     totalPendingTutors,
+//   };
+// };
+
+/**
+ * Calculates total counts and percentage changes for users and tutors.
+ * @param {"day"|"week"|"month"} range - Time period for comparison (default: "week")
+ */
+exports.getUserCounts = async (range = "week") => {
+  const now = new Date();
+
+  // --- Determine time windows ---
+  const startOfThisPeriod = new Date(now);
+  const startOfLastPeriod = new Date(now);
+
+  if (range === "day") {
+    startOfThisPeriod.setDate(now.getDate() - 1);
+    startOfLastPeriod.setDate(now.getDate() - 2);
+  } else if (range === "month") {
+    startOfThisPeriod.setMonth(now.getMonth() - 1);
+    startOfLastPeriod.setMonth(now.getMonth() - 2);
+  } else {
+    // default: week
+    startOfThisPeriod.setDate(now.getDate() - 7);
+    startOfLastPeriod.setDate(now.getDate() - 14);
+  }
+
+  // --- CURRENT TOTALS ---
+  const [totalTutors, totalStudents, totalPendingTutors] = await Promise.all([
+    User.count({ where: { role: "tutor" } }),
+    User.count({ where: { role: "student" } }),
+    Tutor.count({ where: { approvalStatus: "pending" } }),
+  ]);
+
+  // --- CURRENT PERIOD CREATIONS ---
+  const [
+    newTutorsThisPeriod,
+    newStudentsThisPeriod,
+    newPendingTutorsThisPeriod,
+  ] = await Promise.all([
+    User.count({
+      where: { role: "tutor", createdAt: { [Op.gte]: startOfThisPeriod } },
+    }),
+    User.count({
+      where: { role: "student", createdAt: { [Op.gte]: startOfThisPeriod } },
+    }),
+    Tutor.count({
+      where: {
+        approvalStatus: "pending",
+        createdAt: { [Op.gte]: startOfThisPeriod },
+      },
+    }),
+  ]);
+
+  // --- PREVIOUS PERIOD CREATIONS ---
+  const [
+    newTutorsLastPeriod,
+    newStudentsLastPeriod,
+    newPendingTutorsLastPeriod,
+  ] = await Promise.all([
+    User.count({
+      where: {
+        role: "tutor",
+        createdAt: { [Op.between]: [startOfLastPeriod, startOfThisPeriod] },
+      },
+    }),
+    User.count({
+      where: {
+        role: "student",
+        createdAt: { [Op.between]: [startOfLastPeriod, startOfThisPeriod] },
+      },
+    }),
+    Tutor.count({
+      where: {
+        approvalStatus: "pending",
+        createdAt: { [Op.between]: [startOfLastPeriod, startOfThisPeriod] },
+      },
+    }),
+  ]);
+
+  // --- HELPER: Safe percentage change function ---
+  const calcGrowth = (current, previous) => {
+    if (previous === 0 && current > 0) return 100;
+    if (previous === 0 && current === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  };
+
+  // --- CALCULATE GROWTH ---
+  const tutorGrowth = calcGrowth(newTutorsThisPeriod, newTutorsLastPeriod);
+  const studentGrowth = calcGrowth(
+    newStudentsThisPeriod,
+    newStudentsLastPeriod
+  );
+  const pendingTutorGrowth = calcGrowth(
+    newPendingTutorsThisPeriod,
+    newPendingTutorsLastPeriod
+  );
+
+  // --- RETURN FINAL RESULT ---
   return {
-    totalTutors,
-    totalStudents,
-    totalPendingTutors,
+    totals: {
+      totalTutors,
+      totalStudents,
+      totalPendingTutors,
+    },
+    growth: {
+      tutors: Number(tutorGrowth.toFixed(1)),
+      students: Number(studentGrowth.toFixed(1)),
+      pendingTutors: Number(pendingTutorGrowth.toFixed(1)),
+    },
+    periods: {
+      range,
+      thisPeriod: {
+        newTutors: newTutorsThisPeriod,
+        newStudents: newStudentsThisPeriod,
+        newPendingTutors: newPendingTutorsThisPeriod,
+      },
+      lastPeriod: {
+        newTutors: newTutorsLastPeriod,
+        newStudents: newStudentsLastPeriod,
+        newPendingTutors: newPendingTutorsLastPeriod,
+      },
+    },
   };
 };
 
