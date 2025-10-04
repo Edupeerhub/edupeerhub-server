@@ -27,7 +27,6 @@ router.get("/", validate(searchValidator, "params"), tutorController.getTutors);
 //TODO: requre tutor role for appropriate routes
 router.post("/", validate(createProfileSchema), tutorController.createTutor);
 router.get("/recommendations", tutorController.getTutorRecommendations);
-router.get("/", searchValidator, tutorController.getTutors);
 router.get("/:id", tutorController.getTutor);
 router.post(
   "/",
