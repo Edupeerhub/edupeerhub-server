@@ -21,7 +21,7 @@ router.use(protectRoute);
 router.use(requireVerifiedUser);
 
 router.get("/recommendations", tutorController.getTutorRecommendations);
-router.get("/", searchValidator, tutorController.getTutors);
+router.get("/", validate(searchValidator), tutorController.getTutors);
 router.get("/:id", tutorController.getTutor);
 router.post(
   "/",

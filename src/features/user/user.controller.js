@@ -1,6 +1,5 @@
 const sendResponse = require("@utils/sendResponse");
 const UserService = require("./user.service");
-const ApiError = require("@src/shared/utils/apiError");
 
 exports.profile = async (req, res, next) => {
   try {
@@ -14,12 +13,7 @@ exports.profile = async (req, res, next) => {
 
 exports.updateProfile = async (req, res, next) => {
   try {
-    const requester = req.user;
     const targetId = req.params.id;
-
-    if (requester.id !== targetId) {
-      throw new ApiError("You're not allowed to update this profile", 403);
-    }
 
     const fileData = req.file
       ? {

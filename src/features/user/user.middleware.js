@@ -1,3 +1,4 @@
+const ApiError = require("@src/shared/utils/apiError");
 const Joi = require("joi");
 
 const updateProfileSchema = Joi.object({
@@ -24,6 +25,14 @@ const updateProfileSchema = Joi.object({
   //   }).optional(),
 });
 
+const checkUserOwnsProfile = (req, res, next) => {
+  if (req.user.id !== req.params.id) {
+    return next(new ApiError("You're not allowed to perform this action", 403));
+  }
+  next();
+};
+
 module.exports = {
   updateProfileSchema,
+  checkUserOwnsProfile,
 };

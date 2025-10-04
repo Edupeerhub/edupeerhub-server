@@ -13,7 +13,7 @@ exports.getAllUsers = async (req, res, next) => {
   try {
     // use query params to get by tutor or students, just deleted, suspended, onboarded or all users
     const users = await adminService.getUsers(req.query);
-    sendResponse(res, 200, "All users fetched successfully", users);
+    sendResponse(res, 200, "Users fetched successfully", users);
   } catch (error) {
     next(error);
   }

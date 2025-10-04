@@ -34,10 +34,13 @@ const uploadS3 = multer({
 // ------------------
 // Cloudinary Uploads (User profile pics)
 // ------------------
+const folder =
+  process.env.NODE_ENV === "production" ? "user_profiles" : "dev_user_profiles";
+
 const cloudinaryStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "user_profiles",
+    folder: folder,
     allowed_formats: ["jpg", "jpeg", "png", "webp"],
     // transformation: [
     //   { width: 400, height: 400, crop: "fill", gravity: "face" }, // square crop, focus on face
