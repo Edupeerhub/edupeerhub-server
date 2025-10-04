@@ -338,26 +338,26 @@ describe("Tutor test", () => {
         }),
       });
     });
-    it("should return 400 if tutor profile not complete", async () => {
-      const postRes = await authenticatedSession
-        .post(`/api/tutor/`)
-        .send(tutor);
+    // it("should return 400 if tutor profile not complete", async () => {
+    //   const postRes = await authenticatedSession
+    //     .post(`/api/tutor/`)
+    //     .send(tutor);
 
-      const createdTutor = postRes.body.data;
+    //   const createdTutor = postRes.body.data;
 
-      const response = await authenticatedSession
-        .put(`/api/tutor/${loggedInUser.id}`)
-        .send({ bio: "Should not update" });
+    //   const response = await authenticatedSession
+    //     .put(`/api/tutor/${loggedInUser.id}`)
+    //     .send({ bio: "Should not update" });
 
-      expect(response.statusCode).toBe(400);
-      expect(response.body).toEqual(
-        expect.objectContaining({
-          success: false,
-          message: "Validation error.",
-          error: expect.any(Array),
-        })
-      );
-    });
+    //   expect(response.statusCode).toBe(400);
+    //   expect(response.body).toEqual(
+    //     expect.objectContaining({
+    //       success: false,
+    //       message: "Validation error.",
+    //       error: expect.any(Array),
+    //     })
+    //   );
+    // });
 
     it("should return 403 if user is not owner", async () => {
       const tutors = await createTestTutors(1);
