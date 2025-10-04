@@ -95,8 +95,12 @@ exports.getTutors = async ({
         [Op.in]: ratings,
       }
     );
-    where = { [Op.and]: [{profileVisibility}, {approvalStatus}, ratingWhere] };
-    console.log(ratingWhere);
+    where = {
+      [Op.and]: [
+        ...Object.entries(where).map(([key, value]) => ({ [key]: value })),
+        ratingWhere,
+      ],
+    };
   }
 
   return await Tutor.scope("join").findAndCountAll({
@@ -104,6 +108,7 @@ exports.getTutors = async ({
     include: includes,
     limit: limit,
     offset: (page - 1) * limit,
+    distinct: true,
   });
 };
 

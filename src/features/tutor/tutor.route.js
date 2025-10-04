@@ -21,7 +21,7 @@ router.use(protectRoute);
 router.use(requireVerifiedUser);
 
 // GET /api/tutors              // Browse tutors with filters
-router.get("/", validate(searchValidator, "params"), tutorController.getTutors);
+router.get("/", validate(searchValidator, "query"), tutorController.getTutors);
 
 //GET tutor recommendations
 //TODO: requre tutor role for appropriate routes

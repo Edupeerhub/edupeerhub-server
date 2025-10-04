@@ -48,8 +48,8 @@ exports.searchValidator = Joi.object({
   page: Joi.number().default(1),
   limit: Joi.number().default(10),
   name: Joi.string(),
-  subjects: Joi.array().items(Joi.string()),  
-  ratings: Joi.array().items(Joi.number()),
+  subjects: Joi.string().pattern(/^[0-9,]+$/).required(),  
+  ratings: Joi.string().pattern(/^[0-5,]+$/).required(),
 });
 
 //tutor schedule search validator

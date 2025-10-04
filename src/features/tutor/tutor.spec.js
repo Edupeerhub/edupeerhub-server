@@ -224,9 +224,9 @@ describe("Tutor test", () => {
       // await createTestTutors();
 
       const response = await authenticatedSession.get(
-        `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5`
+        `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5&subjects=1`
       );
-      console.log(JSON.stringify(response.body.data));
+      
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
