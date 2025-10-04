@@ -20,7 +20,13 @@ class UserService {
       includes.push({
         model: User.sequelize.models.Student,
         as: "student",
-        include: [{ model: User.sequelize.models.Subject, as: "subjects" }],
+        include: [
+          { model: User.sequelize.models.Subject, as: "subjects" },
+          {
+            model: User.sequelize.models.Exam,
+            as: "exams",
+          },
+        ],
       });
     }
 

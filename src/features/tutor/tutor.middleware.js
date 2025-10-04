@@ -16,13 +16,14 @@ exports.createProfileSchema = Joi.object({
 });
 
 exports.updateProfileSchema = Joi.object({
-  bio: Joi.string().max(1000),
-  education: Joi.string().max(255),
+  bio: Joi.string().max(1000).optional().allow(""),
+  education: Joi.string().max(255).optional().allow(""),
   profileVisibility: Joi.valid("active", "hidden"),
-
-  timezone: Joi.string().pattern(/^UTC(?:[+-][0-9]{1,2})?$/),
-
-  subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
+  timezone: Joi.string()
+    .pattern(/^UTC(?:[+-][0-9]{1,2})?$/)
+    .optional()
+    .allow(""),
+  subjects: Joi.array().items(Joi.number()).label("subjects"),
 });
 
 exports.canEditProfileValidator = async (req, res, next) => {

@@ -21,6 +21,10 @@ const reviewRoutes = require("@features/reviews/review.route");
 
 const app = express();
 
+const allowedOrigins = (
+  process.env.CLIENT_URL || "http://localhost:5173"
+).split(",");
+
 // Trust first proxy
 app.set("trust proxy", 1);
 
@@ -28,7 +32,12 @@ app.set("trust proxy", 1);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
