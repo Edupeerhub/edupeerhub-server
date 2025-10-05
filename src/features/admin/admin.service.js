@@ -98,6 +98,8 @@ exports.getUser = async (id) => {
       "suspendedAt",
       "suspensionReason",
       "deletedAt",
+      "createdAt",
+      "lastLogin",
     ],
     include: [...STUDENT_INCLUDES, ...TUTOR_INCLUDES],
   });
@@ -274,7 +276,18 @@ exports.getAllPendingTutors = async () => {
       {
         model: User,
         as: "user",
-        attributes: ["id", "firstName", "lastName", "email", "role"],
+        attributes: [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "profileImageUrl",
+          "role",
+          "isVerified",
+          "isOnboarded",
+          "accountStatus",
+          "createdAt",
+        ],
       },
     ],
   });
@@ -288,7 +301,17 @@ exports.getTutor = async (id, includeSignedUrl = false) => {
       {
         model: User,
         as: "user",
-        attributes: ["firstName", "lastName", "email", "role"],
+        attributes: [
+          "firstName",
+          "lastName",
+          "email",
+          "profileImageUrl",
+          "role",
+          "isVerified",
+          "isOnboarded",
+          "accountStatus",
+          "createdAt",
+        ],
       },
     ],
   });
@@ -373,7 +396,6 @@ exports.createAdmin = async (adminData) => {
   if (existingAdmin)
     throw new ApiError("Admin with this email already exists", 400);
 
-  const hashedPassword = await hashPassword(password);
   const randomAvatar = generateRandomAvatar(firstName, lastName);
 
   const newAdmin = await User.create(
@@ -381,7 +403,7 @@ exports.createAdmin = async (adminData) => {
       firstName,
       lastName,
       email,
-      passwordHash: hashedPassword,
+      passwordHash: password,
       profileImageUrl: randomAvatar,
       role: "admin",
       isVerified: true,
