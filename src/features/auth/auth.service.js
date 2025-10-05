@@ -4,7 +4,6 @@ const { upsertStreamUser } = require("@src/shared/config/stream.config");
 const ApiError = require("@utils/apiError");
 const { User } = require("@models");
 const {
-  hashPassword,
   generateRandomAvatar,
   generateVerificationCode,
   generateResetToken,
@@ -39,6 +38,9 @@ exports.createUser = async ({ firstName, lastName, email, password }) => {
     isVerified: false,
     isOnboarded: false,
   });
+
+  newUser.lastLogin = new Date();
+  await newUser.save();
 
   return newUser;
 };
@@ -185,9 +187,7 @@ exports.resetUserPassword = async (token, password) => {
 
   if (!user) throw new ApiError("Invalid or expired reset token", 401);
 
-  const hashedPassword = await hashPassword(password);
-
-  user.passwordHash = hashedPassword;
+  user.passwordHash = password;
   user.resetPasswordToken = null;
   user.resetPasswordExpiresAt = null;
   await user.save();

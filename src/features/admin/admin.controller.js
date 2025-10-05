@@ -136,7 +136,7 @@ exports.createAdmin = async (req, res, next) => {
       createdAt: newAdmin.createdAt,
     };
 
-    sendResponse(res, 200, "Admin created successfully", result);
+    sendResponse(res, 201, "Admin created successfully", result);
   } catch (error) {
     next(error);
   }
