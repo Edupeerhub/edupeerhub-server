@@ -33,6 +33,10 @@ module.exports = () => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      profileImagePublicId: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       role: {
         type: DataTypes.ENUM("admin", "tutor", "student"),
         allowNull: true,

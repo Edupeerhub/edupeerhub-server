@@ -18,6 +18,8 @@ const {
   BOOKING_RESCHEDULED_TEMPLATE,
 } = require("./emailTemplates");
 
+const appURL = process.env.CLIENT_URL || "http://localhost:5173";
+
 // --------------------
 // Critical emails (must succeed)
 // --------------------
@@ -166,8 +168,6 @@ const sendUnreadMessageEmail = async (
   unreadCount,
   senderNames
 ) => {
-  const appURL = process.env.CLIENT_URL || "http://localhost:5173";
-
   await safeSendEmail({
     to: [{ email: userEmail }],
     subject: `You have ${unreadCount} unread message${
@@ -184,10 +184,16 @@ const sendBookingCreatedEmail = async (
   studentName,
   scheduledStart
 ) => {
+  const bookingURL = `${appURL}/tutor/booking-requests`;
   await safeSendEmail({
     to: [{ email: tutorEmail }],
     subject: `New booking request from ${studentName}`,
-    html: BOOKING_CREATED_TEMPLATE(tutorName, studentName, scheduledStart),
+    html: BOOKING_CREATED_TEMPLATE(
+      tutorName,
+      studentName,
+      scheduledStart,
+      bookingURL
+    ),
     category: "Booking Created",
   });
 };

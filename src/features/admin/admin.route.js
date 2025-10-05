@@ -14,6 +14,7 @@ router.use(requireAdmin);
 // User Routes
 // =====================
 router.get("/users", adminController.getAllUsers);
+router.get("/users/counts", adminController.getUserSummaryCounts);
 router.get("/users/:id", adminController.getUserById);
 router.patch("/users/:id/restore", adminController.restoreUser);
 
@@ -22,6 +23,7 @@ router.patch("/users/:id/restore", adminController.restoreUser);
 // =====================
 router.get("/tutors/pending", adminController.getPendingTutors);
 router.get("/tutors/:id/pending", adminController.getPendingTutorById);
+router.get("/tutors/:id/file", adminController.getTutorDocument);
 router.patch("/tutors/:id/approve", adminController.approveTutor);
 router.patch(
   "/tutors/:id/reject",

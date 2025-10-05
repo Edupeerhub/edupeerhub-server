@@ -1,5 +1,6 @@
 const ApiError = require("@utils/apiError");
 const logger = require("@utils/logger");
+const multer = require("multer");
 const {
   ValidationError,
   UniqueConstraintError,
@@ -38,6 +39,17 @@ const errorHandler = (error, req, res, next) => {
       dbMessage: error.message,
       original: error.parent?.detail || null,
     });
+  }
+
+  // Multer file errors
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      error = new ApiError("File too large", 400, {
+        maxSize: "5MB",
+      });
+    } else {
+      error = new ApiError("Upload error", 400, error.message);
+    }
   }
 
   // Auto-wrap non-ApiError instances

@@ -1,6 +1,5 @@
 module.exports = {
   testEnvironment: "node",
-  setupFilesAfterEnv: ["<rootDir>/src/shared/tests/jest.setup.js"],
   globalTeardown: "<rootDir>/src/shared/tests/jest.teardown.js",
   globalSetup: "<rootDir>/src/shared/tests/jest.setup.js",
   testTimeout: 10000,

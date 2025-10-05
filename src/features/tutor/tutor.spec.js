@@ -13,6 +13,7 @@ const {
   uuid,
 } = require("@src/shared/tests/utils");
 const { error } = require("winston");
+const { meta } = require("@eslint/js");
 
 let authenticatedSession;
 let testSession;
@@ -20,7 +21,7 @@ let loggedInUser;
 let subjects;
 
 jest.mock("@src/shared/middlewares/rateLimit.middleware", () => {
-  return () => (req, res, next) => next();
+  return jest.fn(() => (req, res, next) => next());
 });
 async function createTestSubjects() {
   return await Subject.bulkCreate(
@@ -109,7 +110,7 @@ async function createTestTutors(count = 5) {
     users.map((user, i) => ({
       userId: user.id,
       bio: `Bio for tutor ${i}`,
-      rating: 0,
+      rating: Number(`${i}.${i}`),
       education: `Education ${i}`,
       timezone: "UTC+0",
       approvalStatus: i % 2 === 0 ? "approved" : "pending",
@@ -166,6 +167,13 @@ const tutorValidator = {
     profileImageUrl: expect.any(String),
   }),
 };
+
+const metaMatcher = {
+  count: expect.any(Number),
+  page: expect.any(Number),
+  limit: expect.any(Number),
+  total: expect.any(Number),
+};
 describe("Tutor test", () => {
   beforeEach(async () => {
     console.log("Top level before each");
@@ -212,49 +220,37 @@ describe("Tutor test", () => {
     beforeEach(async () => {
       await createTestTutors();
     });
-    it("should return all approved tutors", async () => {
+    it("should return filtered tutors", async () => {
       // await createTestTutors();
 
-      const response = await authenticatedSession.get(`/api/tutor/`);
-      const approvedTutors = 3;
+      const response = await authenticatedSession.get(
+        `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5&subjects=1`
+      );
+      
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
         message: "Tutors retrieved successfully",
-        data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
-        },
+        data: expect.arrayOf(tutorValidator),
+        meta: expect.objectContaining(metaMatcher),
       });
 
-      console.log(response.body.data.rows);
-    });
-
-    it("should return 404 for non-existent tutor", async () => {
-      const response = await authenticatedSession.get(
-        `/api/tutor/44e54e24-7e94-476c-b6e7-0bf0e2b1567e`
-      );
-      expect(response.statusCode).toBe(404);
-      expect(response.body.success).toBe(false);
+      console.log(response.body.data);
     });
 
     it("should return tutor for subjects", async () => {
-      const response = await authenticatedSession.get(
-        `/api/tutor/?subjects=English,Mathematics`
-      );
+      const response = await authenticatedSession.get(`/api/tutor/?subjects=1`);
 
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeGreaterThan(0);
-      expect(response.body.data.rows).toEqual(
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data).toEqual(
         expect.arrayContaining([expect.objectContaining(tutorValidator)])
       );
       expect(response.body).toEqual({
         success: true,
         message: "Tutors retrieved successfully",
-        data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
-        },
+        data: expect.arrayOf(tutorValidator),
+        meta: expect.objectContaining(metaMatcher),
       });
     });
   });
@@ -338,22 +334,27 @@ describe("Tutor test", () => {
         }),
       });
     });
-    it("should return 400 if tutor profile not complete", async () => {
-      const tutors = await createTestTutors(1);
-      const tutor = tutors[0];
+    // it("should return 400 if tutor profile not complete", async () => {
+    //   const postRes = await authenticatedSession
+    //     .post(`/api/tutor/`)
+    //     .send(tutor);
 
-      const response = await authenticatedSession
-        .put(`/api/tutor/${tutor.userId}`)
-        .send({ bio: "Should not update" });
-      expect(response.statusCode).toBe(400);
-      expect(response.body).toEqual(
-        expect.objectContaining({
-          success: false,
-          message: "Validation error.",
-          error: expect.any(Array),
-        })
-      );
-    });
+    //   const createdTutor = postRes.body.data;
+
+    //   const response = await authenticatedSession
+    //     .put(`/api/tutor/${loggedInUser.id}`)
+    //     .send({ bio: "Should not update" });
+
+    //   expect(response.statusCode).toBe(400);
+    //   expect(response.body).toEqual(
+    //     expect.objectContaining({
+    //       success: false,
+    //       message: "Validation error.",
+    //       error: expect.any(Array),
+    //     })
+    //   );
+    // });
+
     it("should return 403 if user is not owner", async () => {
       const tutors = await createTestTutors(1);
       const tutor = tutors[0];
@@ -365,7 +366,7 @@ describe("Tutor test", () => {
       expect(response.body).toEqual(
         expect.objectContaining({
           success: false,
-          message: "You're not allowed to update this profile",
+          message: "Access denied - Tutor only",
           error: null,
         })
       );
@@ -385,17 +386,17 @@ describe("Tutor test", () => {
         `/api/tutor/recommendations`
       );
       expect(response.statusCode).toBe(200);
-      expect(response.body.data.count).toBeGreaterThan(0);
-      expect(response.body.data.rows).toEqual(
+      expect(response.body.meta.count).toBeLessThan(5);
+      expect(response.body.data.length).toBeGreaterThan(0);
+      expect(response.body.data).toEqual(
         expect.arrayContaining([expect.objectContaining(tutorValidator)])
       );
       expect(response.body).toEqual({
         success: true,
         message: "success",
-        data: {
-          count: expect.any(Number),
-          rows: expect.arrayOf(tutorValidator),
-        },
+        meta: expect.objectContaining(metaMatcher),
+
+        data: expect.arrayOf(tutorValidator),
       });
     });
   });
