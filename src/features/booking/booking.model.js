@@ -1,5 +1,8 @@
 const ApiError = require("@src/shared/utils/apiError");
 const { DataTypes, Op } = require("sequelize");
+const {
+  updateSessionStats,
+} = require("@features/tutor_stat/tutor_stat.service");
 
 module.exports = (sequelize) => {
   const Booking = sequelize.define(
@@ -257,6 +260,16 @@ module.exports = (sequelize) => {
           if (booking.changed("subjectId")) {
             await validateTutorSubject(booking);
           }
+        },
+
+        afterUpdate: async (booking, options) => {
+          if (booking.changed("status") && booking.status === "confirmed") {
+            await updateSessionStats(booking.tutorId);
+          }
+        },
+
+        afterDestroy: async (booking, options) => {
+          await updateSessionStats(booking.tutorId);
         },
       },
     }

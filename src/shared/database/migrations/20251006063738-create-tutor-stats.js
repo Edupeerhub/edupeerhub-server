@@ -1,0 +1,53 @@
+'use strict';
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up(queryInterface, Sequelize) {
+    await queryInterface.createTable('tutor_stats', {
+    
+      tutor_id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+        allowNull: false,
+        references: {
+          model: "tutor_profiles",
+          key: "user_id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
+
+      },
+      total_completed_sessions: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
+      },
+      total_weekly_sessions: {
+        type: Sequelize.INTEGER,
+                defaultValue: 0
+
+      },
+      total_hours_taught: {
+        type: Sequelize.FLOAT,
+                defaultValue: 0.0
+
+      },
+      average_rating: {
+        type: Sequelize.FLOAT,
+                defaultValue: 0.0
+
+      },
+      total_reviews: {
+        type: Sequelize.INTEGER,
+                defaultValue: 0
+
+      },
+      last_updated: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      
+    });
+  },
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('TutorStats');
+  }
+};
