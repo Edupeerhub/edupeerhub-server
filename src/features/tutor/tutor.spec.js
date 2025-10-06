@@ -116,7 +116,7 @@ async function createTestTutors(count = 5) {
       approvalStatus: i % 2 === 0 ? "approved" : "pending",
       profileVisibility: i % 2 === 0 ? "active" : "hidden",
     })),
-    { returning: true }
+    { returning: true, individualHooks: true }
   );
 
   await Promise.all(
@@ -146,14 +146,27 @@ const updatedProfile = {
   subjects: [1, 2, 3],
 };
 
+const subjectValidator = {
+  id: expect.any(Number),
+  name: expect.any(String),
+  description: expect.any(String),
+};
+
 const tutorValidator = {
   // profileVisibility: "hidden",
-  userId: expect.any(String),
+
   bio: expect.any(String),
   education: expect.any(String),
+  // stats: expect.any(Object),
+  stats: expect.objectContaining({
+    average_rating: expect.any(Number),
+    total_completed_sessions: expect.any(Number),
+    total_hours_taught: expect.any(Number),
+    total_reviews: expect.any(Number),
+    total_weekly_sessions: expect.any(Number),
+  }),
   timezone: expect.any(String),
-  rating: expect.any(Number),
-  subjects: expect.any(Array),
+  subjects: expect.arrayOf(expect.objectContaining(subjectValidator)),
   // approvalStatus: "pending",
   // userId: expect.any(String),
   // updatedAt: expect.any(String),
@@ -161,10 +174,12 @@ const tutorValidator = {
   // deletedAt: null,
   // rejectionReason: null,
   user: expect.objectContaining({
+    role: "tutor",
     email: expect.any(String),
     firstName: expect.any(String),
     lastName: expect.any(String),
     profileImageUrl: expect.any(String),
+    id: expect.any(String),
   }),
 };
 
@@ -226,7 +241,7 @@ describe("Tutor test", () => {
       const response = await authenticatedSession.get(
         `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5&subjects=1`
       );
-      
+
       expect(response.statusCode).toBe(200);
       expect(response.body).toEqual({
         success: true,
@@ -307,30 +322,14 @@ describe("Tutor test", () => {
       expect(response.body).toEqual({
         success: true,
         message: "success",
-        data: expect.objectContaining({
-          // approvalStatus: updatedProfile.approvalStatus,
+        data: expect.objectContaining({   
+
+          ...tutorValidator,
           bio: updatedProfile.bio,
-          // createdAt: expect.any(String),
+
           education: updatedProfile.education,
-          // profileVisibility: updatedProfile.profileVisibility,
-          rating: 0, // shouldn't be able to update rating
-          // rejectionReason: null,
-          subjects: expect.arrayOf(
-            expect.objectContaining({
-              description: expect.any(String),
-              id: expect.any(Number),
-              name: expect.any(String),
-            })
-          ),
+
           timezone: updatedProfile.timezone,
-          // updatedAt: expect.any(String),
-          // userId: loggedInUser.id,
-          user: expect.objectContaining({
-            email: expect.any(String),
-            firstName: expect.any(String),
-            lastName: expect.any(String),
-            profileImageUrl: expect.any(String),
-          }),
         }),
       });
     });

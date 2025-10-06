@@ -13,10 +13,6 @@ module.exports = () => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      rating: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-      },
       approvalStatus: {
         type: DataTypes.ENUM("pending", "approved", "rejected"),
         defaultValue: "pending",
@@ -64,6 +60,13 @@ module.exports = () => {
           },
         ],
       },
+      hooks: {
+        afterSave: async (tutor, options) => {
+          await sequelize.models.TutorStat.create({
+            tutor_id: tutor.userId,
+          });
+        },
+      }
     }
   );
 
@@ -73,10 +76,10 @@ module.exports = () => {
       as: "user",
     });
 
-    Tutor.belongsToMany(models.Subject, {
-      through: "tutor_subjects",
-      as: "subjects",
-    });
+    // Tutor.belongsToMany(models.Subject, {
+    //   through: "TutorSubject",
+    //   as: "subjects",
+    // });
 
     Tutor.hasMany(models.Booking, {
       foreignKey: "tutorId",
@@ -94,8 +97,12 @@ module.exports = () => {
           as: "subjects",
           through: { attributes: [] },
         },
+        {
+          model: models.TutorStat.scope("join"),
+          as: "stats",
+        },
       ],
-      attributes: ["userId", "bio", "rating", "education", "timezone"],
+      attributes: ["bio", "education", "timezone"],
     });
   };
 

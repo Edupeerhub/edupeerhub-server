@@ -39,12 +39,14 @@ exports.getTutor = async (req, res) => {
 };
 
 exports.createTutor = async (req, res) => {
+  const userId = req.user.id;
   const profile = {
     ...req.body,
     rating: 0.0,
     approvalStatus: "pending",
     profileVisibility: "hidden",
-    userId: req.user.id,
+
+    userId: userId,
   };
 
   const folder =
@@ -60,19 +62,18 @@ exports.createTutor = async (req, res) => {
 
   const newTutor = await tutorService.createTutor({
     profile,
-    userId: req.user.id,
-    documentKey,
+    userId: userId,
   });
 
   await trackEvent(eventTypes.USER_ONBOARDED, {
-    userId: newTutor.userId,
+    userId: userId,
     email: newTutor.user.email,
     role: newTutor.user.role,
     fullName: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
   });
 
   await addStreamUser({
-    id: newTutor.userId,
+    id: userId,
     email: newTutor.user.email,
     role: newTutor.user.role,
     firstName: newTutor.user.firstName,
@@ -95,7 +96,7 @@ exports.updateTutor = async (req, res) => {
   });
 
   await addStreamUser({
-    id: updatedTutorProfile.userId,
+    id: tutorId,
     email: updatedTutorProfile.user.email,
     role: updatedTutorProfile.user.role,
     firstName: updatedTutorProfile.user.firstName,

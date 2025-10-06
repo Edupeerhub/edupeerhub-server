@@ -1,6 +1,6 @@
 const ApiError = require("@utils/apiError");
 const { where, Op, literal } = require("sequelize");
-const { Subject, User, Tutor, Student } = require("@models");
+const { Subject, User, Tutor, Student, TutorStat } = require("@models");
 const sequelize = require("@src/shared/database");
 const { required } = require("joi");
 const parseDataWithMeta = require("@src/shared/utils/meta");
@@ -42,28 +42,12 @@ exports.getTutors = async ({
   limit = 10,
   page = 1,
 }) => {
-  const includes = [];
-  let where = {
-    approvalStatus,
-    profileVisibility,
-  };
-
-  // Subjects
-  includes.push({
-    model: Subject.scope("join"),
-    as: "subjects",
-    through: { attributes: [] },
-  });
-
-  if (subjects && subjects.length > 0) {
-    where.userId = {
-      [Op.in]: sequelize.literal(`(
-        SELECT tutor_user_id
-        FROM tutor_subjects
-        WHERE subject_id IN (${subjects.map(Number).join(",")})
-      )`),
-    };
-  }
+  const includes = [
+    {
+      model: Subject.scope("join"),
+      as: "subjects",
+    },
+  ];
 
   //Name
   if (name) {
@@ -84,27 +68,35 @@ exports.getTutors = async ({
     includes.push(nameInclude);
   }
 
-  //Ratings
-  //   const where = {
-  //   status: 'active',
-  //   funding: 'funded',
-  // };
-
   // await sequelize.query(sql`SELECT * FROM projects WHERE ${sql.where(where)}`);
   if (ratings && ratings.length > 0) {
     const ratingWhere = sequelize.where(
-      sequelize.fn("ROUND", sequelize.col("rating")),
+      sequelize.fn("ROUND", sequelize.col("average_rating")),
       {
         [Op.in]: ratings,
       }
     );
-    where = {
-      [Op.and]: [
-        ...Object.entries(where).map(([key, value]) => ({ [key]: value })),
-        ratingWhere,
-      ],
-    };
+    includes.push({
+      model: TutorStat.scope("join"),
+      as: "stats",
+      where: ratingWhere,
+    });
   }
+
+  const where = {
+    approvalStatus,
+    profileVisibility,
+    ...(subjects &&
+      subjects.length > 0 && {
+        userId: {
+          [Op.in]: sequelize.literal(`(
+        SELECT tutor_user_id
+        FROM tutor_subjects
+        WHERE subject_id IN (${subjects.map(Number).join(",")})
+      )`),
+        },
+      }),
+  };
 
   return await Tutor.scope("join").findAndCountAll({
     where: where,
