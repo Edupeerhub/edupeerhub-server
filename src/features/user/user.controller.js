@@ -1,5 +1,6 @@
 const sendResponse = require("@utils/sendResponse");
 const UserService = require("./user.service");
+const { addStreamUser } = require("../auth/auth.service");
 
 exports.profile = async (req, res, next) => {
   try {
@@ -26,6 +27,8 @@ exports.updateProfile = async (req, res, next) => {
       ...req.body,
       ...fileData,
     });
+
+    await addStreamUser(updatedUser);
 
     sendResponse(res, 200, "Profile updated successfully", updatedUser);
   } catch (error) {
