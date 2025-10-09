@@ -93,9 +93,8 @@ exports.updateSessionStats = async (tutorId) => {
     },
   });
 
-  await TutorStat.upsert(
-    {
-      tutor_id: tutorId,
+  await TutorStat.update(
+    {      
       totalCompletedSessions,
       totalWeeklySessions,
       totalStudents,
@@ -107,7 +106,9 @@ exports.updateSessionStats = async (tutorId) => {
       }),
     },
     {
-      conflictFields: ["tutor_id"],
+      where: {
+        tutorId,
+      },
     }
   );
 };
@@ -124,19 +125,18 @@ exports.updatRatingsStats = async (tutorId) => {
     ],
     raw: true,
   });
-  await TutorStat.upsert(
+  await TutorStat.update(
     {
-      tutorId,
       totalReviews: Number(updateRatingsStats?.totalReviews || 0),
       averageRating: Number(updateRatingsStats?.averageRating || 0),
       lastUpdated: new Date(),
     },
     {
-      conflictFields: ["tutor_id"],
+      where: {
+        tutorId,
+      },
     }
-    // {
-    //   conflictFields: ["tutorId"],
-    // }
+
   );
 
   exports.updateAllStats = async (tutorId) => {
