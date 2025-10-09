@@ -44,8 +44,7 @@ exports.createTutor = async (req, res) => {
     ...req.body,
     rating: 0.0,
     approvalStatus: "pending",
-    profileVisibility: "hidden",
-
+    profileVisibility: "active",
     userId: userId,
   };
 
@@ -63,6 +62,7 @@ exports.createTutor = async (req, res) => {
   const newTutor = await tutorService.createTutor({
     profile,
     userId: userId,
+    documentKey,
   });
 
   await trackEvent(eventTypes.USER_ONBOARDED, {

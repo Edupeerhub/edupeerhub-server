@@ -40,8 +40,6 @@ module.exports = () => {
   Subject.associate = (models) => {
     Subject.addScope("join", {
       attributes: ["id", "name", "description"],
-
-      through: { attributes: [] },
     });
 
     Subject.belongsToMany(models.Tutor, {
@@ -54,7 +52,7 @@ module.exports = () => {
     models.Tutor.belongsToMany(Subject, {
       through: "tutor_subjects",
       as: "subjects",
-    })
+    });
     //Student associations
     // models.Student.belongsToMany(Subject, {
     //   through: "StudentSubject",

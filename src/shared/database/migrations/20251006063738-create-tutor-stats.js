@@ -1,9 +1,8 @@
-'use strict';
+"use strict";
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('tutor_stats', {
-    
+    await queryInterface.createTable("TutorStat", {
       tutor_id: {
         type: Sequelize.UUID,
         primaryKey: true,
@@ -14,40 +13,39 @@ module.exports = {
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
-
       },
-      total_completed_sessions: {
+      totalCompletedSessions: {
         type: Sequelize.INTEGER,
-        defaultValue: 0
+        allowNull: false,
+        defaultValue: 0,
       },
-      total_weekly_sessions: {
+      totalWeeklySessions: {
         type: Sequelize.INTEGER,
-                defaultValue: 0
-
+        allowNull: false,
+        defaultValue: 0,
       },
-      total_hours_taught: {
+      totalHoursTaught: {
         type: Sequelize.FLOAT,
-                defaultValue: 0.0
-
+        allowNull: false,
+        defaultValue: 0.0,
       },
-      average_rating: {
+      averageRating: {
         type: Sequelize.FLOAT,
-                defaultValue: 0.0
-
+        allowNull: false,
+        defaultValue: 0.0,
       },
-      total_reviews: {
+      totalReviews: {
         type: Sequelize.INTEGER,
-                defaultValue: 0
-
+        allowNull: false,
+        defaultValue: 0,
       },
-      last_updated: {
+      lastUpdated: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
-      
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('TutorStats');
-  }
+    await queryInterface.dropTable("TutorStats");
+  },
 };

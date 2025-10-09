@@ -63,7 +63,7 @@ module.exports = () => {
       hooks: {
         afterSave: async (tutor, options) => {
           await sequelize.models.TutorStat.create({
-            tutor_id: tutor.userId,
+            tutorId: tutor.userId,
           });
         },
       }
