@@ -43,7 +43,6 @@ exports.createTutor = async (req, res) => {
     ...req.body,
     rating: 0.0,
     approvalStatus: "pending",
-    profileVisibility: "hidden",
     userId: req.user.id,
   };
 
