@@ -44,8 +44,7 @@ exports.createTutor = async (req, res) => {
     ...req.body,
     rating: 0.0,
     approvalStatus: "pending",
-    profileVisibility: "active",
-    userId: userId,
+    userId: req.user.id,
   };
 
   const folder =

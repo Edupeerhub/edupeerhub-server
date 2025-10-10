@@ -228,7 +228,6 @@ exports.getUserCounts = async (range = "week") => {
     newPendingTutorsLastPeriod
   );
 
-  // --- RETURN FINAL RESULT ---
   return {
     totals: {
       totalTutors,
