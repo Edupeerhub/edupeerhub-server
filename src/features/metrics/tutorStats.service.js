@@ -130,7 +130,7 @@ exports.updateSessionStats = async (tutorId) => {
  * - Average rating
  * - Total reviews
  */
-exports.updatRatingsStats = async (tutorId) => {
+exports.updateRatingsStats = async (tutorId) => {
   const { TutorStat, Review } = require("@models");
 
   const [ratingsData] = await Review.findAll({

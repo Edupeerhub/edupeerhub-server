@@ -1,11 +1,11 @@
-const Sequelize = require("sequelize");
+const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
   const TutorStat = sequelize.define(
     "TutorStat",
     {
       tutorId: {
-        type: Sequelize.UUID,
+        type: DataTypes.UUID,
         primaryKey: true,
         allowNull: false,
 
@@ -13,38 +13,38 @@ module.exports = (sequelize) => {
         onDelete: "CASCADE",
       },
       totalCompletedSessions: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
       totalWeeklySessions: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
       totalStudents: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
       totalHoursTaught: {
-        type: Sequelize.FLOAT,
+        type: DataTypes.FLOAT,
         allowNull: false,
         defaultValue: 0.0,
       },
       averageRating: {
-        type: Sequelize.FLOAT,
+        type: DataTypes.FLOAT,
         allowNull: false,
         defaultValue: 0.0,
       },
       totalReviews: {
-        type: Sequelize.INTEGER,
+        type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
       lastUpdated: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
       },
     },
     {
@@ -55,9 +55,13 @@ module.exports = (sequelize) => {
   );
 
   TutorStat.associate = function (models) {
-    TutorStat.belongsTo(models.Tutor, { foreignKey: "tutor_id", as: "tutor" });
+    TutorStat.belongsTo(models.Tutor, {
+      foreignKey: "tutorId",
+      as: "tutor",
+    });
+
     models.Tutor.hasOne(TutorStat, {
-      foreignKey: "tutor_id",
+      foreignKey: "tutorId",
       as: "stats",
     });
 

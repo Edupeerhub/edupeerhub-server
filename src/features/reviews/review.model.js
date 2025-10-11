@@ -66,19 +66,19 @@ module.exports = () => {
         where: { deleted_at: null },
       },
 
-      hooks: {
-        afterCreate: async (review) => {
-          await updateRatingsStats(review.tutorId);
-        },
+      // hooks: {
+      //   afterSave: async (review, options) => {
+      //     await updateRatingsStats(review.revieweeId);
+      //   },
 
-        afterUpdate: async (review) => {
-          await updateRatingsStats(review.tutorId);
-        },
+      //   afterUpdate: async (review, options) => {
+      //     await updateRatingsStats(review.revieweeId);
+      //   },
 
-        afterDestroy: async (review) => {
-          await updateRatingsStats(review.tutorId);
-        },
-      },
+      //   afterDestroy: async (review, options) => {
+      //     await updateRatingsStats(review.revieweeId);
+      //   },
+      // },
     }
   );
 

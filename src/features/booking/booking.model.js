@@ -271,7 +271,7 @@ module.exports = (sequelize) => {
           }
         },
 
-        afterUpdate: async (booking, options) => {
+        afterSave: async (booking, options) => {
           if (booking.changed("status") && booking.status === "confirmed") {
             await updateSessionStats(booking.tutorId);
           }
