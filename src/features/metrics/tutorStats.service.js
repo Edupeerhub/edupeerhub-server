@@ -1,10 +1,19 @@
 const Models = require("@models");
 const sequelize = require("@src/shared/database");
-
 const { Op, literal, fn } = require("sequelize");
 
+/**
+ * Update tutor session-related stats:
+ * - Total completed sessions
+ * - Weekly sessions
+ * - Total unique students
+ * - Total hours taught
+ * - Total reviews count
+ */
 exports.updateSessionStats = async (tutorId) => {
   const { TutorStat, Booking, Review } = require("@models");
+
+  // Total completed sessions
   const totalCompletedSessions = await Booking.count({
     where: {
       tutorId,
@@ -12,6 +21,7 @@ exports.updateSessionStats = async (tutorId) => {
     },
   });
 
+  // Total unique students
   const [studentResult] = await Booking.findAll({
     where: {
       tutorId,
@@ -31,6 +41,7 @@ exports.updateSessionStats = async (tutorId) => {
 
   const totalStudents = Number(studentResult?.totalStudents || 0);
 
+  // Total hours taught (in seconds → hours)
   // const totalHoursTaught = await Booking.sum(
   //   literal('("endTime" - "startTime") / 3600'),
   //   {
@@ -81,7 +92,9 @@ exports.updateSessionStats = async (tutorId) => {
   //   (actualEndTime - actualStartTime) / (1000 * 60 * 60)
   // );
 
-  const oneWeekAgo = new Date().setDate(new Date().getDate() - 7);
+  // Weekly sessions (past 7 days)
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const totalWeeklySessions = await Booking.count({
     where: {
@@ -93,8 +106,9 @@ exports.updateSessionStats = async (tutorId) => {
     },
   });
 
+  // Update TutorStat table
   await TutorStat.update(
-    {      
+    {
       totalCompletedSessions,
       totalWeeklySessions,
       totalStudents,
@@ -106,18 +120,23 @@ exports.updateSessionStats = async (tutorId) => {
       }),
     },
     {
-      where: {
-        tutorId,
-      },
+      where: { tutorId },
     }
   );
 };
 
+/**
+ * Update tutor rating stats:
+ * - Average rating
+ * - Total reviews
+ */
 exports.updatRatingsStats = async (tutorId) => {
   const { TutorStat, Review } = require("@models");
-  const [updateRatingsStats] = await Review.findAll({
+
+  const [ratingsData] = await Review.findAll({
     where: {
-      tutorId,
+      revieweeId: tutorId,
+      type: "student_to_tutor",
     },
     attributes: [
       [sequelize.fn("AVG", sequelize.col("rating")), "averageRating"],
@@ -125,24 +144,25 @@ exports.updatRatingsStats = async (tutorId) => {
     ],
     raw: true,
   });
+
   await TutorStat.update(
     {
-      totalReviews: Number(updateRatingsStats?.totalReviews || 0),
-      averageRating: Number(updateRatingsStats?.averageRating || 0),
+      totalReviews: Number(ratingsData?.totalReviews || 0),
+      averageRating: Number(ratingsData?.averageRating || 0),
       lastUpdated: new Date(),
     },
     {
-      where: {
-        tutorId,
-      },
+      where: { tutorId },
     }
-
   );
+};
 
-  exports.updateAllStats = async (tutorId) => {
-    Promise.all([
-      await this.updateSessionStats(tutorId),
-      await this.updateRatingsStats(tutorId),
-    ]);
-  };
+/**
+ * Update all tutor stats at once
+ */
+exports.updateAllStats = async (tutorId, models) => {
+  await Promise.all([
+    exports.updateSessionStats(tutorId, models),
+    exports.updateRatingsStats(tutorId, models),
+  ]);
 };

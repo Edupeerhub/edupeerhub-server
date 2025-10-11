@@ -22,6 +22,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
+      totalStudents: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
       totalHoursTaught: {
         type: Sequelize.FLOAT,
         allowNull: false,
@@ -59,6 +64,7 @@ module.exports = (sequelize) => {
     TutorStat.addScope("join", {
       attributes: [
         "totalCompletedSessions",
+        "totalStudents",
         "totalWeeklySessions",
         "totalHoursTaught",
         "averageRating",

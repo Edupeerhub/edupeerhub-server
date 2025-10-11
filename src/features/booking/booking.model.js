@@ -2,7 +2,7 @@ const ApiError = require("@src/shared/utils/apiError");
 const { DataTypes, Op } = require("sequelize");
 const {
   updateSessionStats,
-} = require("@features/tutor_stat/tutor_stat.service");
+} = require("@src/features/metrics/tutorStats.service");
 
 module.exports = (sequelize) => {
   const Booking = sequelize.define(

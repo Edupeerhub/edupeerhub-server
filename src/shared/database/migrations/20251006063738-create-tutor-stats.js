@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("TutorStat", {
+    await queryInterface.createTable("tutor_stats", {
       tutor_id: {
         type: Sequelize.UUID,
         primaryKey: true,
@@ -14,38 +14,53 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      totalCompletedSessions: {
+      total_completed_sessions: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-      totalWeeklySessions: {
+      total_weekly_sessions: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-      totalHoursTaught: {
+      total_students: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      total_hours_taught: {
         type: Sequelize.FLOAT,
         allowNull: false,
         defaultValue: 0.0,
       },
-      averageRating: {
+      average_rating: {
         type: Sequelize.FLOAT,
         allowNull: false,
         defaultValue: 0.0,
       },
-      totalReviews: {
+      total_reviews: {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-      lastUpdated: {
+      last_updated: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      created_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW,
+      },
+      updated_at: {
+        allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("TutorStats");
+    await queryInterface.dropTable("tutor_stats");
   },
 };

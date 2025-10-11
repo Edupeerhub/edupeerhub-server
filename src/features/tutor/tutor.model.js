@@ -66,7 +66,7 @@ module.exports = () => {
             tutorId: tutor.userId,
           });
         },
-      }
+      },
     }
   );
 
@@ -102,7 +102,30 @@ module.exports = () => {
           as: "stats",
         },
       ],
-      attributes: ["bio", "education", "timezone"],
+      attributes: ["userId", "bio", "education", "timezone"],
+    });
+
+    Tutor.addScope("userProfile", {
+      include: [
+        {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+          through: { attributes: [] },
+        },
+        {
+          model: models.TutorStat.scope("join"),
+          as: "stats",
+        },
+      ],
+      attributes: [
+        "userId",
+        "bio",
+        "education",
+        "timezone",
+        "approvalStatus",
+        "profileVisibility",
+        "rejectionReason",
+      ],
     });
   };
 

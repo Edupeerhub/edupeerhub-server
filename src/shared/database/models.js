@@ -7,7 +7,7 @@ const definers = [
   require("@features/user/user.model"),
   require("@features/subject/subject.model"),
   require("@features/student/student.model"),
-  require("@features/tutor_stat/tutor_stat.model"),
+  require("@src/features/metrics/tutorStats.model"),
   require("@features/tutor/tutor.model"),
   require("@features/admin/admin.model"),
   require("@features/exams/exams.model"),
