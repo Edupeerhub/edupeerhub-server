@@ -164,6 +164,7 @@ const tutorValidator = {
     totalHoursTaught: expect.any(Number),
     totalReviews: expect.any(Number),
     totalWeeklySessions: expect.any(Number),
+    totalStudents: expect.any(Number),
   }),
   timezone: expect.any(String),
   subjects: expect.arrayOf(expect.objectContaining(subjectValidator)),
@@ -181,6 +182,8 @@ const tutorValidator = {
     profileImageUrl: expect.any(String),
     id: expect.any(String),
   }),
+      userId: expect.any(String),
+
 };
 
 const metaMatcher = {
