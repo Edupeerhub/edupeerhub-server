@@ -6,7 +6,7 @@ const emailHeader = (color = "#E7F6FB") => `
         <table border="0" cellspacing="0" cellpadding="0" align="center">
           <tr>
             <td align="center" valign="middle" style="padding-right: 10px;">
-              <img src="https://edupeerhub.com/images/logo.png" alt="Logo" width="40" height="40" style="display:block;" />
+              <img src="https://edupeerhub.com/images/logo.png?v=2" alt="Logo" width="40" height="40" style="display:block;" />
             </td>
             <td align="center" valign="middle" style="font-family: Poppins, Arial, sans-serif; font-size: 30px; font-weight: bold; color: #000000; text-decoration: none;">
               edupeerhub

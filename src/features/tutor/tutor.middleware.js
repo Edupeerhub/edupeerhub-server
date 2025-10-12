@@ -1,5 +1,64 @@
 const Joi = require("joi");
 
+const allowedTimezones = [
+  "UTC",
+  "UTC+1",
+  "UTC-1",
+  "UTC+2",
+  "UTC-2",
+  "UTC+3",
+  "UTC-3",
+  "UTC+4",
+  "UTC-4",
+  "UTC+5",
+  "UTC-5",
+  "UTC+6",
+  "UTC-6",
+  "UTC+7",
+  "UTC-7",
+  "UTC+8",
+  "UTC-8",
+  "UTC+9",
+  "UTC-9",
+  "UTC+10",
+  "UTC-10",
+  "UTC+11",
+  "UTC-11",
+  "UTC+12",
+  "UTC-12",
+  "WAT",
+  "EAT",
+  "CAT",
+  "EST",
+  "PST",
+  "CST",
+];
+
+const timezoneSchema = Joi.string()
+  .trim()
+  .custom((value, helpers) => {
+    // Remove ALL spaces (leading, trailing, and internal)
+    const cleaned = value.replace(/\s+/g, "");
+
+    // Check if the cleaned value matches any allowed timezone (case-insensitive)
+    const isValid = allowedTimezones.some(
+      (tz) => tz.toLowerCase() === cleaned.toLowerCase()
+    );
+
+    if (!isValid) {
+      return helpers.error("any.only");
+    }
+
+    return cleaned;
+  })
+  .optional()
+  .allow("")
+  .messages({
+    "any.only":
+      "Timezone must be a valid format (e.g. UTC, UTC+1, WAT, EST, PST)",
+    "string.base": "Timezone must be a text value",
+  });
+
 const sendResponse = require("@utils/sendResponse");
 //availability validator
 
@@ -10,7 +69,7 @@ exports.availabilityValidator = async (req, res, next) => {
 //tutor profile validator
 exports.createProfileSchema = Joi.object({
   bio: Joi.string().max(1000),
-  timezone: Joi.string().pattern(/^UTC(?:[+-][0-9]{1,2})?$/),
+  timezone: timezoneSchema,
   education: Joi.string().max(255).required(),
   subjects: Joi.array().items(Joi.number()).min(1).required().label("subjects"),
 });
@@ -19,10 +78,7 @@ exports.updateProfileSchema = Joi.object({
   bio: Joi.string().max(1000).optional().allow(""),
   education: Joi.string().max(255).optional().allow(""),
   profileVisibility: Joi.valid("active", "hidden"),
-  timezone: Joi.string()
-    .pattern(/^UTC(?:[+-][0-9]{1,2})?$/)
-    .optional()
-    .allow(""),
+  timezone: timezoneSchema,
   subjects: Joi.array().items(Joi.number()).label("subjects"),
 });
 
