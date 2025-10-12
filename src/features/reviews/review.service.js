@@ -3,6 +3,7 @@ const { Review, User } = require("@models");
 const sequelize = require("@src/shared/database");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
+const logger = require("@src/shared/utils/logger");
 
 const createReview = async (reviewData) => {
   const { reviewerId, revieweeId, rating, comment, type, sessionId } =
@@ -88,6 +89,15 @@ const createReview = async (reviewData) => {
 
     // 3. Commit the transaction
     await transaction.commit();
+
+    if (type === "student_to_tutor") {
+      const {
+        updateRatingsStats,
+      } = require("@features/metrics/tutorStats.service");
+      await updateRatingsStats(revieweeId).catch((err) =>
+        logger.error("Failed to update tutor stats:", err)
+      );
+    }
 
     // 4. Fetch the created review with associated reviewer data for the response
     const createdReviewRaw = await Review.findByPk(newReview.id, {

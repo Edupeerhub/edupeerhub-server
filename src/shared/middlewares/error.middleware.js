@@ -11,6 +11,7 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const errorHandler = (error, req, res, next) => {
   let status = error.statusCode || 500;
+  const stack = error.stack;
 
   // ─── Error Normalization ─────────────────────────────
 
@@ -88,7 +89,7 @@ const errorHandler = (error, req, res, next) => {
         user: req.user ? { id: req.user.id, email: req.user.email } : undefined,
       });
     } else {
-      logger.error("Error occurred", { baseLog, stack: error.stack });
+      logger.error("Error occurred", { baseLog, stack: stack });
     }
   }
 

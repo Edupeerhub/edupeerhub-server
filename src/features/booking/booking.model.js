@@ -1,5 +1,8 @@
 const ApiError = require("@src/shared/utils/apiError");
 const { DataTypes, Op } = require("sequelize");
+const {
+  updateSessionStats,
+} = require("@src/features/metrics/tutorStats.service");
 
 module.exports = (sequelize) => {
   const Booking = sequelize.define(
@@ -38,10 +41,6 @@ module.exports = (sequelize) => {
       subjectId: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        references: {
-          model: "subjects",
-          key: "id",
-        },
         onUpdate: "CASCADE",
         onDelete: "RESTRICT",
       },
@@ -195,7 +194,20 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      duration: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          const startTime = this.getDataValue("actualStartTime");
+          const endTime = this.getDataValue("actualEndTime");
 
+          if (startTime && endTime) {
+            const diffMs =
+              new Date(endTime).getTime() - new Date(startTime).getTime();
+            return Math.round(diffMs / (1000 * 60 * 60)); // Convert milliseconds to hours
+          }
+          return null;
+        },
+      },
       // rating: {
       //   type: DataTypes.INTEGER,
       //   allowNull: true,
@@ -258,6 +270,16 @@ module.exports = (sequelize) => {
             await validateTutorSubject(booking);
           }
         },
+
+        afterSave: async (booking, options) => {
+          if (booking.changed("status") && booking.status === "confirmed") {
+            await updateSessionStats(booking.tutorId);
+          }
+        },
+
+        afterDestroy: async (booking, options) => {
+          await updateSessionStats(booking.tutorId);
+        },
       },
     }
   );
@@ -285,7 +307,7 @@ module.exports = (sequelize) => {
 
     // The most robust way to check for time overlap between two intervals [A, B] and [C, D]
     // is to check if A < D AND C < B.
-    const overlappingBooking = await Booking.findOne({
+    const overlappingBooking = await Booking.unscoped().findOne({
       where: {
         tutorId: newBooking.tutorId,
         // The existing booking must also be in a state that conflicts with a new booking
@@ -384,6 +406,7 @@ module.exports = (sequelize) => {
           attributes: {
             exclude: [
               "userId",
+              "documentKey",
               "createdAt",
               "updatedAt",
               "approvalStatus",
@@ -405,6 +428,7 @@ module.exports = (sequelize) => {
             {
               model: models.Subject.scope("join"),
               as: "subjects",
+              through: { attributes: [] },
             },
           ],
         },
@@ -434,8 +458,11 @@ module.exports = (sequelize) => {
           ],
         },
         {
-          model: models.Subject.scope("join"),
+          model: models.Subject,
+
           as: "subject",
+          // through: { attributes: [] },
+          attributes: ["id", "name", "description"],
         },
       ],
     });
