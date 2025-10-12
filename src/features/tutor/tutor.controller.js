@@ -43,7 +43,7 @@ exports.createTutor = async (req, res) => {
   const profile = {
     ...req.body,
     rating: 0.0,
-    approvalStatus: "pending",
+    approvalStatus: "approved", // TODO: change to pending when presentation is done
     userId: req.user.id,
   };
 
