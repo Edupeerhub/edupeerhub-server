@@ -67,8 +67,7 @@ module.exports = {
       [
         {
           user_id: tutorId,
-          bio: "Experienced math tutor",
-          rating: 5.0,
+          bio: "Experienced math tutor", 
           approval_status: "approved",
           profile_visibility: "active",
           education: "MSc Mathematics",
