@@ -44,7 +44,7 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
       },
-      reviewBreakdown: {
+      review_breakdown: {
         type: Sequelize.JSON,
         allowNull: false,
         defaultValue: [
@@ -56,16 +56,6 @@ module.exports = {
         ],
       },
       last_updated: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
-      },
-      created_at: {
-        allowNull: false,
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW,
-      },
-      updated_at: {
-        allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW,
       },
