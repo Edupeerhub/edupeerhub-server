@@ -30,12 +30,12 @@ module.exports = {
         defaultValue: 0,
       },
       total_hours_taught: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.DECIMAL(6, 1),
         allowNull: false,
         defaultValue: 0.0,
       },
       average_rating: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.DECIMAL(2, 1),
         allowNull: false,
         defaultValue: 0.0,
       },
@@ -43,6 +43,10 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         defaultValue: 0,
+      },
+      reviewBreakdown: {
+        type: Sequelize.JSON,
+        defaultValue: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       },
       last_updated: {
         type: Sequelize.DATE,

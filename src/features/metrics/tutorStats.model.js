@@ -1,3 +1,4 @@
+const { get } = require("@src/app");
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
@@ -16,6 +17,9 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
+        get() {
+          return this.getDataValue("totalCompletedSessions") || 0;
+        },
       },
       totalWeeklySessions: {
         type: DataTypes.INTEGER,
@@ -28,29 +32,56 @@ module.exports = (sequelize) => {
         defaultValue: 0,
       },
       totalHoursTaught: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(6, 1),
         allowNull: false,
         defaultValue: 0.0,
+        get() {
+          const value = this.getDataValue("totalHoursTaught");
+          return value === null ? null : Math.round(value * 10) / 10;
+        },
       },
       averageRating: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(2, 1),
         allowNull: false,
         defaultValue: 0.0,
+        get() {
+          const value = this.getDataValue("averageRating");
+          return value === null ? null : Math.round(value * 10) / 10;
+        },
       },
       totalReviews: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
+      reviewBreakdown: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      },
       lastUpdated: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
       },
     },
+
     {
       tableName: "tutor_stats",
       underscored: true,
       timestamps: false,
+      hooks: {
+        beforeUpdate: async (tutorStat, options) => {
+          const existingRecord = await TutorStat.findOne({
+            where: {
+              tutorId: tutorStat.tutorId,
+            },
+          });
+
+          if (!existingRecord) {
+            TutorStat.create({ tutorId: tutorStat.tutorId });
+          }
+        },
+      },
     }
   );
 
@@ -73,6 +104,7 @@ module.exports = (sequelize) => {
         "totalHoursTaught",
         "averageRating",
         "totalReviews",
+        "reviewBreakdown",
       ],
     });
   };

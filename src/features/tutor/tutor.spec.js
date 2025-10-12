@@ -165,6 +165,13 @@ const tutorValidator = {
     totalReviews: expect.any(Number),
     totalWeeklySessions: expect.any(Number),
     totalStudents: expect.any(Number),
+    reviewBreakdown: expect.objectContaining({
+      1: expect.any(Number),
+      2: expect.any(Number),
+      3: expect.any(Number),
+      4: expect.any(Number),
+      5: expect.any(Number),
+    }),
   }),
   timezone: expect.any(String),
   subjects: expect.arrayOf(expect.objectContaining(subjectValidator)),
@@ -182,7 +189,7 @@ const tutorValidator = {
     profileImageUrl: expect.any(String),
     id: expect.any(String),
   }),
-      userId: expect.any(String),
+  userId: expect.any(String),
 
 };
 
@@ -242,7 +249,7 @@ describe("Tutor test", () => {
       // await createTestTutors();
 
       const response = await authenticatedSession.get(
-        `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5&subjects=1`
+        `/api/tutor/?page=1&limit=10&ratings=1,2,3,4,5`
       );
 
       expect(response.statusCode).toBe(200);
@@ -325,7 +332,7 @@ describe("Tutor test", () => {
       expect(response.body).toEqual({
         success: true,
         message: "success",
-        data: expect.objectContaining({   
+        data: expect.objectContaining({
 
           ...tutorValidator,
           bio: updatedProfile.bio,

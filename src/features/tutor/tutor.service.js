@@ -30,7 +30,19 @@ exports.createTutor = async ({ profile, userId, documentKey }) => {
 };
 
 exports.getTutor = async (userId) => {
-  return await Tutor.scope("join").findByPk(userId);
+  return Tutor.scope("join")
+    .findByPk(userId)
+    .then((tutor) => {
+
+      if (!tutor) {
+        return null;
+      }
+      if (tutor.stats.averageRating === null) {
+        return { ...tutor.toJSON(), stats: DEFAULT_STATS };
+      } else {
+        return { ...tutor.toJSON() };
+      }
+    });
 };
 
 exports.getTutors = async ({
@@ -73,7 +85,7 @@ exports.getTutors = async ({
     const ratingWhere = sequelize.where(
       sequelize.fn("ROUND", sequelize.col("average_rating")),
       {
-        [Op.in]: ratings,
+        [Op.in]: ratings.map(Number),
       }
     );
     includes.push({
@@ -98,13 +110,28 @@ exports.getTutors = async ({
       }),
   };
 
-  return await Tutor.scope("join").findAndCountAll({
+  const tutors = await Tutor.scope("join").findAndCountAll({
     where: where,
     include: includes,
     limit: limit,
     offset: (page - 1) * limit,
     distinct: true,
   });
+
+  const count = tutors.count;
+
+  const tutorWithStats = tutors.rows.map((tutor) => {
+    if (tutor.stats.averageRating === null) {
+      return { ...tutor.toJSON(), stats: DEFAULT_STATS };
+    } else {
+      return { ...tutor.toJSON() };
+    }
+  });
+
+  return {
+    count: count,
+    rows: tutorWithStats,
+  };
 };
 
 exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
@@ -113,7 +140,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
   const subjects = await student.getSubjects();
   const subjectIds = subjects.map((subject) => subject.id);
 
-  const recommendedTutors = await Tutor.scope("join").findAndCountAll({
+  let recommendedTutors = await Tutor.scope("join").findAndCountAll({
     where: {
       approvalStatus: "approved",
       profileVisibility: "active",
@@ -131,7 +158,7 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
   });
 
   if (recommendedTutors.count === 0) {
-    return await Tutor.scope("join").findAndCountAll({
+    recommendedTutors = await Tutor.scope("join").findAndCountAll({
       where: {
         approvalStatus: "approved",
         profileVisibility: "active",
@@ -142,8 +169,30 @@ exports.getTutorRecommendations = async ({ userId, limit = 10, page = 1 }) => {
       distinct: true,
     });
   }
+  const count = recommendedTutors.count;
 
-  return recommendedTutors;
+  const tutorWithStats = recommendedTutors.rows.map((tutor) => {
+    if (tutor.stats.averageRating === null) {
+      return { ...tutor.toJSON(), stats: DEFAULT_STATS };
+    } else {
+      return { ...tutor.toJSON() };
+    }
+  });
+
+  return {
+    count: count,
+    rows: tutorWithStats,
+  };
+};
+
+const DEFAULT_STATS = {
+  totalCompletedSessions: 0,
+  totalWeeklySessions: 0,
+  totalStudents: 0,
+  totalHoursTaught: 0.0,
+  averageRating: 0.0,
+  totalReviews: 0,
+  reviewBreakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
 };
 
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {
