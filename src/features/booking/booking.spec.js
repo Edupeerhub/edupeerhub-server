@@ -27,13 +27,18 @@ jest.mock("@features/notification/reminderSingleton", () => ({
   rescheduleSessionReminder: jest.fn(),
 }));
 
+const subjectMatcher = {
+  id: expect.any(Number),
+  description: expect.any(String),
+  name: expect.any(String),
+};
+
 const tutorMatcher = {
   bio: expect.any(String),
-  rating: expect.any(Number),
   profileVisibility: expect.any(String),
   education: expect.any(String),
   timezone: expect.any(String),
-  subjects: expect.any(Array),
+  subjects: expect.arrayOf(expect.objectContaining(subjectMatcher)),
   user: expect.objectContaining({
     id: expect.any(String),
     firstName: expect.any(String),
@@ -52,12 +57,6 @@ const studentMatcher = {
     lastName: "Dupe",
     profileImageUrl: "randomAvatar",
   }),
-};
-
-const subjectMatcher = {
-  id: expect.any(Number),
-  description: expect.any(String),
-  name: expect.any(String),
 };
 
 const bookingMatcher = (booking = {}) => ({

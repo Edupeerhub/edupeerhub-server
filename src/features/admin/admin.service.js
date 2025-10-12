@@ -161,7 +161,7 @@ exports.getUserCounts = async (range = "week") => {
   const [totalTutors, totalStudents, totalPendingTutors] = await Promise.all([
     User.count({ where: { role: "tutor" } }),
     User.count({ where: { role: "student" } }),
-    Tutor.count({ where: { approvalStatus: "pending" } }),
+    Tutor.unscoped().count({ where: { approvalStatus: "pending" } }),
   ]);
 
   // --- CURRENT PERIOD CREATIONS ---
@@ -228,7 +228,6 @@ exports.getUserCounts = async (range = "week") => {
     newPendingTutorsLastPeriod
   );
 
-  // --- RETURN FINAL RESULT ---
   return {
     totals: {
       totalTutors,

@@ -1,4 +1,6 @@
 const sequelize = require("@src/shared/database/index");
+
+const { updateRatingsStats } = require("@features/metrics/tutorStats.service");
 const { DataTypes } = require("sequelize");
 
 module.exports = () => {
@@ -63,6 +65,20 @@ module.exports = () => {
       defaultScope: {
         where: { deleted_at: null },
       },
+
+      // hooks: {
+      //   afterSave: async (review, options) => {
+      //     await updateRatingsStats(review.revieweeId);
+      //   },
+
+      //   afterUpdate: async (review, options) => {
+      //     await updateRatingsStats(review.revieweeId);
+      //   },
+
+      //   afterDestroy: async (review, options) => {
+      //     await updateRatingsStats(review.revieweeId);
+      //   },
+      // },
     }
   );
 

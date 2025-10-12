@@ -71,6 +71,7 @@ exports.deleteBooking = async (bookingId) => {
     where: {
       id: bookingId,
     },
+    individualHooks: true,
   });
 };
 

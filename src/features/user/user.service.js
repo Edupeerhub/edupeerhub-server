@@ -1,5 +1,5 @@
 const ApiError = require("@utils/apiError");
-const { User, Student, Tutor, Subject, Admin } = require("@models");
+const { User, Student, Tutor, Admin } = require("@models");
 const { getProfilePicUrls } = require("@src/shared/utils/cloudinaryHelper");
 
 class UserService {
@@ -18,29 +18,21 @@ class UserService {
 
     if (role === "student") {
       includes.push({
-        model: User.sequelize.models.Student,
+        model: Student.scope("userProfile"),
         as: "student",
-        include: [
-          { model: User.sequelize.models.Subject, as: "subjects" },
-          {
-            model: User.sequelize.models.Exam,
-            as: "exams",
-          },
-        ],
       });
     }
 
     if (role === "tutor") {
       includes.push({
-        model: User.sequelize.models.Tutor,
+        model: Tutor.scope("userProfile"),
         as: "tutor",
-        include: [{ model: User.sequelize.models.Subject, as: "subjects" }],
       });
     }
 
     if (role === "admin") {
       includes.push({
-        model: User.sequelize.models.Admin,
+        model: Admin,
         as: "admin",
       });
     }
