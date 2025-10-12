@@ -33,7 +33,6 @@ exports.getTutor = async (userId) => {
   return Tutor.scope("join")
     .findByPk(userId)
     .then((tutor) => {
-
       if (!tutor) {
         return null;
       }
@@ -192,7 +191,13 @@ const DEFAULT_STATS = {
   totalHoursTaught: 0.0,
   averageRating: 0.0,
   totalReviews: 0,
-  reviewBreakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  reviewBreakdown: [
+    { stars: 5, percent: 0 },
+    { stars: 4, percent: 0 },
+    { stars: 3, percent: 0 },
+    { stars: 2, percent: 0 },
+    { stars: 1, percent: 0 },
+  ],
 };
 
 exports.updateTutorProfile = async ({ id, tutorProfile }) => {

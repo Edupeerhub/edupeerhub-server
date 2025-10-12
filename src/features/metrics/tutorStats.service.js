@@ -1,6 +1,5 @@
-const Models = require("@models");
 const sequelize = require("@src/shared/database");
-const { Op, literal, fn } = require("sequelize");
+const { Op } = require("sequelize");
 
 /**
  * Update tutor session-related stats:
@@ -11,7 +10,7 @@ const { Op, literal, fn } = require("sequelize");
  * - Total reviews count
  */
 exports.updateSessionStats = async (tutorId) => {
-  const { TutorStat, Booking, Review } = require("@models");
+  const { TutorStat, Booking } = require("@models");
 
   // Total completed sessions
   const totalCompletedSessions = await Booking.count({
@@ -106,35 +105,47 @@ exports.updateSessionStats = async (tutorId) => {
     },
   });
 
+  // const [stat] = await TutorStat.findOrCreate({
+  //   where: { tutorId },
+  //   defaults: {
+  //     tutorId,
+  //     totalCompletedSessions: 0,
+  //     totalWeeklySessions: 0,
+  //     totalStudents: 0,
+  //     totalHoursTaught: 0.0,
+  //   },
+  // });
+
+  // await stat.update({
+  //   totalCompletedSessions,
+  //   totalWeeklySessions,
+  //   totalStudents,
+  //   totalHoursTaught,
+  // });
+
   // Update TutorStat table
-  await TutorStat.update(
+  // await TutorStat.update(
+  //   {
+  //     totalCompletedSessions,
+  //     totalWeeklySessions,
+  //     totalStudents,
+  //     totalHoursTaught,
+  //   },
+  //   {
+  //     where: { tutorId },
+  //   }
+  // );
+
+  await TutorStat.upsert(
     {
+      tutorId,
       totalCompletedSessions,
       totalWeeklySessions,
       totalStudents,
       totalHoursTaught,
-      reviewBreakdown: await Review.findAll({
-        where: {
-          revieweeId: tutorId,
-        },
-        attributes: ["rating", [sequelize.fn("COUNT", "*"), "count"]],
-        group: ["rating"],
-        raw: true,
-      }).then((reviews) => {
-        const breakdown = {};
-        reviews.forEach((review) => {
-          breakdown[review.rating] = review.count;
-        });
-        return breakdown;
-      }),
-      totalReviews: await Review.count({
-        where: {
-          revieweeId: tutorId,
-        },
-      }),
     },
     {
-      where: { tutorId },
+      conflictFields: ["tutor_id"], // For PostgreSQL
     }
   );
 };
@@ -159,28 +170,58 @@ exports.updateRatingsStats = async (tutorId) => {
     raw: true,
   });
 
-  await TutorStat.update(
+  const totalReviews = Number(ratingsData?.totalReviews || 0);
+  const averageRating = Number(
+    parseFloat(ratingsData?.averageRating || 0).toFixed(2)
+  );
+
+  // Get rating counts
+  const ratingCounts = await Review.findAll({
+    where: {
+      revieweeId: tutorId,
+      type: "student_to_tutor",
+    },
+    attributes: ["rating", [sequelize.fn("COUNT", "*"), "count"]],
+    group: ["rating"],
+    raw: true,
+  });
+
+  // Build count map
+  const countMap = ratingCounts.reduce((acc, item) => {
+    acc[item.rating] = parseInt(item.count, 10);
+    return acc;
+  }, {});
+
+  // Build breakdown array with percentages (5 → 1)
+  const reviewBreakdown = [5, 4, 3, 2, 1].map((stars) => {
+    const count = countMap[stars] || 0;
+    const percent =
+      totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+    return { stars, percent };
+  });
+
+  // await TutorStat.update(
+  //   {
+  //     totalReviews,
+  //     averageRating,
+  //     reviewBreakdown, // Now stored as array with percentages
+  //     lastUpdated: new Date(),
+  //   },
+  //   {
+  //     where: { tutorId },
+  //   }
+  // );
+
+  await TutorStat.upsert(
     {
-      totalReviews: Number(ratingsData?.totalReviews || 0),
-      averageRating: Number(ratingsData?.averageRating || 0),
-      reviewBreakdown: await Review.findAll({
-        where: {
-          revieweeId: tutorId,
-        },
-        attributes: ["rating", [sequelize.fn("COUNT", "*"), "count"]],
-        group: ["rating"],
-        raw: true,
-      }).then((reviews) => {
-        const breakdown = {};
-        reviews.forEach((review) => {
-          breakdown[review.rating] = review.count;
-        });
-        return breakdown;
-      }),
+      tutorId,
+      totalReviews,
+      averageRating,
+      reviewBreakdown,
       lastUpdated: new Date(),
     },
     {
-      where: { tutorId },
+      conflictFields: ["tutor_id"], // For PostgreSQL
     }
   );
 };
@@ -188,9 +229,31 @@ exports.updateRatingsStats = async (tutorId) => {
 /**
  * Update all tutor stats at once
  */
-exports.updateAllStats = async (tutorId, models) => {
+exports.updateAllStats = async (tutorId) => {
+  const { TutorStat } = require("@models");
+
+  await TutorStat.findOrCreate({
+    where: { tutorId },
+    defaults: {
+      tutorId,
+      totalCompletedSessions: 0,
+      totalWeeklySessions: 0,
+      totalStudents: 0,
+      totalHoursTaught: 0.0,
+      averageRating: 0.0,
+      totalReviews: 0,
+      reviewBreakdown: [
+        { stars: 5, percent: 0 },
+        { stars: 4, percent: 0 },
+        { stars: 3, percent: 0 },
+        { stars: 2, percent: 0 },
+        { stars: 1, percent: 0 },
+      ],
+    },
+  });
+
   await Promise.all([
-    exports.updateSessionStats(tutorId, models),
-    exports.updateRatingsStats(tutorId, models),
+    exports.updateSessionStats(tutorId),
+    exports.updateRatingsStats(tutorId),
   ]);
 };

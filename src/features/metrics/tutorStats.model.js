@@ -1,4 +1,3 @@
-const { get } = require("@src/app");
 const { DataTypes } = require("sequelize");
 
 module.exports = (sequelize) => {
@@ -57,7 +56,13 @@ module.exports = (sequelize) => {
       reviewBreakdown: {
         type: DataTypes.JSON,
         allowNull: false,
-        defaultValue: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        defaultValue: [
+          { stars: 5, percent: 0 },
+          { stars: 4, percent: 0 },
+          { stars: 3, percent: 0 },
+          { stars: 2, percent: 0 },
+          { stars: 1, percent: 0 },
+        ],
       },
       lastUpdated: {
         type: DataTypes.DATE,
@@ -69,19 +74,19 @@ module.exports = (sequelize) => {
       tableName: "tutor_stats",
       underscored: true,
       timestamps: false,
-      hooks: {
-        beforeUpdate: async (tutorStat, options) => {
-          const existingRecord = await TutorStat.findOne({
-            where: {
-              tutorId: tutorStat.tutorId,
-            },
-          });
+      // hooks: {
+      //   beforeUpdate: async (tutorStat, options) => {
+      //     const existingRecord = await TutorStat.findOne({
+      //       where: {
+      //         tutorId: tutorStat.tutorId,
+      //       },
+      //     });
 
-          if (!existingRecord) {
-            TutorStat.create({ tutorId: tutorStat.tutorId });
-          }
-        },
-      },
+      //     if (!existingRecord) {
+      //       await TutorStat.create({ tutorId: tutorStat.tutorId });
+      //     }
+      //   },
+      // },
     }
   );
 

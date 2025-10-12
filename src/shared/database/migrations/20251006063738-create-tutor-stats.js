@@ -46,7 +46,14 @@ module.exports = {
       },
       reviewBreakdown: {
         type: Sequelize.JSON,
-        defaultValue: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        allowNull: false,
+        defaultValue: [
+          { stars: 5, percent: 0 },
+          { stars: 4, percent: 0 },
+          { stars: 3, percent: 0 },
+          { stars: 2, percent: 0 },
+          { stars: 1, percent: 0 },
+        ],
       },
       last_updated: {
         type: Sequelize.DATE,
