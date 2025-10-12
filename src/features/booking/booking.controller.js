@@ -60,12 +60,12 @@ exports.createBooking = async (req, res) => {
     );
   }
 
-  if (availability.scheduledStart.getTime() < Date.now() + 1 * 60 * 1000) {
-    throw new ApiError(
-      "Bookings must be made at least 1 hour in advance. Please select a later time slot.",
-      400
-    );
-  }
+  // if (availability.scheduledStart.getTime() < Date.now() + 1 * 60 * 1000) {
+  //   throw new ApiError(
+  //     "Bookings must be made at least 1 hour in advance. Please select a later time slot.",
+  //     400
+  //   );
+  // }
 
   const booking = await bookingService.updateBooking(req.params.bookingId, {
     studentId: req.user.id,
