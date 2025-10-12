@@ -163,6 +163,20 @@ exports.updateRatingsStats = async (tutorId) => {
     {
       totalReviews: Number(ratingsData?.totalReviews || 0),
       averageRating: Number(ratingsData?.averageRating || 0),
+      reviewBreakdown: await Review.findAll({
+        where: {
+          revieweeId: tutorId,
+        },
+        attributes: ["rating", [sequelize.fn("COUNT", "*"), "count"]],
+        group: ["rating"],
+        raw: true,
+      }).then((reviews) => {
+        const breakdown = {};
+        reviews.forEach((review) => {
+          breakdown[review.rating] = review.count;
+        });
+        return breakdown;
+      }),
       lastUpdated: new Date(),
     },
     {
