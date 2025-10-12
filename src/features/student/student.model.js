@@ -56,6 +56,24 @@ module.exports = () => {
         exclude: ["createdAt", "updatedAt"],
       },
     });
+    Student.addScope("userProfile", {
+      include: [
+        {
+          model: models.Subject.scope("join"),
+          as: "subjects",
+          through: { attributes: [] },
+        },
+        {
+          model: models.Exam,
+          as: "exams",
+          attributes: ["id", "name"],
+          through: { attributes: [] },
+        },
+      ],
+      attributes: {
+        exclude: ["createdAt", "updatedAt"],
+      },
+    });
     Student.belongsToMany(models.Subject, {
       through: "student_subjects",
       as: "subjects",

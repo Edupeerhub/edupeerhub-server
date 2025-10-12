@@ -5,14 +5,15 @@ const sequelize = require("./index");
 // =====================
 const definers = [
   require("@features/user/user.model"),
-  require("@features/student/student.model"),
   require("@features/subject/subject.model"),
+  require("@features/student/student.model"),
+  require("@src/features/metrics/tutorStats.model"),
   require("@features/tutor/tutor.model"),
   require("@features/admin/admin.model"),
   require("@features/exams/exams.model"),
   require("@features/events/events.model"),
   require("@features/booking/booking.model"),
-  require("@features/reviews/review.model")
+  require("@features/reviews/review.model"),
 ];
 
 ///Add models
@@ -39,14 +40,16 @@ for (const model of sequelize.modelManager.models) {
 
 module.exports = {
   User: sequelize.models.User,
+  Subject: sequelize.models.Subject,
   Student: sequelize.models.Student,
   Tutor: sequelize.models.Tutor,
-  Subject: sequelize.models.Subject,
   Admin: sequelize.models.Admin,
   EventLog: sequelize.models.EventLog,
   Exam: sequelize.models.Exam,
   Booking: sequelize.models.Booking,
-  Review: sequelize.models.Review
+  Review: sequelize.models.Review,
+  TutorStat: sequelize.models.TutorStat,
+
   // StudentExam: sequelize.models.StudentExam,
 };
 

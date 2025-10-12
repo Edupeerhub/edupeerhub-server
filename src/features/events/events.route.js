@@ -29,6 +29,9 @@ router.post("/session/completed", async (req, res, next) => {
 
     const booking = await Booking.findOne({ where: { id: sessionId } });
     booking.status = "completed";
+    booking.actualStartTime = startedAt ? new Date(startedAt) : null;
+    booking.actualEndTime = endedAt;
+
     await booking.save();
 
     await trackEvent(SESSION_COMPLETED, {
