@@ -165,13 +165,13 @@ const tutorValidator = {
     totalReviews: expect.any(Number),
     totalWeeklySessions: expect.any(Number),
     totalStudents: expect.any(Number),
-    reviewBreakdown: expect.objectContaining({
-      1: expect.any(Number),
-      2: expect.any(Number),
-      3: expect.any(Number),
-      4: expect.any(Number),
-      5: expect.any(Number),
-    }),
+    reviewBreakdown: expect.arrayContaining([
+      expect.objectContaining({ stars: 5, percent: expect.any(Number) }),
+      expect.objectContaining({ stars: 4, percent: expect.any(Number) }),
+      expect.objectContaining({ stars: 3, percent: expect.any(Number) }),
+      expect.objectContaining({ stars: 2, percent: expect.any(Number) }),
+      expect.objectContaining({ stars: 1, percent: expect.any(Number) }),
+    ]),
   }),
   timezone: expect.any(String),
   subjects: expect.arrayOf(expect.objectContaining(subjectValidator)),
@@ -190,7 +190,6 @@ const tutorValidator = {
     id: expect.any(String),
   }),
   userId: expect.any(String),
-
 };
 
 const metaMatcher = {
@@ -333,7 +332,6 @@ describe("Tutor test", () => {
         success: true,
         message: "success",
         data: expect.objectContaining({
-
           ...tutorValidator,
           bio: updatedProfile.bio,
 
