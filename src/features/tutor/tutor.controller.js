@@ -74,6 +74,7 @@ exports.createTutor = async (req, res) => {
     id: userId,
     email: newTutor.user.email,
     role: newTutor.user.role,
+    profileImageUrl: newTutor.user.profileImageUrl,
     firstName: newTutor.user.firstName,
     lastName: newTutor.user.lastName,
   });
@@ -97,6 +98,7 @@ exports.updateTutor = async (req, res) => {
     id: tutorId,
     email: updatedTutorProfile.user.email,
     role: updatedTutorProfile.user.role,
+    profileImageUrl: updatedTutorProfile.user.profileImageUrl,
     firstName: updatedTutorProfile.user.firstName,
     lastName: updatedTutorProfile.user.lastName,
   });

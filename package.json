@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "migrate": "sequelize-cli db:migrate",
     "seed": "sequelize-cli db:seed:all",
-    "update-stream-settings": "node src/shared/scripts/updateStreamSettings.js"
+    "update-stream-settings": "node src/shared/scripts/updateStreamSettings.js",
+    "sync-stream-users": "node src/shared/scripts/syncStreamUsers.js"
   },
   "repository": {
     "type": "git",
