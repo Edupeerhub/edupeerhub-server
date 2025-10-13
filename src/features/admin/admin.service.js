@@ -10,7 +10,6 @@ const TUTOR_INCLUDES = [
     as: "tutor",
     attributes: [
       "bio",
-      "rating",
       "approvalStatus",
       "profileVisibility",
       "education",
