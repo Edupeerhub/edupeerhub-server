@@ -40,6 +40,7 @@ module.exports = {
       await addStreamUser({
         id: student.userId,
         email: student.user.email,
+        profileImageUrl: student.user.profileImageUrl,
         role: student.user.role,
         firstName: student.user.firstName,
         lastName: student.user.lastName,
@@ -70,6 +71,7 @@ module.exports = {
       await addStreamUser({
         id: student.userId,
         email: student.user.email,
+        profileImageUrl: student.user.profileImageUrl,
         role: student.user.role,
         firstName: student.user.firstName,
         lastName: student.user.lastName,

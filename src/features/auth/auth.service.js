@@ -220,7 +220,7 @@ exports.addStreamUser = async ({
   await upsertStreamUser({
     id: id.toString(),
     name: `${firstName} ${lastName}`.trim(),
-    image: profileImageUrl || "",
+    image: profileImageUrl,
     email: email,
     app_role: role,
   });
