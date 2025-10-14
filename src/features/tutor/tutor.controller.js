@@ -7,6 +7,7 @@ const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
 const { uploadFileToS3 } = require("@src/shared/utils/s3");
+const sendSlackNotification = require("@src/shared/utils/slackNotifier");
 
 exports.getTutors = async (req, res) => {
   //params
@@ -79,6 +80,11 @@ exports.createTutor = async (req, res) => {
     lastName: newTutor.user.lastName,
   });
 
+  await sendSlackNotification("tutor_onboarded", {
+    name: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
+    email: newTutor.user.email,
+  });
+
   sendResponse(res, 201, "Onboarding successful", newTutor);
 };
 
@@ -94,14 +100,14 @@ exports.updateTutor = async (req, res) => {
     tutorProfile,
   });
 
-  await addStreamUser({
-    id: tutorId,
-    email: updatedTutorProfile.user.email,
-    role: updatedTutorProfile.user.role,
-    profileImageUrl: updatedTutorProfile.user.profileImageUrl,
-    firstName: updatedTutorProfile.user.firstName,
-    lastName: updatedTutorProfile.user.lastName,
-  });
+  // await addStreamUser({
+  //   id: tutorId,
+  //   email: updatedTutorProfile.user.email,
+  //   role: updatedTutorProfile.user.role,
+  //   profileImageUrl: updatedTutorProfile.user.profileImageUrl,
+  //   firstName: updatedTutorProfile.user.firstName,
+  //   lastName: updatedTutorProfile.user.lastName,
+  // });
   sendResponse(res, 200, "success", updatedTutorProfile);
 };
 
