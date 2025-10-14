@@ -193,6 +193,9 @@ jobs:
             # Mailtrap
             MAILTRAP_TOKEN=${{ secrets.MAILTRAP_TOKEN }}
             MAILTRAP_ENDPOINT=${{ secrets.MAILTRAP_ENDPOINT }}
+
+            # Slack
+            SLACK_WEBHOOK_URL=${{ secrets.STAGING_SLACK_WEBHOOK_URL }}
             ENVEOF
 
             # Inject runtime values

@@ -276,3 +276,46 @@ exports.BOOKING_DECLINED_TEMPLATE = (scheduledStart) =>
         <p style="font-family: Roboto, Arial, sans-serif;">Best regards,<br/>Edupeerhub Team</p>
       `
   );
+
+exports.ADMIN_TUTOR_ONBOARDING_NOTIFICATION_TEMPLATE = (
+  tutorName,
+  tutorEmail,
+  tutorId,
+  vettingURL
+) =>
+  emailWrapper(
+    "New Tutor Onboarding - Vetting Required",
+    `
+        <p style="font-family: Roboto, Arial, sans-serif;">Hello Admin,</p>
+        <p style="font-family: Roboto, Arial, sans-serif;">
+          A new tutor has just completed the onboarding process and is awaiting vetting.
+        </p>
+  
+        <div style="background-color: #E7F6FB; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 0; font-family: Roboto, Arial, sans-serif;">
+            <strong>Name:</strong> ${tutorName}
+          </p>
+          <p style="margin: 5px 0 0 0; font-family: Roboto, Arial, sans-serif;">
+            <strong>Email:</strong> ${tutorEmail}
+          </p>
+          <p style="margin: 5px 0 0 0; font-family: Roboto, Arial, sans-serif;">
+            <strong>Tutor ID:</strong> ${tutorId}
+          </p>
+        </div>
+  
+        <p style="font-family: Roboto, Arial, sans-serif;">
+          Please review and verify their profile to approve or reject their application.
+        </p>
+  
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${vettingURL}" 
+             style="background-color: #4CA1F0; color: white; padding: 12px 20px; 
+                    text-decoration: none; border-radius: 6px; font-weight: bold; 
+                    font-family: Poppins, Arial, sans-serif; display: inline-block;">
+            Review Tutor
+          </a>
+        </div>
+  
+        <p style="font-family: Roboto, Arial, sans-serif;">Best regards,<br>Edupeerhub System</p>
+      `
+  );
