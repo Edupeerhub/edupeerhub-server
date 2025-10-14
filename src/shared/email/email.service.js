@@ -16,6 +16,7 @@ const {
   BOOKING_DECLINED_TEMPLATE,
   BOOKING_CANCELLED_TEMPLATE,
   BOOKING_RESCHEDULED_TEMPLATE,
+  ADMIN_TUTOR_ONBOARDING_NOTIFICATION_TEMPLATE,
 } = require("./emailTemplates");
 
 const appURL = process.env.CLIENT_URL || "http://localhost:5173";
@@ -130,6 +131,35 @@ const sendRejectionEmail = async (email, name, reason) => {
   } catch (error) {
     throw new ApiError(
       "Error sending tutor rejection email",
+      500,
+      error.message
+    );
+  }
+};
+
+const sendAdminTutorOnboardingNotification = async ({
+  adminEmail,
+  tutorName,
+  tutorEmail,
+  tutorId,
+}) => {
+  try {
+    const vettingURL = `${appURL}/admin/tutors/${tutorId}`;
+
+    await sendEmail({
+      to: [{ email: adminEmail }],
+      subject: `Tutor Onboarding: Vetting Required for ${tutorName}`,
+      html: ADMIN_TUTOR_ONBOARDING_NOTIFICATION_TEMPLATE(
+        tutorName,
+        tutorEmail,
+        tutorId,
+        vettingURL
+      ),
+      category: "Admin Notification",
+    });
+  } catch (error) {
+    throw new ApiError(
+      "Error sending admin tutor onboarding notification",
       500,
       error.message
     );
@@ -288,6 +318,7 @@ module.exports = {
   sendPasswordChangeSuccessEmail,
   sendApprovalEmail,
   sendRejectionEmail,
+  sendAdminTutorOnboardingNotification,
 
   // non-critical
   sendCallReminderEmail,
