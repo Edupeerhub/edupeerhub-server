@@ -8,6 +8,9 @@ const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
 const { uploadFileToS3 } = require("@src/shared/utils/s3");
 const sendSlackNotification = require("@src/shared/utils/slackNotifier");
+const {
+  sendAdminTutorOnboardingNotification,
+} = require("@src/shared/email/email.service");
 
 exports.getTutors = async (req, res) => {
   //params
@@ -83,6 +86,13 @@ exports.createTutor = async (req, res) => {
   await sendSlackNotification("tutor_onboarded", {
     name: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
     email: newTutor.user.email,
+  });
+
+  await sendAdminTutorOnboardingNotification({
+    adminEmail: "althubteam29@gmail.com",
+    tutorName: `${newTutor.user.firstName} ${newTutor.user.lastName}`,
+    tutorEmail: newTutor.user.email,
+    tutorId: userId,
   });
 
   sendResponse(res, 201, "Onboarding successful", newTutor);
