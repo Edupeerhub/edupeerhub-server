@@ -407,7 +407,7 @@ exports.createAdmin = async (adminData) => {
       isVerified: true,
       isOnboarded: true,
       admin: {
-        isSuperAdmin: isSuperAdmin || false,
+        isSuperAdmin: isSuperAdmin ?? false,
       },
     },
     {
