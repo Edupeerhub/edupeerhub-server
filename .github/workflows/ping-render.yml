@@ -9,7 +9,7 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 1  # overall timeout per job
+    timeout-minutes: 3 # overall timeout per job
 
     steps:
       - name: Ping Render Server
@@ -24,8 +24,8 @@ jobs:
           URL="https://staging-api-edupeerhub.onrender.com/api/health"
           echo "🌐 Target URL: $URL"
 
-          max_retries=3
-          delay=10
+          max_retries=4
+          delay=30
           success=false
 
           for i in $(seq 1 $max_retries); do
