@@ -11,6 +11,13 @@ module.exports = async function sendSlackNotification(eventType, payload = {}) {
     return;
   }
 
+  if (process.env.NODE_ENV === "test") {
+    logger.info(
+      `⚠️ Test environment detected. Slack notification for "${eventType}" not sent.`
+    );
+    return;
+  }
+
   let blocks = [];
 
   switch (eventType) {
