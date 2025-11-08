@@ -6,7 +6,7 @@ const ApiError = require("@src/shared/utils/apiError");
 const trackEvent = require("../events/events.service");
 const eventTypes = require("../events/eventTypes");
 const { addStreamUser } = require("../auth/auth.service");
-const { uploadFileToS3 } = require("@src/shared/utils/s3");
+const { uploadFileToS3 } = require("@src/shared/S3/s3Service");
 const sendSlackNotification = require("@src/shared/utils/slackNotifier");
 const {
   sendAdminTutorOnboardingNotification,

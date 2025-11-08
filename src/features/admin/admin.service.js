@@ -1,6 +1,6 @@
 const { User, Tutor, Student, Admin } = require("@src/shared/database/models");
 const { Op } = require("sequelize");
-const { getSignedFileUrl } = require("@src/shared/utils/s3");
+const { getSignedFileUrl } = require("@src/shared/S3/s3Service");
 const ApiError = require("@utils/apiError");
 const { hashPassword, generateRandomAvatar } = require("@utils/authHelpers");
 
@@ -407,7 +407,7 @@ exports.createAdmin = async (adminData) => {
       isVerified: true,
       isOnboarded: true,
       admin: {
-        isSuperAdmin: isSuperAdmin || false,
+        isSuperAdmin: isSuperAdmin ?? false,
       },
     },
     {
