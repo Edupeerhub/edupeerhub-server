@@ -1,31 +1,8 @@
-const {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} = require("@aws-sdk/client-s3");
-const logger = require("./logger");
+const { PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+const logger = require("../utils/logger");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const ApiError = require("./apiError");
-
-const isTests = process.env.NODE_ENV === "test";
-
-if (
-  !isTests &&
-  (!process.env.AWS_ACCESS_KEY_ID ||
-    !process.env.AWS_SECRET_ACCESS_KEY ||
-    !process.env.S3_BUCKET_NAME ||
-    !process.env.AWS_REGION)
-) {
-  throw new ApiError("Missing S3 environment variables");
-}
-
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
+// const { s3Client: client, isTests } = require("./s3Client");
+const { r2Client: client, isTests } = require("./r2Client");
 
 async function uploadFileToS3(file, folder = "uploads") {
   if (isTests) {
@@ -35,7 +12,7 @@ async function uploadFileToS3(file, folder = "uploads") {
 
   const key = `${folder}/${Date.now()}_${file.originalname}`;
 
-  await s3.send(
+  await client.send(
     new PutObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
       Key: key,
@@ -57,7 +34,7 @@ async function getSignedFileUrl(key, expiresIn = 300) {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key,
   });
-  return await getSignedUrl(s3, command, { expiresIn });
+  return await getSignedUrl(client, command, { expiresIn });
 }
 
 module.exports = { uploadFileToS3, getSignedFileUrl };
