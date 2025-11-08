@@ -1,4 +1,4 @@
-name: Keep Render Server Awake
+name: Keep Render Server Awake 
 
 on:
   schedule:
