@@ -1,0 +1,53 @@
+name: Keep Render Server Awake
+
+on:
+  schedule:
+    # Every 13 minutes between 08:00 and 23:00 UTC
+    - cron: "*/13 7-23 * * *"
+  workflow_dispatch: # allows manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1  # overall timeout per job
+
+    steps:
+      - name: Ping Render Server
+        run: |
+          echo "🕓 Starting Render keep-alive job at $(date -u)"
+
+          # Random jitter (0–45 seconds)
+          jitter=$((RANDOM % 45))
+          echo "⏳ Waiting $jitter seconds before ping..."
+          sleep $jitter
+
+          URL="https://staging-api-edupeerhub.onrender.com/api/health"
+          echo "🌐 Target URL: $URL"
+
+          max_retries=3
+          delay=10
+          success=false
+
+          for i in $(seq 1 $max_retries); do
+            echo "🔁 Attempt $i of $max_retries..."
+            response=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+            echo "📬 Response: HTTP $response"
+
+            if [ "$response" = "200" ]; then
+              echo "✅ Success! Server is awake and healthy."
+              success=true
+              break
+            fi
+
+            if [ $i -lt $max_retries ]; then
+              echo "⚠️ Attempt $i failed. Retrying in $delay seconds..."
+              sleep $delay
+            fi
+          done
+
+          if [ "$success" = false ]; then
+            echo "❌ Server did not respond successfully after $max_retries attempts."
+            exit 1
+          fi
+
+          echo "🏁 Job completed successfully at $(date -u)"
