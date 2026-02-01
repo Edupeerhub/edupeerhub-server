@@ -104,7 +104,7 @@ jobs:
       - name: Checkout (for metadata only)
         uses: actions/checkout@v4
       - name: Deploy via SSH to production
-        uses: appleboy/ssh-action@v0.1.10
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.SERVER_USER }}
